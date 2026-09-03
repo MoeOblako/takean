@@ -357,103 +357,143 @@
             border-color: var(--accent);
         }
 
-        .format-toolbar {
+        /* ===== BBC TOOLBAR ===== */
+        .bbc-toolbar {
             display: flex;
             gap: 4px;
             flex-wrap: wrap;
             margin-top: 8px;
+            padding: 6px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
         }
 
-        .format-toolbar button {
-            padding: 6px 10px;
+        .bbc-toolbar .group-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            padding: 0 6px;
+            font-weight: 600;
+        }
+
+        .bbc-toolbar button {
+            padding: 4px 8px;
             background: var(--bg-input);
             border: 1px solid var(--border-color);
             border-radius: var(--radius);
             color: var(--text-secondary);
             cursor: pointer;
             font-family: var(--font);
-            font-size: 13px;
+            font-size: 12px;
             transition: all 0.2s;
             -webkit-tap-highlight-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 2px;
         }
 
-        .format-toolbar button:hover {
+        .bbc-toolbar button:hover {
             background: var(--bg-hover);
             color: var(--text-primary);
         }
 
-        .create-color-row {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 8px;
-            align-items: center;
+        .bbc-toolbar button .material-icons {
+            font-size: 16px;
         }
 
-        .create-color-row input[type="color"] {
-            width: 36px;
-            height: 36px;
-            padding: 2px;
-            border: 2px solid var(--border-color);
-            border-radius: var(--radius);
-            background: none;
-            cursor: pointer;
+        .bbc-toolbar .separator {
+            width: 1px;
+            background: var(--border-color);
+            margin: 0 4px;
         }
 
-        .create-color-row input[type="color"]:focus {
-            border-color: var(--accent);
-        }
-
-        .create-color-row .label {
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-
-        /* Ideology Grid - без эмодзи */
-        .ideology-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 6px;
+        /* ===== CATEGORY TREE ===== */
+        .category-tree {
             margin-top: 6px;
         }
 
-        .ideology-item {
+        .category-tree .category-item {
+            margin-bottom: 4px;
+        }
+
+        .category-tree .category-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             padding: 8px 12px;
             background: var(--bg-input);
             border: 1px solid var(--border-color);
             border-radius: var(--radius);
-            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .category-tree .category-header:hover {
+            border-color: var(--accent);
+        }
+
+        .category-tree .category-header .material-icons {
+            font-size: 20px;
+            transition: transform 0.3s;
+        }
+
+        .category-tree .category-header .material-icons.expanded {
+            transform: rotate(90deg);
+        }
+
+        .category-tree .subcategories {
+            padding-left: 16px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .category-tree .subcategories.open {
+            display: block;
+        }
+
+        .category-tree .subcategory-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            margin: 3px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
             cursor: pointer;
             transition: all 0.2s;
             font-size: 12px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            -webkit-tap-highlight-color: transparent;
         }
 
-        .ideology-item:hover {
+        .category-tree .subcategory-item:hover {
             border-color: var(--accent);
-            color: var(--text-primary);
+            background: var(--accent-light);
         }
 
-        .ideology-item.active {
+        .category-tree .subcategory-item.active {
             border-color: var(--accent);
             background: var(--accent-light);
             color: var(--accent);
         }
 
-        .ideology-item .icon {
-            display: block;
-            font-size: 22px;
-            margin-bottom: 2px;
-            color: var(--text-muted);
+        .category-tree .subcategory-item .icon {
+            font-size: 18px;
         }
 
-        .ideology-item .icon .material-icons {
-            font-size: 24px;
+        .category-tree .subcategory-item .icon svg {
+            width: 18px;
+            height: 18px;
         }
 
-        /* Image Upload */
+        .category-tree .category-header .icon {
+            font-size: 20px;
+        }
+
+        /* ===== IMAGE UPLOAD ===== */
         .image-upload-area {
             border: 2px dashed var(--border-color);
             border-radius: var(--radius);
@@ -542,7 +582,7 @@
             transition: width 0.3s;
         }
 
-        /* Preview */
+        /* ===== PREVIEW ===== */
         .create-preview {
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
@@ -602,6 +642,7 @@
             color: var(--text-secondary);
             padding: 6px 8px;
             border-radius: var(--radius);
+            min-height: 40px;
         }
 
         .create-preview .preview-content .mention {
@@ -632,6 +673,33 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .create-color-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+            align-items: center;
+        }
+
+        .create-color-row input[type="color"] {
+            width: 36px;
+            height: 36px;
+            padding: 2px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius);
+            background: none;
+            cursor: pointer;
+        }
+
+        .create-color-row input[type="color"]:focus {
+            border-color: var(--accent);
+        }
+
+        .create-color-row .label {
+            font-size: 13px;
+            color: var(--text-muted);
         }
 
         .create-select {
@@ -696,6 +764,22 @@
             width: 100%;
         }
 
+        /* ===== BBC STYLES ===== */
+        .bbc-bold { font-weight: 700; }
+        .bbc-italic { font-style: italic; }
+        .bbc-underline { text-decoration: underline; }
+        .bbc-strike { text-decoration: line-through; }
+        .bbc-code { font-family: monospace; background: var(--bg-input); padding: 2px 6px; border-radius: var(--radius); }
+        .bbc-quote { border-left: 3px solid var(--accent); padding-left: 12px; margin: 4px 0; color: var(--text-secondary); }
+        .bbc-spoiler { background: var(--bg-hover); color: var(--bg-hover); cursor: pointer; padding: 2px 6px; border-radius: var(--radius); transition: color 0.3s; }
+        .bbc-spoiler:hover { color: var(--text-primary); }
+        .bbc-size-small { font-size: 12px; }
+        .bbc-size-normal { font-size: 15px; }
+        .bbc-size-large { font-size: 20px; }
+        .bbc-size-huge { font-size: 26px; }
+        .bbc-color { transition: color 0.2s; }
+        .bbc-bg { transition: background 0.2s; }
+
         /* ===== RESPONSIVE ===== */
         @media (max-width: 992px) {
             .search-bar { max-width: 120px; }
@@ -714,7 +798,11 @@
             .search-bar input { min-width: 40px; width: 40px; font-size: 11px; }
             .create-page h1 { font-size: 20px; }
             .create-section { padding: 12px 14px; }
-            .ideology-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+            .bbc-toolbar { gap: 2px; padding: 4px; }
+            .bbc-toolbar button { font-size: 11px; padding: 3px 6px; }
+            .bbc-toolbar button .material-icons { font-size: 14px; }
+            .bbc-toolbar .group-label { font-size: 10px; }
+            .category-tree .subcategory-item { font-size: 11px; padding: 4px 8px; }
             .image-preview-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
             .footer-inner { flex-direction: column; align-items: center; text-align: center; }
         }
@@ -733,13 +821,14 @@
             .create-section .section-title { font-size: 13px; }
             .create-textarea { min-height: 120px; font-size: 13px; }
             .create-input { font-size: 13px; }
-            .ideology-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
-            .ideology-item { font-size: 11px; padding: 6px 8px; }
-            .ideology-item .icon { font-size: 18px; }
+            .bbc-toolbar button { font-size: 10px; padding: 2px 5px; }
+            .bbc-toolbar button .material-icons { font-size: 12px; }
+            .bbc-toolbar .group-label { font-size: 9px; padding: 0 3px; }
+            .category-tree .category-header { font-size: 12px; padding: 6px 10px; }
+            .category-tree .subcategory-item { font-size: 10px; padding: 3px 6px; }
             .image-preview-grid { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
             .create-preview .preview-title { font-size: 15px; }
             .create-preview .preview-content { font-size: 13px; }
-            .format-toolbar button { font-size: 12px; padding: 4px 8px; }
         }
     </style>
 </head>
@@ -762,6 +851,10 @@
                 <a href="/create.html" class="active">
                     <span class="material-icons">add_box</span>
                     <span>Создать</span>
+                </a>
+                <a href="/communities.html">
+                    <span class="material-icons">group</span>
+                    <span>Сообщества</span>
                 </a>
             </nav>
 
@@ -787,6 +880,7 @@
     <h1>Создать тейк</h1>
     <p class="subtitle">Оформите свой тейк с максимальной кастомизацией</p>
 
+    <!-- Заголовок -->
     <div class="create-section">
         <div class="section-title">
             <span class="material-icons">title</span> Заголовок
@@ -794,77 +888,323 @@
         <input class="create-input" id="postTitle" placeholder="Введите заголовок тейка..." maxlength="200">
     </div>
 
+    <!-- Текст с BBC-тулбаром -->
     <div class="create-section">
         <div class="section-title">
             <span class="material-icons">text_fields</span> Текст
         </div>
-        <textarea class="create-textarea" id="postContent" placeholder="Опишите свой тейк... Поддерживает @упоминания и Markdown"></textarea>
+        <textarea class="create-textarea" id="postContent" placeholder="Опишите свой тейк... Используйте BBC-теги"></textarea>
         
-        <div class="format-toolbar">
-            <button onclick="formatText('bold')"><span class="material-icons" style="font-size:16px;">format_bold</span></button>
-            <button onclick="formatText('italic')"><span class="material-icons" style="font-size:16px;">format_italic</span></button>
-            <button onclick="formatText('underline')"><span class="material-icons" style="font-size:16px;">format_underline</span></button>
-            <button onclick="formatText('strikethrough')"><span class="material-icons" style="font-size:16px;">strikethrough_s</span></button>
-            <button onclick="formatText('link')"><span class="material-icons" style="font-size:16px;">link</span></button>
+        <div class="bbc-toolbar">
+            <span class="group-label">Формат:</span>
+            <button onclick="insertBBC('b')"><span class="material-icons">format_bold</span></button>
+            <button onclick="insertBBC('i')"><span class="material-icons">format_italic</span></button>
+            <button onclick="insertBBC('u')"><span class="material-icons">format_underline</span></button>
+            <button onclick="insertBBC('s')"><span class="material-icons">strikethrough_s</span></button>
+            
+            <div class="separator"></div>
+            
+            <span class="group-label">Размер:</span>
+            <button onclick="insertBBC('size=small')">S</button>
+            <button onclick="insertBBC('size=normal')">M</button>
+            <button onclick="insertBBC('size=large')">L</button>
+            <button onclick="insertBBC('size=huge')">XL</button>
+            
+            <div class="separator"></div>
+            
+            <span class="group-label">Цвет:</span>
+            <button onclick="insertColorBBC()"><span class="material-icons">palette</span></button>
+            <button onclick="insertBgBBC()"><span class="material-icons">format_color_fill</span></button>
+            
+            <div class="separator"></div>
+            
+            <button onclick="insertBBC('code')"><span class="material-icons">code</span></button>
+            <button onclick="insertBBC('quote')"><span class="material-icons">format_quote</span></button>
+            <button onclick="insertBBC('spoiler')"><span class="material-icons">visibility_off</span></button>
+            <button onclick="insertLinkBBC()"><span class="material-icons">link</span></button>
+            <button onclick="insertImageBBC()"><span class="material-icons">image</span></button>
         </div>
 
         <div class="create-color-row">
             <span class="label">Цвет текста:</span>
-            <input type="color" id="textColor" value="#e8e8e8">
+            <input type="color" id="textColor" value="#e8e8e8" onchange="document.getElementById('previewContent').style.color=this.value">
             <span class="label">Фон:</span>
-            <input type="color" id="bgColor" value="#1c1c1c">
-            <button class="ripple-btn outline" onclick="document.getElementById('textColor').value='#e8e8e8';document.getElementById('bgColor').value='#1c1c1c';updatePreview();" style="padding:4px 10px;font-size:12px;">
+            <input type="color" id="bgColor" value="#1c1c1c" onchange="document.getElementById('previewContent').style.background=this.value">
+            <button class="ripple-btn outline" onclick="resetColors()" style="padding:4px 10px;font-size:12px;">
                 <span class="material-icons" style="font-size:16px;">refresh</span> Сброс
             </button>
         </div>
     </div>
 
+    <!-- Категории с ветками -->
     <div class="create-section">
         <div class="section-title">
             <span class="material-icons">label</span> Категория / Идеология
         </div>
-        <div class="ideology-grid" id="ideologyGrid">
-            <div class="ideology-item" data-value="politics">
-                <span class="icon"><span class="material-icons">gavel</span></span>Политика
+        <div class="category-tree" id="categoryTree">
+            <!-- Политика -->
+            <div class="category-item">
+                <div class="category-header" onclick="toggleCategory(this)">
+                    <span class="icon"><span class="material-icons" style="color:#d32f2f;">gavel</span></span>
+                    <span>Политика</span>
+                    <span class="material-icons" style="margin-left:auto;font-size:18px;">chevron_right</span>
+                </div>
+                <div class="subcategories">
+                    <span class="subcategory-item" data-value="communism" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#d32f2f;">flag</span></span> Коммунизм
+                    </span>
+                    <span class="subcategory-item" data-value="socialism" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#e53935;">people</span></span> Социализм
+                    </span>
+                    <span class="subcategory-item" data-value="capitalism" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#43a047;">attach_money</span></span> Капитализм
+                    </span>
+                    <span class="subcategory-item" data-value="liberalism" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#1e88e5;">balance</span></span> Либерализм
+                    </span>
+                    <span class="subcategory-item" data-value="conservatism" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#3949ab;">history</span></span> Консерватизм
+                    </span>
+                    <span class="subcategory-item" data-value="anarchism" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#6d4c41;">gavel</span></span> Анархизм
+                    </span>
+                    <span class="subcategory-item" data-value="nationalism" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#1565c0;">public</span></span> Национализм
+                    </span>
+                    <span class="subcategory-item" data-value="fascism" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#4e342e;">flag</span></span> Фашизм
+                    </span>
+                    <span class="subcategory-item" data-value="democracy" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#1565c0;">how_to_vote</span></span> Демократия
+                    </span>
+                    <span class="subcategory-item" data-value="authoritarianism" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#4e342e;">gavel</span></span> Авторитаризм
+                    </span>
+                </div>
             </div>
-            <div class="ideology-item" data-value="communism">
-                <span class="icon"><span class="material-icons" style="color:#d32f2f;">flag</span></span>Коммунизм
+
+            <!-- Игры -->
+            <div class="category-item">
+                <div class="category-header" onclick="toggleCategory(this)">
+                    <span class="icon"><span class="material-icons" style="color:#7cb342;">sports_esports</span></span>
+                    <span>Игры</span>
+                    <span class="material-icons" style="margin-left:auto;font-size:18px;">chevron_right</span>
+                </div>
+                <div class="subcategories">
+                    <span class="subcategory-item" data-value="minecraft" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#4caf50;">grass</span></span> Minecraft
+                    </span>
+                    <span class="subcategory-item" data-value="dota2" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#d32f2f;">swords</span></span> Dota 2
+                    </span>
+                    <span class="subcategory-item" data-value="csgo" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#f9a825;">sports_esports</span></span> CS:GO
+                    </span>
+                    <span class="subcategory-item" data-value="valorant" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#d32f2f;">sports_esports</span></span> Valorant
+                    </span>
+                    <span class="subcategory-item" data-value="league_of_legends" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#1a237e;">swords</span></span> League of Legends
+                    </span>
+                    <span class="subcategory-item" data-value="heartstone" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#ff6f00;">casino</span></span> Hearthstone
+                    </span>
+                    <span class="subcategory-item" data-value="wow" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#1565c0;">swords</span></span> World of Warcraft
+                    </span>
+                    <span class="subcategory-item" data-value="gta" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#4e342e;">directions_car</span></span> GTA V
+                    </span>
+                    <span class="subcategory-item" data-value="cyberpunk" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#7b1fa2;">science</span></span> Cyberpunk 2077
+                    </span>
+                    <span class="subcategory-item" data-value="indie" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#ef6c00;">psychology</span></span> Инди-игры
+                    </span>
+                </div>
             </div>
-            <div class="ideology-item" data-value="games">
-                <span class="icon"><span class="material-icons">sports_esports</span></span>Игры
+
+            <!-- Технологии -->
+            <div class="category-item">
+                <div class="category-header" onclick="toggleCategory(this)">
+                    <span class="icon"><span class="material-icons" style="color:#1e88e5;">computer</span></span>
+                    <span>Технологии</span>
+                    <span class="material-icons" style="margin-left:auto;font-size:18px;">chevron_right</span>
+                </div>
+                <div class="subcategories">
+                    <span class="subcategory-item" data-value="ai" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#7b1fa2;">psychology</span></span> Искусственный интеллект
+                    </span>
+                    <span class="subcategory-item" data-value="programming" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#2e7d32;">code</span></span> Программирование
+                    </span>
+                    <span class="subcategory-item" data-value="cybersecurity" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#c62828;">security</span></span> Кибербезопасность
+                    </span>
+                    <span class="subcategory-item" data-value="web3" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#6a1b9a;">language</span></span> Web3 / Blockchain
+                    </span>
+                    <span class="subcategory-item" data-value="space" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#1a237e;">rocket</span></span> Космос
+                    </span>
+                    <span class="subcategory-item" data-value="robotics" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#4e342e;">smart_toy</span></span> Робототехника
+                    </span>
+                    <span class="subcategory-item" data-value="biotech" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#2e7d32;">biotech</span></span> Биотехнологии
+                    </span>
+                    <span class="subcategory-item" data-value="nano" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#546e7a;">science</span></span> Нанотехнологии
+                    </span>
+                </div>
             </div>
-            <div class="ideology-item" data-value="tech">
-                <span class="icon"><span class="material-icons">computer</span></span>Технологии
+
+            <!-- Наука -->
+            <div class="category-item">
+                <div class="category-header" onclick="toggleCategory(this)">
+                    <span class="icon"><span class="material-icons" style="color:#00897b;">science</span></span>
+                    <span>Наука</span>
+                    <span class="material-icons" style="margin-left:auto;font-size:18px;">chevron_right</span>
+                </div>
+                <div class="subcategories">
+                    <span class="subcategory-item" data-value="physics" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#1565c0;">bolt</span></span> Физика
+                    </span>
+                    <span class="subcategory-item" data-value="chemistry" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#2e7d32;">science</span></span> Химия
+                    </span>
+                    <span class="subcategory-item" data-value="biology" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#43a047;">grass</span></span> Биология
+                    </span>
+                    <span class="subcategory-item" data-value="astronomy" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#1a237e;">nights_stay</span></span> Астрономия
+                    </span>
+                    <span class="subcategory-item" data-value="math" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#4e342e;">functions</span></span> Математика
+                    </span>
+                    <span class="subcategory-item" data-value="psychology" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#7b1fa2;">psychology</span></span> Психология
+                    </span>
+                    <span class="subcategory-item" data-value="sociology" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#3949ab;">people</span></span> Социология
+                    </span>
+                    <span class="subcategory-item" data-value="philosophy" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#4e342e;">auto_awesome</span></span> Философия
+                    </span>
+                </div>
             </div>
-            <div class="ideology-item" data-value="science">
-                <span class="icon"><span class="material-icons">science</span></span>Наука
+
+            <!-- Искусство -->
+            <div class="category-item">
+                <div class="category-header" onclick="toggleCategory(this)">
+                    <span class="icon"><span class="material-icons" style="color:#d32f2f;">palette</span></span>
+                    <span>Искусство</span>
+                    <span class="material-icons" style="margin-left:auto;font-size:18px;">chevron_right</span>
+                </div>
+                <div class="subcategories">
+                    <span class="subcategory-item" data-value="painting" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#d32f2f;">brush</span></span> Живопись
+                    </span>
+                    <span class="subcategory-item" data-value="music" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#2e7d32;">music_note</span></span> Музыка
+                    </span>
+                    <span class="subcategory-item" data-value="cinema" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#1565c0;">movie</span></span> Кино
+                    </span>
+                    <span class="subcategory-item" data-value="literature" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#4e342e;">menu_book</span></span> Литература
+                    </span>
+                    <span class="subcategory-item" data-value="photography" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#546e7a;">photo_camera</span></span> Фотография
+                    </span>
+                    <span class="subcategory-item" data-value="architecture" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#795548;">architecture</span></span> Архитектура
+                    </span>
+                    <span class="subcategory-item" data-value="design" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#7b1fa2;">design_services</span></span> Дизайн
+                    </span>
+                </div>
             </div>
-            <div class="ideology-item" data-value="art">
-                <span class="icon"><span class="material-icons">palette</span></span>Искусство
+
+            <!-- Спорт -->
+            <div class="category-item">
+                <div class="category-header" onclick="toggleCategory(this)">
+                    <span class="icon"><span class="material-icons" style="color:#f9a825;">sports_soccer</span></span>
+                    <span>Спорт</span>
+                    <span class="material-icons" style="margin-left:auto;font-size:18px;">chevron_right</span>
+                </div>
+                <div class="subcategories">
+                    <span class="subcategory-item" data-value="football" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#43a047;">sports_soccer</span></span> Футбол
+                    </span>
+                    <span class="subcategory-item" data-value="basketball" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#e65100;">sports_basketball</span></span> Баскетбол
+                    </span>
+                    <span class="subcategory-item" data-value="tennis" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#2e7d32;">sports_tennis</span></span> Теннис
+                    </span>
+                    <span class="subcategory-item" data-value="hockey" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#1565c0;">sports_hockey</span></span> Хоккей
+                    </span>
+                    <span class="subcategory-item" data-value="boxing" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#d32f2f;">sports_martial_arts</span></span> Бокс
+                    </span>
+                    <span class="subcategory-item" data-value="esports" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#7b1fa2;">sports_esports</span></span> Киберспорт
+                    </span>
+                    <span class="subcategory-item" data-value="fitness" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#ef6c00;">fitness_center</span></span> Фитнес
+                    </span>
+                </div>
             </div>
-            <div class="ideology-item" data-value="sport">
-                <span class="icon"><span class="material-icons">sports_soccer</span></span>Спорт
-            </div>
-            <div class="ideology-item" data-value="other">
-                <span class="icon"><span class="material-icons">more_horiz</span></span>Другое
+
+            <!-- Другое -->
+            <div class="category-item">
+                <div class="category-header" onclick="toggleCategory(this)">
+                    <span class="icon"><span class="material-icons" style="color:#78909c;">more_horiz</span></span>
+                    <span>Другое</span>
+                    <span class="material-icons" style="margin-left:auto;font-size:18px;">chevron_right</span>
+                </div>
+                <div class="subcategories">
+                    <span class="subcategory-item" data-value="life" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#43a047;">spa</span></span> Жизнь
+                    </span>
+                    <span class="subcategory-item" data-value="travel" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#1565c0;">flight</span></span> Путешествия
+                    </span>
+                    <span class="subcategory-item" data-value="food" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#e65100;">restaurant</span></span> Еда
+                    </span>
+                    <span class="subcategory-item" data-value="fashion" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#7b1fa2;">style</span></span> Мода
+                    </span>
+                    <span class="subcategory-item" data-value="education" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#2e7d32;">school</span></span> Образование
+                    </span>
+                    <span class="subcategory-item" data-value="business" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#43a047;">business</span></span> Бизнес
+                    </span>
+                    <span class="subcategory-item" data-value="health" onclick="selectSubcategory(this)">
+                        <span class="icon"><span class="material-icons" style="color:#d32f2f;">health_and_safety</span></span> Здоровье
+                    </span>
+                </div>
             </div>
         </div>
         <input class="create-input" style="margin-top:8px;" id="customCategory" placeholder="Или введите свою категорию...">
+        <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;" id="selectedCategories"></div>
     </div>
 
+    <!-- Сообщество -->
     <div class="create-section">
         <div class="section-title">
             <span class="material-icons">group</span> Сообщество
         </div>
         <select class="create-select" id="communitySelect">
             <option value="">Без сообщества (опубликовать на главной)</option>
-            <option value="takean_official">Takean Official</option>
-            <option value="tech_talks">Tech Talks</option>
-            <option value="gaming_zone">Gaming Zone</option>
-            <option value="political_arena">Political Arena</option>
         </select>
     </div>
 
+    <!-- Изображения -->
     <div class="create-section">
         <div class="section-title">
             <span class="material-icons">image</span> Изображения <span style="font-weight:400;font-size:12px;color:var(--text-muted);">(до 20)</span>
@@ -881,6 +1221,7 @@
         <div class="image-preview-grid" id="imagePreviewGrid"></div>
     </div>
 
+    <!-- Предпросмотр -->
     <div class="create-section">
         <div class="section-title">
             <span class="material-icons">preview</span> Предпросмотр
@@ -947,12 +1288,38 @@ const IMGBB_API_KEY = '82ba1ce293103084398ae828937d95d4';
 
 let currentUser = null;
 let uploadedImages = [];
+let selectedCategories = [];
 let isUploading = false;
-let selectedIdeology = '';
 let previewTimeout = null;
 
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
+
+function createUserInFirestore(user) {
+    return db.collection('users').doc(user.uid).get().then(doc => {
+        if (!doc.exists) {
+            let username = user.displayName || 'user_' + Date.now().toString(36);
+            username = username.toLowerCase().replace(/[^a-z0-9_.-]/g, '');
+            if (!username || username.length < 2) {
+                username = 'user_' + Date.now().toString(36);
+            }
+            return db.collection('users').doc(user.uid).set({
+                username: username,
+                displayName: user.displayName || username,
+                email: user.email || '',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                avatar: user.photoURL || null,
+                cover: null,
+                bio: '',
+                reputation: 0,
+                followers: [],
+                following: [],
+                theme: currentTheme
+            });
+        }
+        return doc;
+    });
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('themeToggle').addEventListener('click', () => {
@@ -964,6 +1331,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     loadUserData();
+    loadUserCommunities();
     setupEventListeners();
 });
 
@@ -977,18 +1345,11 @@ function setupEventListeners() {
 
     document.getElementById('postTitle').addEventListener('input', updatePreview);
     document.getElementById('postContent').addEventListener('input', updatePreview);
-    document.getElementById('textColor').addEventListener('input', updatePreview);
-    document.getElementById('bgColor').addEventListener('input', updatePreview);
-    document.getElementById('customCategory').addEventListener('input', updatePreview);
-
-    document.querySelectorAll('#ideologyGrid .ideology-item').forEach(el => {
-        el.addEventListener('click', function() {
-            document.querySelectorAll('#ideologyGrid .ideology-item').forEach(i => i.classList.remove('active'));
-            this.classList.add('active');
-            selectedIdeology = this.dataset.value;
-            document.getElementById('customCategory').value = '';
+    document.getElementById('customCategory').addEventListener('input', function() {
+        if (this.value.trim()) {
+            document.querySelectorAll('.subcategory-item.active').forEach(el => el.classList.remove('active'));
             updatePreview();
-        });
+        }
     });
 
     document.getElementById('imageUploadArea').addEventListener('click', () => {
@@ -1042,8 +1403,181 @@ function loadUserData() {
     }
 }
 
-auth.onAuthStateChanged(user => { loadUserData(); });
+auth.onAuthStateChanged(user => { 
+    loadUserData();
+    if (user) loadUserCommunities();
+});
 
+function loadUserCommunities() {
+    if (!currentUser) return;
+    
+    db.collection('communities')
+        .where('members', 'array-contains', currentUser.uid)
+        .get()
+        .then(snapshot => {
+            const select = document.getElementById('communitySelect');
+            // Оставляем только опцию "Без сообщества"
+            select.innerHTML = '<option value="">Без сообщества (опубликовать на главной)</option>';
+            
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const option = document.createElement('option');
+                option.value = doc.id;
+                option.textContent = data.name || data.handle || doc.id;
+                select.appendChild(option);
+            });
+        })
+        .catch(err => console.error('Load communities error:', err));
+}
+
+// ============================================================
+// CATEGORY TREE
+// ============================================================
+function toggleCategory(header) {
+    const subcategories = header.nextElementSibling;
+    const icon = header.querySelector('.material-icons:last-child');
+    if (subcategories) {
+        subcategories.classList.toggle('open');
+        icon.classList.toggle('expanded');
+    }
+}
+
+function selectSubcategory(el) {
+    el.classList.toggle('active');
+    const value = el.dataset.value;
+    const label = el.textContent.trim();
+    
+    if (el.classList.contains('active')) {
+        if (!selectedCategories.find(c => c.value === value)) {
+            selectedCategories.push({ value, label });
+        }
+    } else {
+        selectedCategories = selectedCategories.filter(c => c.value !== value);
+    }
+    
+    updateSelectedCategoriesDisplay();
+    document.getElementById('customCategory').value = '';
+    updatePreview();
+}
+
+function updateSelectedCategoriesDisplay() {
+    const container = document.getElementById('selectedCategories');
+    container.innerHTML = selectedCategories.map(c => `
+        <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--accent-light);border:1px solid var(--accent);border-radius:var(--radius);font-size:12px;color:var(--accent);">
+            ${c.label}
+            <span style="cursor:pointer;color:var(--text-muted);" onclick="removeCategory('${c.value}')">×</span>
+        </span>
+    `).join('');
+}
+
+function removeCategory(value) {
+    selectedCategories = selectedCategories.filter(c => c.value !== value);
+    document.querySelectorAll(`.subcategory-item[data-value="${value}"]`).forEach(el => el.classList.remove('active'));
+    updateSelectedCategoriesDisplay();
+    updatePreview();
+}
+
+// ============================================================
+// BBC TOOLBAR
+// ============================================================
+function insertBBC(tag) {
+    const textarea = document.getElementById('postContent');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = textarea.value.substring(start, end);
+    
+    let wrapped = '';
+    if (tag === 'b') wrapped = `[b]${selected}[/b]`;
+    else if (tag === 'i') wrapped = `[i]${selected}[/i]`;
+    else if (tag === 'u') wrapped = `[u]${selected}[/u]`;
+    else if (tag === 's') wrapped = `[s]${selected}[/s]`;
+    else if (tag === 'code') wrapped = `[code]${selected}[/code]`;
+    else if (tag === 'quote') wrapped = `[quote]${selected}[/quote]`;
+    else if (tag === 'spoiler') wrapped = `[spoiler]${selected}[/spoiler]`;
+    else if (tag.startsWith('size=')) wrapped = `[${tag}]${selected}[/size]`;
+    else wrapped = `[${tag}]${selected}[/${tag}]`;
+    
+    textarea.value = textarea.value.substring(0, start) + wrapped + textarea.value.substring(end);
+    textarea.focus();
+    textarea.selectionStart = start;
+    textarea.selectionEnd = start + wrapped.length;
+    updatePreview();
+}
+
+function insertColorBBC() {
+    const color = prompt('Введите цвет в HEX формате (например, #ff0000):');
+    if (color && /^#[0-9a-fA-F]{6}$/.test(color)) {
+        insertCustomBBC(`color=${color}`);
+    } else if (color) {
+        alert('Неверный формат. Используйте HEX: #RRGGBB');
+    }
+}
+
+function insertBgBBC() {
+    const color = prompt('Введите цвет фона в HEX формате (например, #ff0000):');
+    if (color && /^#[0-9a-fA-F]{6}$/.test(color)) {
+        insertCustomBBC(`bg=${color}`);
+    } else if (color) {
+        alert('Неверный формат. Используйте HEX: #RRGGBB');
+    }
+}
+
+function insertCustomBBC(tag) {
+    const textarea = document.getElementById('postContent');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = textarea.value.substring(start, end);
+    
+    const wrapped = `[${tag}]${selected}[/${tag.split('=')[0]}]`;
+    textarea.value = textarea.value.substring(0, start) + wrapped + textarea.value.substring(end);
+    textarea.focus();
+    textarea.selectionStart = start;
+    textarea.selectionEnd = start + wrapped.length;
+    updatePreview();
+}
+
+function insertLinkBBC() {
+    const url = prompt('Введите URL:');
+    if (url) {
+        const textarea = document.getElementById('postContent');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selected = textarea.value.substring(start, end) || 'ссылка';
+        const wrapped = `[url=${url}]${selected}[/url]`;
+        textarea.value = textarea.value.substring(0, start) + wrapped + textarea.value.substring(end);
+        textarea.focus();
+        textarea.selectionStart = start;
+        textarea.selectionEnd = start + wrapped.length;
+        updatePreview();
+    }
+}
+
+function insertImageBBC() {
+    const url = prompt('Введите URL изображения:');
+    if (url) {
+        const textarea = document.getElementById('postContent');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const wrapped = `[img]${url}[/img]`;
+        textarea.value = textarea.value.substring(0, start) + wrapped + textarea.value.substring(end);
+        textarea.focus();
+        textarea.selectionStart = start;
+        textarea.selectionEnd = start + wrapped.length;
+        updatePreview();
+    }
+}
+
+function resetColors() {
+    document.getElementById('textColor').value = '#e8e8e8';
+    document.getElementById('bgColor').value = '#1c1c1c';
+    document.getElementById('previewContent').style.color = '#e8e8e8';
+    document.getElementById('previewContent').style.background = '#1c1c1c';
+    updatePreview();
+}
+
+// ============================================================
+// IMAGE UPLOAD
+// ============================================================
 function handleImageUpload(files) {
     if (isUploading) return;
     if (uploadedImages.length + files.length > 20) {
@@ -1122,47 +1656,28 @@ function removeImage(index) {
     renderImagePreviews();
 }
 
-function formatText(type) {
-    const textarea = document.getElementById('postContent');
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selected = textarea.value.substring(start, end);
-    let wrapped = '';
-
-    switch(type) {
-        case 'bold': wrapped = `**${selected}**`; break;
-        case 'italic': wrapped = `*${selected}*`; break;
-        case 'underline': wrapped = `__${selected}__`; break;
-        case 'strikethrough': wrapped = `~~${selected}~~`; break;
-        case 'link': 
-            const url = prompt('Введите URL:');
-            if (url) wrapped = `[${selected || 'ссылка'}](${url})`;
-            else return;
-            break;
-        default: return;
-    }
-
-    textarea.value = textarea.value.substring(0, start) + wrapped + textarea.value.substring(end);
-    textarea.focus();
-    textarea.selectionStart = start;
-    textarea.selectionEnd = start + wrapped.length;
-    updatePreview();
-}
-
+// ============================================================
+// PREVIEW
+// ============================================================
 function updatePreview() {
     clearTimeout(previewTimeout);
     previewTimeout = setTimeout(() => {
         const title = document.getElementById('postTitle').value || 'Заголовок тейка';
         const content = document.getElementById('postContent').value || 'Текст тейка будет здесь...';
-        const textColor = document.getElementById('textColor').value;
-        const bgColor = document.getElementById('bgColor').value;
         const user = auth.currentUser;
-        const category = document.getElementById('customCategory').value.trim() || selectedIdeology;
-
-        document.getElementById('previewTitle').textContent = category ? `[${category}] ${title}` : title;
-        document.getElementById('previewContent').innerHTML = renderPreviewContent(content);
-        document.getElementById('previewContent').style.color = textColor;
-        document.getElementById('previewContent').style.background = bgColor;
+        
+        // Категории
+        let categoryText = '';
+        if (selectedCategories.length) {
+            categoryText = '[' + selectedCategories.map(c => c.label).join(', ') + '] ';
+        }
+        const customCat = document.getElementById('customCategory').value.trim();
+        if (customCat) {
+            categoryText = `[${customCat}] `;
+        }
+        
+        document.getElementById('previewTitle').textContent = categoryText + title;
+        document.getElementById('previewContent').innerHTML = parseBBCPreview(content);
         document.getElementById('previewContent').style.padding = '8px';
         document.getElementById('previewContent').style.borderRadius = 'var(--radius)';
 
@@ -1187,15 +1702,27 @@ function updatePreview() {
     }, 300);
 }
 
-function renderPreviewContent(text) {
+function parseBBCPreview(text) {
     if (!text) return '';
     let html = escapeHtml(text);
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    html = html.replace(/__(.*?)__/g, '<u>$1</u>');
-    html = html.replace(/~~(.*?)~~/g, '<s>$1</s>');
-    html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" style="color:var(--accent);">$1</a>');
-    html = html.replace(/@([a-zA-Z0-9_.-]+)/g, '<span class="mention">@$1</span>');
+    html = html.replace(/\[b\](.*?)\[\/b\]/g, '<strong>$1</strong>');
+    html = html.replace(/\[i\](.*?)\[\/i\]/g, '<em>$1</em>');
+    html = html.replace(/\[u\](.*?)\[\/u\]/g, '<u>$1</u>');
+    html = html.replace(/\[s\](.*?)\[\/s\]/g, '<s>$1</s>');
+    html = html.replace(/\[code\](.*?)\[\/code\]/g, '<code style="font-family:monospace;background:var(--bg-input);padding:2px 6px;border-radius:var(--radius);">$1</code>');
+    html = html.replace(/\[quote\](.*?)\[\/quote\]/g, '<div style="border-left:3px solid var(--accent);padding-left:12px;margin:4px 0;color:var(--text-secondary);">$1</div>');
+    html = html.replace(/\[spoiler\](.*?)\[\/spoiler\]/g, '<span style="background:var(--bg-hover);color:var(--bg-hover);cursor:pointer;padding:2px 6px;border-radius:var(--radius);">$1</span>');
+    html = html.replace(/\[size=small\](.*?)\[\/size\]/g, '<span style="font-size:12px;">$1</span>');
+    html = html.replace(/\[size=normal\](.*?)\[\/size\]/g, '<span style="font-size:15px;">$1</span>');
+    html = html.replace(/\[size=large\](.*?)\[\/size\]/g, '<span style="font-size:20px;">$1</span>');
+    html = html.replace(/\[size=huge\](.*?)\[\/size\]/g, '<span style="font-size:26px;">$1</span>');
+    html = html.replace(/\[color=(#[0-9a-fA-F]{6})\](.*?)\[\/color\]/g, '<span style="color:$1;">$2</span>');
+    html = html.replace(/\[bg=(#[0-9a-fA-F]{6})\](.*?)\[\/bg\]/g, '<span style="background:$1;padding:2px 4px;border-radius:var(--radius);">$2</span>');
+    html = html.replace(/\[url\](.*?)\[\/url\]/g, '<a href="$1" target="_blank" style="color:var(--accent);">$1</a>');
+    html = html.replace(/\[url=(.*?)\](.*?)\[\/url\]/g, '<a href="$1" target="_blank" style="color:var(--accent);">$2</a>');
+    html = html.replace(/\[img\](.*?)\[\/img\]/g, '<img src="$1" style="max-width:100%;max-height:200px;border-radius:var(--radius);margin:4px 0;" loading="lazy">');
+    html = html.replace(/@([a-zA-Z0-9_.-]+)/g, '<span style="color:var(--accent);font-weight:500;">@$1</span>');
+    html = html.replace(/\n/g, '<br>');
     return html;
 }
 
@@ -1206,6 +1733,9 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// ============================================================
+// PUBLISH
+// ============================================================
 function publishPost() {
     if (!currentUser) {
         alert('Войдите в аккаунт, чтобы опубликовать тейк');
@@ -1222,7 +1752,12 @@ function publishPost() {
     }
 
     const community = document.getElementById('communitySelect').value;
-    const category = document.getElementById('customCategory').value.trim() || selectedIdeology || 'other';
+    
+    let category = document.getElementById('customCategory').value.trim();
+    if (!category && selectedCategories.length) {
+        category = selectedCategories.map(c => c.label).join(', ');
+    }
+    if (!category) category = 'other';
 
     const btn = document.getElementById('publishBtn');
     btn.disabled = true;
@@ -1254,6 +1789,12 @@ function publishPost() {
                 shortId: shortId,
                 url: `/post/${shortId}`
             }).then(() => {
+                // Обновляем количество постов в сообществе
+                if (community) {
+                    db.collection('communities').doc(community).update({
+                        postsCount: firebase.firestore.FieldValue.increment(1)
+                    }).catch(() => {});
+                }
                 alert('Тейк успешно опубликован!');
                 window.location.href = `/post.html?id=${docRef.id}`;
             });
