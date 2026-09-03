@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Takean - Сообщества</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-card: #1c1c1c;
+            --bg-hover: #2a2a2a;
+            --bg-input: #252525;
+            --text-primary: #e8e8e8;
+            --text-secondary: #a0a0a0;
+            --text-muted: #6b6b6b;
+            --border-color: #2c2c2c;
+            --border-light: #3a3a3a;
+            --accent: #4f8cff;
+            --accent-hover: #6b9fff;
+            --accent-light: rgba(79, 140, 255, 0.15);
+            --green: #4caf50;
+            --red: #f44336;
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+            --radius: 4px;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --topbar-height: 60px;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f0f0f0;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-hover: #e8e8e8;
+            --bg-input: #f0f0f0;
+            --text-primary: #1a1a1a;
+            --text-secondary: #555555;
+            --text-muted: #888888;
+            --border-color: #e0e0e0;
+            --border-light: #d0d0d0;
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        html {
+            font-family: var(--font);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background 0.3s, color 0.3s;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: var(--radius); }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 0 16px; width: 100%; }
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .flex-center { display: flex; align-items: center; justify-content: center; }
+        .flex-between { display: flex; align-items: center; justify-content: space-between; }
+        .flex-col { display: flex; flex-direction: column; }
+        .gap-8 { gap: 8px; }
+        .gap-12 { gap: 12px; }
+        .gap-16 { gap: 16px; }
+        .gap-24 { gap: 24px; }
+        .text-center { text-align: center; }
+        .text-muted { color: var(--text-muted); }
+
+        @keyframes ripple {
+            0% { transform: scale(0); opacity: 0.4; }
+            100% { transform: scale(4); opacity: 0; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .animate-fade { animation: fadeIn 0.25s ease-out; }
+        .animate-slide { animation: slideUp 0.3s ease-out; }
+
+        /* ===== TOP BAR ===== */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 6px 0;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            min-height: var(--topbar-height);
+        }
+
+        .topbar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .topbar-logo {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+            text-decoration: none;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .topbar-logo span { color: var(--accent); }
+
+        .topbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .topbar-nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .topbar-nav a:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .topbar-nav a.active {
+            color: var(--accent);
+            background: var(--accent-light);
+        }
+
+        .topbar-nav a .material-icons { font-size: 20px; }
+        .topbar-nav a span:not(.material-icons) { display: inline; }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .topbar-actions .material-icons {
+            font-size: 22px;
+            color: var(--text-secondary);
+        }
+
+        .topbar-actions .avatar-small {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--bg-hover);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .topbar-actions .avatar-small:hover {
+            border-color: var(--accent);
+        }
+
+        .topbar-actions .avatar-small img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 0 8px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            max-width: 160px;
+        }
+
+        .search-bar:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        .search-bar input {
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 13px;
+            padding: 6px 6px;
+            width: 100%;
+            min-width: 60px;
+        }
+
+        .search-bar input::placeholder {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .search-bar .material-icons {
+            color: var(--text-muted);
+            font-size: 18px;
+        }
+
+        /* ===== RIPPLE BUTTON ===== */
+        .ripple-btn {
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: var(--font);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            transition: background 0.2s, transform 0.1s;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .ripple-btn .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(0);
+            animation: ripple 0.5s ease-out;
+            pointer-events: none;
+        }
+
+        [data-theme="light"] .ripple-btn .ripple-effect {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .ripple-btn:hover { background: var(--bg-hover); }
+        .ripple-btn:active { transform: scale(0.97); }
+
+        .ripple-btn.primary {
+            background: var(--accent);
+            color: #fff;
+        }
+        .ripple-btn.primary:hover { background: var(--accent-hover); }
+
+        .ripple-btn.outline {
+            border: 1px solid var(--border-color);
+        }
+        .ripple-btn.outline:hover { background: var(--bg-hover); }
+
+        /* ===== COMMUNITIES PAGE ===== */
+        .communities-page { padding: 16px 0 24px; }
+        .communities-page h1 { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+        .communities-page .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; }
+
+        .community-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .community-card:hover {
+            border-color: var(--accent);
+        }
+
+        .community-card .avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius);
+            background: var(--bg-hover);
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .community-card .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .community-card .info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .community-card .info .name {
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .community-card .info .handle {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .community-card .info .desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .community-card .info .stats {
+            display: flex;
+            gap: 16px;
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .community-card .info .stats span .num {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .community-card .join-btn {
+            flex-shrink: 0;
+        }
+
+        /* ===== CREATE COMMUNITY MODAL ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            animation: fadeIn 0.2s ease-out;
+            padding: 16px;
+        }
+
+        .modal-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 28px 32px;
+            max-width: 480px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.25s ease-out;
+        }
+
+        .modal-box .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .modal-box .modal-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .modal-box .modal-header .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 24px;
+            padding: 4px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .modal-box .modal-header .close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-box .field {
+            margin-bottom: 16px;
+        }
+
+        .modal-box .field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .modal-box .field input,
+        .modal-box .field textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .modal-box .field input:focus,
+        .modal-box .field textarea:focus {
+            border-color: var(--accent);
+        }
+
+        .modal-box .field textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .modal-box .field .input-prefix {
+            display: flex;
+            align-items: center;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .modal-box .field .input-prefix span {
+            padding: 10px 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+            background: var(--bg-hover);
+            border-right: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .modal-box .field .input-prefix input {
+            border: none;
+            border-radius: 0;
+            background: none;
+            padding: 10px 12px;
+            width: 100%;
+            outline: none;
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 14px;
+        }
+
+        .modal-box .field .input-prefix input:focus {
+            border-color: transparent;
+            box-shadow: none;
+        }
+
+        .modal-box .field .input-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .modal-box .field .input-hint .material-icons {
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        .modal-box .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 16px;
+        }
+
+        .modal-box .modal-actions .ripple-btn {
+            padding: 8px 24px;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            margin-top: auto;
+            padding: 30px 0 16px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+
+        .footer-inner {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .footer-brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .footer-brand span { color: var(--accent); }
+
+        .footer-links {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover { color: var(--accent); }
+
+        .footer-copy {
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-top: 12px;
+            text-align: center;
+            width: 100%;
+        }
+
+        /* ===== LOADING ===== */
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .loading-spinner .material-icons {
+            animation: spin 1s linear infinite;
+            font-size: 28px;
+            margin-right: 10px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state .material-icons {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--red);
+            border: 1px solid var(--red);
+            border-radius: var(--radius);
+            background: rgba(244, 67, 54, 0.05);
+        }
+
+        .error-state .material-icons {
+            font-size: 36px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .error-state .error-details {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 992px) {
+            .search-bar { max-width: 120px; }
+            .search-bar input { min-width: 50px; font-size: 12px; }
+            .topbar-nav a { padding: 4px 8px; font-size: 12px; }
+            .topbar-nav a .material-icons { font-size: 18px; }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 0 10px; }
+            .topbar-logo { font-size: 17px; }
+            .topbar-nav a span:not(.material-icons) { display: none; }
+            .topbar-nav a { padding: 6px 8px; }
+            .topbar-nav a .material-icons { font-size: 20px; }
+            .search-bar { max-width: 100px; }
+            .search-bar input { min-width: 40px; width: 40px; font-size: 11px; }
+            .communities-page h1 { font-size: 20px; }
+            .community-card { padding: 12px 14px; flex-wrap: wrap; }
+            .community-card .avatar { width: 44px; height: 44px; font-size: 18px; }
+            .community-card .info .name { font-size: 15px; }
+            .community-card .join-btn { width: 100%; }
+            .community-card .join-btn .ripple-btn { width: 100%; justify-content: center; }
+            .footer-inner { flex-direction: column; align-items: center; text-align: center; }
+            .modal-box { padding: 20px; margin: 8px; }
+        }
+
+        @media (max-width: 480px) {
+            .topbar { padding: 4px 0; }
+            .topbar-logo { font-size: 15px; }
+            .topbar-nav a { padding: 4px 6px; }
+            .topbar-nav a .material-icons { font-size: 18px; }
+            .search-bar { max-width: 70px; }
+            .search-bar input { min-width: 30px; width: 30px; padding: 4px 4px; font-size: 10px; }
+            .topbar-actions .avatar-small { width: 26px; height: 26px; font-size: 10px; }
+            .topbar-actions .material-icons { font-size: 18px; }
+            .communities-page h1 { font-size: 18px; }
+            .community-card { padding: 10px 12px; }
+            .community-card .avatar { width: 36px; height: 36px; font-size: 14px; }
+            .community-card .info .name { font-size: 14px; }
+            .modal-box { padding: 16px; }
+            .modal-box .modal-header h2 { font-size: 18px; }
+            .modal-box .field input { font-size: 13px; padding: 8px 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="topbar">
+    <div class="container">
+        <div class="topbar-inner">
+            <a href="/" class="topbar-logo">Take<span>an</span></a>
+            
+            <nav class="topbar-nav">
+                <a href="/">
+                    <span class="material-icons">home</span>
+                    <span>Главная</span>
+                </a>
+                <a href="/search.html">
+                    <span class="material-icons">search</span>
+                    <span>Поиск</span>
+                </a>
+                <a href="/create.html">
+                    <span class="material-icons">add_box</span>
+                    <span>Создать</span>
+                </a>
+                <a href="/communities.html" class="active">
+                    <span class="material-icons">group</span>
+                    <span>Сообщества</span>
+                </a>
+            </nav>
+
+            <div class="topbar-actions">
+                <div class="search-bar">
+                    <span class="material-icons">search</span>
+                    <input type="text" placeholder="Поиск..." id="globalSearch">
+                </div>
+                
+                <button class="ripple-btn" id="themeToggle" aria-label="Переключить тему" style="padding:4px 6px;">
+                    <span class="material-icons">dark_mode</span>
+                </button>
+
+                <div class="avatar-small" id="userAvatar">
+                    <span>?</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="container communities-page" style="flex:1;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+        <div>
+            <h1>Сообщества</h1>
+            <p class="subtitle" style="margin-bottom:0;">Присоединяйтесь к сообществам по интересам</p>
+        </div>
+        <button class="ripple-btn primary" onclick="openCreateCommunityModal()">
+            <span class="material-icons">add</span> Создать сообщество
+        </button>
+    </div>
+
+    <div id="communitiesContainer">
+        <div class="loading-spinner">
+            <span class="material-icons">refresh</span> Загрузка...
+        </div>
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <div class="footer-inner">
+            <div>
+                <div class="footer-brand">Take<span>an</span></div>
+                <div style="color: var(--text-muted); font-size: 13px; margin-top: 2px;">
+                    Платформа для тейков
+                </div>
+            </div>
+            <div class="footer-links">
+                <a href="/settings.html">Настройки</a>
+                <a href="#" onclick="alert('Страница в разработке')">Политика конфиденциальности</a>
+                <a href="#" onclick="alert('Страница в разработке')">Задать вопрос</a>
+                <a href="/404.html">404</a>
+            </div>
+        </div>
+        <div class="footer-copy">
+            &copy; 2026 Takean. Все права защищены.
+        </div>
+    </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyBDzDIwiObevnlfqfm6p9fzAvsHHpT2QZU",
+    authDomain: "takean.firebaseapp.com",
+    projectId: "takean",
+    storageBucket: "takean.firebasestorage.app",
+    messagingSenderId: "359116659063",
+    appId: "1:359116659063:web:eb81859e5a8f885e546972",
+    measurementId: "G-VXLM679GKK"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+let currentUser = null;
+let communities = [];
+
+let currentTheme = localStorage.getItem('takean-theme') || 'dark';
+document.documentElement.setAttribute('data-theme', currentTheme);
+
+function createUserInFirestore(user) {
+    return db.collection('users').doc(user.uid).get().then(doc => {
+        if (!doc.exists) {
+            let username = user.displayName || 'user_' + Date.now().toString(36);
+            username = username.toLowerCase().replace(/[^a-z0-9_.-]/g, '');
+            if (!username || username.length < 2) {
+                username = 'user_' + Date.now().toString(36);
+            }
+            return db.collection('users').doc(user.uid).set({
+                username: username,
+                displayName: user.displayName || username,
+                email: user.email || '',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                avatar: user.photoURL || null,
+                cover: null,
+                bio: '',
+                reputation: 0,
+                followers: [],
+                following: [],
+                theme: currentTheme
+            });
+        }
+        return doc;
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('themeToggle').addEventListener('click', () => {
+        currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        localStorage.setItem('takean-theme', currentTheme);
+        document.getElementById('themeToggle').innerHTML = 
+            `<span class="material-icons">${currentTheme === 'dark' ? 'dark_mode' : 'light_mode'}</span>`;
+    });
+
+    loadUserData();
+    loadCommunities();
+    setupEventListeners();
+});
+
+function setupEventListeners() {
+    document.getElementById('globalSearch').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const q = document.getElementById('globalSearch').value.trim();
+            if (q) window.location.href = `/search.html?q=${encodeURIComponent(q)}`;
+        }
+    });
+}
+
+function loadUserData() {
+    const user = auth.currentUser;
+    currentUser = user;
+    
+    const avatarEl = document.getElementById('userAvatar');
+    if (user) {
+        avatarEl.innerHTML = user.photoURL 
+            ? `<img src="${user.photoURL}" alt="avatar">` 
+            : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
+        avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+        createUserInFirestore(user).catch(err => console.error('Error creating user:', err));
+    } else {
+        avatarEl.innerHTML = '<span>?</span>';
+        avatarEl.onclick = () => window.location.href = '/login.html';
+    }
+}
+
+auth.onAuthStateChanged(user => { loadUserData(); });
+
+function loadCommunities() {
+    const container = document.getElementById('communitiesContainer');
+    container.innerHTML = '<div class="loading-spinner"><span class="material-icons">refresh</span> Загрузка...</div>';
+
+    db.collection('communities')
+        .orderBy('memberCount', 'desc')
+        .limit(50)
+        .get()
+        .then(snapshot => {
+            communities = [];
+            snapshot.forEach(doc => {
+                communities.push({ id: doc.id, ...doc.data() });
+            });
+            renderCommunities(communities);
+        })
+        .catch(err => {
+            console.error('Load communities error:', err);
+            container.innerHTML = `
+                <div class="error-state">
+                    <span class="material-icons">error</span>
+                    <h3 style="font-weight:500;">Ошибка загрузки сообществ</h3>
+                    <div class="error-details">${err.message}</div>
+                    <button class="ripple-btn primary" style="margin-top:12px;" onclick="loadCommunities()">
+                        <span class="material-icons">refresh</span> Повторить
+                    </button>
+                </div>
+            `;
+        });
+}
+
+function renderCommunities(communitiesList) {
+    const container = document.getElementById('communitiesContainer');
+    
+    if (!communitiesList || !communitiesList.length) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <span class="material-icons">group_off</span>
+                <h3 style="font-weight:500;">Нет сообществ</h3>
+                <p style="font-size:14px;">Будьте первым, кто создаст сообщество!</p>
+                <button class="ripple-btn primary" style="margin-top:12px;" onclick="openCreateCommunityModal()">
+                    <span class="material-icons">add</span> Создать сообщество
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = communitiesList.map(community => {
+        const isMember = currentUser && community.members && community.members.includes(currentUser.uid);
+        const displayName = community.name || community.id || 'Сообщество';
+        
+        return `
+            <div class="community-card" onclick="window.location.href='/community.html?id=${community.id}'">
+                <div class="avatar">
+                    ${community.avatar ? `<img src="${community.avatar}" alt="">` : `<span class="material-icons" style="font-size:28px;">group</span>`}
+                </div>
+                <div class="info">
+                    <div class="name">${escapeHtml(displayName)}</div>
+                    <div class="handle">@${escapeHtml(community.handle || community.id)}</div>
+                    <div class="desc">${escapeHtml(community.description || 'Нет описания')}</div>
+                    <div class="stats">
+                        <span><span class="num">${community.memberCount || 0}</span> участников</span>
+                        <span><span class="num">${community.postsCount || 0}</span> тейков</span>
+                    </div>
+                </div>
+                <div class="join-btn" onclick="event.stopPropagation();">
+                    ${isMember ? `
+                        <button class="ripple-btn outline" onclick="toggleJoinCommunity('${community.id}')" style="font-size:12px;padding:4px 12px;">
+                            Выйти
+                        </button>
+                    ` : `
+                        <button class="ripple-btn primary" onclick="toggleJoinCommunity('${community.id}')" style="font-size:12px;padding:4px 12px;">
+                            <span class="material-icons" style="font-size:16px;">add</span> Вступить
+                        </button>
+                    `}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function toggleJoinCommunity(communityId) {
+    if (!currentUser) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    const community = communities.find(c => c.id === communityId);
+    if (!community) return;
+    
+    const isMember = community.members && community.members.includes(currentUser.uid);
+    const ref = db.collection('communities').doc(communityId);
+    
+    db.runTransaction(transaction => {
+        return transaction.get(ref).then(doc => {
+            if (!doc.exists) return;
+            const data = doc.data();
+            let members = data.members || [];
+            
+            if (isMember) {
+                members = members.filter(id => id !== currentUser.uid);
+            } else {
+                members.push(currentUser.uid);
+            }
+            
+            transaction.update(ref, {
+                members: members,
+                memberCount: members.length
+            });
+        });
+    }).then(() => {
+        if (isMember) {
+            community.members = (community.members || []).filter(id => id !== currentUser.uid);
+        } else {
+            community.members = [...(community.members || []), currentUser.uid];
+        }
+        community.memberCount = community.members.length;
+        renderCommunities(communities);
+    }).catch(err => alert('Ошибка: ' + err.message));
+}
+
+function openCreateCommunityModal() {
+    if (!currentUser) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>Создать сообщество</h2>
+                <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
+            </div>
+            <div class="field">
+                <label>Название сообщества</label>
+                <div class="input-prefix">
+                    <span>@</span>
+                    <input type="text" id="communityHandle" placeholder="community_name" 
+                           oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9_.-]/g, '')">
+                </div>
+                <div class="input-hint">
+                    <span class="material-icons">info</span> Только латиница, цифры, _ . -
+                </div>
+            </div>
+            <div class="field">
+                <label>Отображаемое название</label>
+                <input type="text" id="communityName" placeholder="Название сообщества">
+            </div>
+            <div class="field">
+                <label>Описание</label>
+                <textarea id="communityDesc" placeholder="Опишите сообщество..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="ripple-btn outline" onclick="this.closest('.modal-overlay').remove()">Отмена</button>
+                <button class="ripple-btn primary" id="createCommunityBtn">Создать</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    document.getElementById('createCommunityBtn').addEventListener('click', function() {
+        const handle = document.getElementById('communityHandle').value.trim();
+        const name = document.getElementById('communityName').value.trim();
+        const description = document.getElementById('communityDesc').value.trim();
+        
+        if (!handle || handle.length < 2) {
+            alert('Идентификатор сообщества должен быть минимум 2 символа');
+            return;
+        }
+        if (!name) {
+            alert('Введите название сообщества');
+            return;
+        }
+        if (!/^[a-z0-9_.-]+$/.test(handle)) {
+            alert('Идентификатор может содержать только латиницу, цифры, _ . -');
+            return;
+        }
+        
+        this.disabled = true;
+        this.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Создание...';
+        
+        // Проверяем уникальность
+        db.collection('communities').where('handle', '==', handle).get()
+            .then(snapshot => {
+                if (!snapshot.empty) {
+                    alert('Сообщество с таким идентификатором уже существует');
+                    this.disabled = false;
+                    this.innerHTML = 'Создать';
+                    return Promise.reject('exists');
+                }
+                return db.collection('communities').add({
+                    handle: handle,
+                    name: name,
+                    description: description || 'Нет описания',
+                    ownerId: currentUser.uid,
+                    ownerName: currentUser.displayName || 'Аноним',
+                    members: [currentUser.uid],
+                    memberCount: 1,
+                    postsCount: 0,
+                    avatar: null,
+                    cover: null,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            })
+            .then(docRef => {
+                if (docRef) {
+                    modal.remove();
+                    alert('Сообщество создано!');
+                    loadCommunities();
+                }
+            })
+            .catch(err => {
+                if (err !== 'exists') {
+                    alert('Ошибка: ' + err.message);
+                    this.disabled = false;
+                    this.innerHTML = 'Создать';
+                }
+            });
+    });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+console.log('👥 Communities page loaded');
+</script>
+</body>
+</html>
