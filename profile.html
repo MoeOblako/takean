@@ -4,23 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- ===== OPEN GRAPH (фиксированные для краулеров) ===== -->
-    <meta property="og:title" content="Takean - Профиль">
-    <meta property="og:description" content="Профиль пользователя на Takean">
-    <meta property="og:image" content="https://takean.pages.dev/og-image.png">
-    <meta property="og:url" content="https://takean.pages.dev/profile.html">
+    <!-- ===== OPEN GRAPH ===== -->
+    <meta property="og:title" id="ogTitleMeta" content="Профиль пользователя">
+    <meta property="og:description" id="ogDescriptionMeta" content="Профиль пользователя на Takean">
+    <meta property="og:image" id="ogImageMeta" content="">
+    <meta property="og:url" id="ogUrlMeta" content="">
     <meta property="og:type" content="profile">
     <meta property="og:site_name" content="Takean">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Takean - Профиль">
-    <meta name="twitter:description" content="Профиль пользователя на Takean">
-    <meta name="twitter:image" content="https://takean.pages.dev/og-image.png">
+    <meta name="twitter:title" id="twitterTitle" content="Профиль пользователя">
+    <meta name="twitter:description" id="twitterDescription" content="Профиль пользователя на Takean">
+    <meta name="twitter:image" id="twitterImage" content="">
     
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
-        /* ===== ВСЕ СТИЛИ КАК РАНЬШЕ ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -317,7 +316,7 @@
 
         .profile-cover {
             width: 100%;
-            height: 160px;
+            height: 180px;
             background: linear-gradient(135deg, var(--bg-hover), var(--border-color));
             position: relative;
             overflow: hidden;
@@ -329,22 +328,25 @@
             object-fit: cover;
         }
 
-        .profile-cover .cover-edit {
+        .profile-cover .cover-overlay {
             position: absolute;
-            bottom: 8px;
-            right: 8px;
-            background: rgba(0,0,0,0.6);
-            border: none;
-            color: #fff;
-            padding: 4px 12px;
-            border-radius: var(--radius);
-            font-size: 12px;
-            cursor: pointer;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
             display: flex;
             align-items: center;
-            gap: 4px;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+            cursor: pointer;
+        }
+
+        .profile-cover:hover .cover-overlay {
+            opacity: 1;
+        }
+
+        .profile-cover .cover-overlay .material-icons {
+            font-size: 40px;
+            color: #fff;
         }
 
         .profile-info {
@@ -355,6 +357,7 @@
         .profile-avatar-wrap {
             margin-top: -60px;
             margin-bottom: 12px;
+            position: relative;
         }
 
         .profile-avatar {
@@ -380,21 +383,25 @@
             object-fit: cover;
         }
 
-        .profile-avatar .avatar-edit {
+        .profile-avatar .avatar-overlay {
             position: absolute;
             inset: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.5);
             display: flex;
             align-items: center;
             justify-content: center;
             opacity: 0;
-            transition: opacity 0.2s;
-            color: #fff;
+            transition: opacity 0.3s;
             border-radius: 50%;
         }
 
-        .profile-avatar:hover .avatar-edit {
+        .profile-avatar:hover .avatar-overlay {
             opacity: 1;
+        }
+
+        .profile-avatar .avatar-overlay .material-icons {
+            font-size: 28px;
+            color: #fff;
         }
 
         .profile-name {
@@ -591,12 +598,6 @@
             overflow: hidden;
         }
 
-        .post-content .mention {
-            color: var(--accent);
-            font-weight: 500;
-            cursor: pointer;
-        }
-
         .post-images {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -653,13 +654,13 @@
         .post-action-btn:hover { background: var(--bg-hover); }
         .post-action-btn .material-icons { font-size: 18px; }
 
-        /* ===== MODAL ===== */
+        /* ===== MODAL EDIT ===== */
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -672,30 +673,264 @@
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: var(--radius);
-            padding: 24px;
-            max-width: 500px;
+            padding: 28px 32px;
+            max-width: 520px;
             width: 100%;
-            max-height: 80vh;
+            max-height: 90vh;
             overflow-y: auto;
             animation: slideUp 0.25s ease-out;
         }
 
-        .modal-box .close-modal {
-            float: right;
+        .modal-box .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .modal-box .modal-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .modal-box .modal-header .close-btn {
             background: none;
             border: none;
             color: var(--text-muted);
             cursor: pointer;
             font-size: 24px;
+            padding: 4px;
             -webkit-tap-highlight-color: transparent;
         }
 
-        .modal-box h3 {
-            font-size: 20px;
-            font-weight: 700;
+        .modal-box .modal-header .close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        /* Avatar & Cover upload in modal */
+        .edit-media-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .edit-avatar-box {
+            text-align: center;
+        }
+
+        .edit-avatar-box .preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--bg-hover);
+            overflow: hidden;
+            margin: 0 auto 8px;
+            border: 2px solid var(--border-color);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .edit-avatar-box .preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .edit-avatar-box .preview .empty-avatar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .edit-avatar-box .preview .upload-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .edit-avatar-box .preview:hover .upload-overlay {
+            opacity: 1;
+        }
+
+        .edit-avatar-box .preview .upload-overlay .material-icons {
+            font-size: 28px;
+            color: #fff;
+        }
+
+        .edit-avatar-box .label {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .edit-cover-box {
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .edit-cover-box .preview {
+            width: 100%;
+            height: 80px;
+            background: var(--bg-hover);
+            overflow: hidden;
+            border-radius: var(--radius);
+            margin: 0 auto 8px;
+            border: 2px solid var(--border-color);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .edit-cover-box .preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .edit-cover-box .preview .empty-cover {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .edit-cover-box .preview .upload-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .edit-cover-box .preview:hover .upload-overlay {
+            opacity: 1;
+        }
+
+        .edit-cover-box .preview .upload-overlay .material-icons {
+            font-size: 28px;
+            color: #fff;
+        }
+
+        .edit-cover-box .label {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .edit-field {
             margin-bottom: 16px;
         }
 
+        .edit-field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .edit-field input,
+        .edit-field textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .edit-field input:focus,
+        .edit-field textarea:focus {
+            border-color: var(--accent);
+        }
+
+        .edit-field textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .edit-field .input-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .edit-field .input-hint .material-icons {
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        .edit-field .input-prefix {
+            display: flex;
+            align-items: center;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .edit-field .input-prefix span {
+            padding: 10px 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+            background: var(--bg-hover);
+            border-right: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .edit-field .input-prefix input {
+            border: none;
+            border-radius: 0;
+            background: none;
+            padding: 10px 12px;
+            width: 100%;
+            outline: none;
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 14px;
+        }
+
+        .edit-field .input-prefix input:focus {
+            border-color: transparent;
+            box-shadow: none;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 16px;
+        }
+
+        .modal-actions .ripple-btn {
+            padding: 8px 24px;
+        }
+
+        /* ===== MODAL FOLLOWERS ===== */
         .modal-user-item {
             display: flex;
             align-items: center;
@@ -843,6 +1078,9 @@
             .post-title { font-size: 15px; }
             .post-images { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
             .footer-inner { flex-direction: column; align-items: center; text-align: center; }
+            .modal-box { padding: 20px; margin: 8px; }
+            .edit-media-row { flex-direction: column; align-items: center; }
+            .edit-cover-box { width: 100%; }
         }
 
         @media (max-width: 480px) {
@@ -864,8 +1102,8 @@
             .post-title { font-size: 14px; }
             .post-content { font-size: 13px; }
             .post-avatar { width: 30px; height: 30px; font-size: 12px; }
-            .modal-box { padding: 16px; margin: 8px; }
-            .modal-user-item { padding: 8px 0; }
+            .modal-box { padding: 16px; }
+            .modal-box .modal-header h2 { font-size: 18px; }
         }
     </style>
 </head>
@@ -972,11 +1210,18 @@ document.documentElement.setAttribute('data-theme', currentTheme);
 function createUserInFirestore(user) {
     return db.collection('users').doc(user.uid).get().then(doc => {
         if (!doc.exists) {
+            let username = user.displayName || 'user_' + Date.now().toString(36);
+            // Очищаем username: только латиница, цифры, _ . -
+            username = username.toLowerCase().replace(/[^a-z0-9_.-]/g, '');
+            if (!username || username.length < 2) {
+                username = 'user_' + Date.now().toString(36);
+            }
             return db.collection('users').doc(user.uid).set({
-                username: user.displayName || 'user_' + Date.now().toString(36),
+                username: username,
                 email: user.email || '',
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 avatar: user.photoURL || null,
+                cover: null,
                 bio: '',
                 reputation: 0,
                 followers: [],
@@ -997,11 +1242,9 @@ document.addEventListener('DOMContentLoaded', () => {
             `<span class="material-icons">${currentTheme === 'dark' ? 'dark_mode' : 'light_mode'}</span>`;
     });
 
-    // Получаем uid из URL
     const urlParams = new URLSearchParams(window.location.search);
     profileUserId = urlParams.get('uid');
     
-    // Если нет uid в URL, пробуем взять текущего пользователя
     if (!profileUserId) {
         const user = auth.currentUser;
         if (user) {
@@ -1047,8 +1290,6 @@ function loadUserData() {
             ? `<img src="${user.photoURL}" alt="avatar">` 
             : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
         avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
-        
-        // Гарантируем создание пользователя в Firestore
         createUserInFirestore(user).catch(err => console.error('Error creating user:', err));
     } else {
         avatarEl.innerHTML = '<span>?</span>';
@@ -1085,7 +1326,6 @@ function loadProfile(uid) {
             }
             profileUser = { id: doc.id, ...doc.data() };
             
-            // Обновляем OG мета-теги динамически через JS
             const username = profileUser.username || 'Пользователь';
             const bio = profileUser.bio || 'Профиль пользователя на Takean';
             const avatar = profileUser.avatar || '';
@@ -1093,7 +1333,6 @@ function loadProfile(uid) {
             
             document.title = `${username} | Takean`;
             
-            // Динамически обновляем OG мета-теги
             updateOGTags({
                 title: username,
                 description: bio.substring(0, 160),
@@ -1119,10 +1358,8 @@ function loadProfile(uid) {
         });
 }
 
-// ===== ФУНКЦИЯ ОБНОВЛЕНИЯ OG ТЕГОВ =====
 function updateOGTags(data) {
-    // Обновляем мета-теги
-    const metaTags = {
+    const metaMap = {
         'og:title': data.title,
         'og:description': data.description,
         'og:image': data.image || 'https://takean.pages.dev/og-image.png',
@@ -1132,7 +1369,7 @@ function updateOGTags(data) {
         'twitter:image': data.image || 'https://takean.pages.dev/og-image.png'
     };
     
-    for (const [property, content] of Object.entries(metaTags)) {
+    for (const [property, content] of Object.entries(metaMap)) {
         let meta = document.querySelector(`meta[property="${property}"]`);
         if (!meta) {
             meta = document.querySelector(`meta[name="${property}"]`);
@@ -1140,11 +1377,6 @@ function updateOGTags(data) {
         if (meta) {
             meta.setAttribute('content', content);
         }
-    }
-    
-    // Обновляем title
-    if (data.title) {
-        document.title = `${data.title} | Takean`;
     }
 }
 
@@ -1156,20 +1388,24 @@ function renderProfile(user) {
     
     container.innerHTML = `
         <div class="profile-header">
-            <div class="profile-cover">
-                ${user.cover ? `<img src="${user.cover}" alt="cover">` : ''}
+            <div class="profile-cover" id="profileCover">
+                ${user.cover ? `<img src="${user.cover}" alt="cover" id="coverImage">` : ''}
                 ${isOwn ? `
-                    <button class="cover-edit" onclick="changeCover()">
-                        <span class="material-icons" style="font-size:16px;">photo_camera</span> Изменить
-                    </button>
+                    <div class="cover-overlay" onclick="openEditModal()">
+                        <span class="material-icons">photo_camera</span>
+                    </div>
                 ` : ''}
             </div>
             
             <div class="profile-info">
                 <div class="profile-avatar-wrap">
-                    <div class="profile-avatar" onclick="${isOwn ? 'changeAvatar()' : ''}">
-                        ${user.avatar ? `<img src="${user.avatar}" alt="avatar">` : `<span>${(user.username || '?')[0].toUpperCase()}</span>`}
-                        ${isOwn ? `<div class="avatar-edit"><span class="material-icons">photo_camera</span></div>` : ''}
+                    <div class="profile-avatar" id="profileAvatar" ${isOwn ? `onclick="openEditModal()"` : ''}>
+                        ${user.avatar ? `<img src="${user.avatar}" alt="avatar" id="avatarImage">` : `<span>${(user.username || '?')[0].toUpperCase()}</span>`}
+                        ${isOwn ? `
+                            <div class="avatar-overlay">
+                                <span class="material-icons">photo_camera</span>
+                            </div>
+                        ` : ''}
                     </div>
                 </div>
                 
@@ -1201,15 +1437,13 @@ function renderProfile(user) {
                             ${isFollowing ? 'Отписаться' : 'Подписаться'}
                         </button>
                     ` : `
+                        <button class="ripple-btn primary" onclick="openEditModal()">
+                            <span class="material-icons">edit</span> Изменить профиль
+                        </button>
                         <button class="ripple-btn outline" onclick="window.location.href='/settings.html'">
                             <span class="material-icons">settings</span> Настройки
                         </button>
                     `}
-                    ${isOwn ? `
-                        <button class="ripple-btn outline" onclick="editProfile()">
-                            <span class="material-icons">edit</span> Редактировать
-                        </button>
-                    ` : ''}
                 </div>
             </div>
         </div>
@@ -1235,6 +1469,181 @@ function renderProfile(user) {
             else if (tab === 'likes') loadUserLikes(user.id);
         });
     });
+}
+
+// ============================================================
+// EDIT MODAL
+// ============================================================
+function openEditModal() {
+    if (!currentUser || !profileUser) return;
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'editModal';
+    
+    const username = profileUser.username || '';
+    const bio = profileUser.bio || '';
+    const avatar = profileUser.avatar || '';
+    const cover = profileUser.cover || '';
+    
+    modal.innerHTML = `
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>Редактировать профиль</h2>
+                <button class="close-btn" onclick="closeEditModal()">×</button>
+            </div>
+            
+            <div class="edit-media-row">
+                <div class="edit-avatar-box">
+                    <div class="preview" id="editAvatarPreview" onclick="document.getElementById('avatarInput').click()">
+                        ${avatar ? `<img src="${avatar}" alt="avatar">` : `<div class="empty-avatar">${(username || '?')[0].toUpperCase()}</div>`}
+                        <div class="upload-overlay">
+                            <span class="material-icons">photo_camera</span>
+                        </div>
+                    </div>
+                    <div class="label">Аватар</div>
+                    <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
+                </div>
+                
+                <div class="edit-cover-box">
+                    <div class="preview" id="editCoverPreview" onclick="document.getElementById('coverInput').click()">
+                        ${cover ? `<img src="${cover}" alt="cover">` : `<div class="empty-cover">Шапка профиля</div>`}
+                        <div class="upload-overlay">
+                            <span class="material-icons">photo_camera</span>
+                        </div>
+                    </div>
+                    <div class="label">Шапка</div>
+                    <input type="file" id="coverInput" accept="image/*" style="display:none;" onchange="handleCoverUpload(event)">
+                </div>
+            </div>
+            
+            <div class="edit-field">
+                <label>Имя пользователя</label>
+                <div class="input-prefix">
+                    <span>@</span>
+                    <input type="text" id="editUsername" value="${escapeHtml(username)}" 
+                           placeholder="username" 
+                           oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9_.-]/g, '')">
+                </div>
+                <div class="input-hint">
+                    <span class="material-icons">info</span> Только латиница, цифры, _ . -
+                </div>
+            </div>
+            
+            <div class="edit-field">
+                <label>Описание</label>
+                <textarea id="editBio" placeholder="Расскажите о себе...">${escapeHtml(bio)}</textarea>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="ripple-btn outline" onclick="closeEditModal()">Отмена</button>
+                <button class="ripple-btn primary" onclick="saveProfileChanges()">
+                    <span class="material-icons">save</span> Сохранить
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function closeEditModal() {
+    const modal = document.getElementById('editModal');
+    if (modal) modal.remove();
+}
+
+function handleAvatarUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const preview = document.getElementById('editAvatarPreview');
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        preview.innerHTML = `
+            <img src="${e.target.result}" alt="avatar">
+            <div class="upload-overlay">
+                <span class="material-icons">photo_camera</span>
+            </div>
+        `;
+    };
+    reader.readAsDataURL(file);
+    
+    // Сохраняем файл для загрузки
+    window._avatarFile = file;
+}
+
+function handleCoverUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const preview = document.getElementById('editCoverPreview');
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        preview.innerHTML = `
+            <img src="${e.target.result}" alt="cover">
+            <div class="upload-overlay">
+                <span class="material-icons">photo_camera</span>
+            </div>
+        `;
+    };
+    reader.readAsDataURL(file);
+    
+    window._coverFile = file;
+}
+
+function saveProfileChanges() {
+    const username = document.getElementById('editUsername').value.trim();
+    const bio = document.getElementById('editBio').value.trim();
+    
+    if (!username || username.length < 2) {
+        alert('Имя пользователя должно быть минимум 2 символа');
+        return;
+    }
+    
+    const btn = document.querySelector('#editModal .modal-actions .ripple-btn.primary');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
+    
+    let updates = { username: username, bio: bio };
+    let uploadPromises = [];
+    
+    // Загрузка аватара
+    if (window._avatarFile) {
+        const avatarRef = storage.ref(`avatars/${currentUser.uid}`);
+        const promise = avatarRef.put(window._avatarFile)
+            .then(snapshot => snapshot.ref.getDownloadURL())
+            .then(url => {
+                updates.avatar = url;
+                return currentUser.updateProfile({ photoURL: url });
+            });
+        uploadPromises.push(promise);
+    }
+    
+    // Загрузка шапки
+    if (window._coverFile) {
+        const coverRef = storage.ref(`covers/${currentUser.uid}`);
+        const promise = coverRef.put(window._coverFile)
+            .then(snapshot => snapshot.ref.getDownloadURL())
+            .then(url => {
+                updates.cover = url;
+            });
+        uploadPromises.push(promise);
+    }
+    
+    Promise.all(uploadPromises)
+        .then(() => {
+            return db.collection('users').doc(currentUser.uid).update(updates);
+        })
+        .then(() => {
+            closeEditModal();
+            loadProfile(profileUserId);
+            alert('Профиль обновлён!');
+        })
+        .catch(err => {
+            alert('Ошибка: ' + err.message);
+            btn.disabled = false;
+            btn.innerHTML = '<span class="material-icons">save</span> Сохранить';
+        });
 }
 
 function loadUserPosts(uid) {
@@ -1376,8 +1785,8 @@ function showFollowers(type) {
     modal.className = 'modal-overlay';
     modal.innerHTML = `
         <div class="modal-box">
-            <button class="close-modal" onclick="this.closest('.modal-overlay').remove()">×</button>
-            <h3>${type === 'followers' ? 'Подписчики' : 'Подписки'}</h3>
+            <button class="close-btn" onclick="this.closest('.modal-overlay').remove()" style="float:right;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:24px;">×</button>
+            <h3 style="margin-bottom:16px;">${type === 'followers' ? 'Подписчики' : 'Подписки'}</h3>
             <div id="followersList">
                 <div class="loading-spinner"><span class="material-icons">refresh</span></div>
             </div>
@@ -1406,82 +1815,6 @@ function showFollowers(type) {
 function showReputation() {
     if (!profileUser) return;
     alert(`Репутация: ${profileUser.reputation || 0}\n\nПодробная статистика будет доступна в следующей версии`);
-}
-
-function changeAvatar() {
-    if (!currentUser) return;
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const size = Math.min(img.width, img.height, 400);
-                canvas.width = size;
-                canvas.height = size;
-                const ctx = canvas.getContext('2d');
-                const x = (img.width - size) / 2;
-                const y = (img.height - size) / 2;
-                ctx.drawImage(img, x, y, size, size, 0, 0, size, size);
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-                uploadAvatar(dataUrl);
-            };
-            img.src = ev.target.result;
-        };
-        reader.readAsDataURL(file);
-    };
-    input.click();
-}
-
-function uploadAvatar(dataUrl) {
-    const ref = storage.ref(`avatars/${currentUser.uid}`);
-    ref.putString(dataUrl, 'data_url')
-        .then(snapshot => snapshot.ref.getDownloadURL())
-        .then(url => {
-            return db.collection('users').doc(currentUser.uid).update({ avatar: url });
-        })
-        .then(() => {
-            currentUser.updateProfile({ photoURL: url });
-            loadProfile(profileUserId);
-        })
-        .catch(err => alert('Ошибка: ' + err.message));
-}
-
-function changeCover() {
-    if (!currentUser) return;
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            const dataUrl = ev.target.result;
-            const ref = storage.ref(`covers/${currentUser.uid}`);
-            ref.putString(dataUrl, 'data_url')
-                .then(snapshot => snapshot.ref.getDownloadURL())
-                .then(url => db.collection('users').doc(currentUser.uid).update({ cover: url }))
-                .then(() => loadProfile(profileUserId))
-                .catch(err => alert('Ошибка: ' + err.message));
-        };
-        reader.readAsDataURL(file);
-    };
-    input.click();
-}
-
-function editProfile() {
-    const bio = prompt('Редактировать описание:', profileUser?.bio || '');
-    if (bio !== null) {
-        db.collection('users').doc(currentUser.uid).update({ bio: bio })
-            .then(() => loadProfile(profileUserId))
-            .catch(err => alert('Ошибка: ' + err.message));
-    }
 }
 
 function escapeHtml(text) {
