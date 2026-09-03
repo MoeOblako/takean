@@ -669,6 +669,12 @@
             background: var(--bg-hover);
         }
 
+        .modal-box .google-btn svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
         .modal-box .auth-bottom {
             text-align: center;
             margin-top: 16px;
@@ -684,6 +690,22 @@
         }
 
         .modal-box .auth-bottom a:hover { text-decoration: underline; }
+
+        /* ===== BBC TAGS ===== */
+        .bbc-bold { font-weight: 700; }
+        .bbc-italic { font-style: italic; }
+        .bbc-underline { text-decoration: underline; }
+        .bbc-strike { text-decoration: line-through; }
+        .bbc-code { font-family: monospace; background: var(--bg-input); padding: 2px 6px; border-radius: var(--radius); }
+        .bbc-quote { border-left: 3px solid var(--accent); padding-left: 12px; margin: 4px 0; color: var(--text-secondary); }
+        .bbc-spoiler { background: var(--bg-hover); color: var(--bg-hover); cursor: pointer; padding: 2px 6px; border-radius: var(--radius); transition: color 0.3s; }
+        .bbc-spoiler:hover { color: var(--text-primary); }
+        .bbc-size-small { font-size: 12px; }
+        .bbc-size-normal { font-size: 15px; }
+        .bbc-size-large { font-size: 20px; }
+        .bbc-size-huge { font-size: 26px; }
+        .bbc-color { transition: color 0.2s; }
+        .bbc-bg { transition: background 0.2s; }
 
         /* ===== FOOTER ===== */
         .footer {
@@ -784,13 +806,6 @@
             .modal-box { padding: 16px; margin: 8px; }
             .feed-filters .filter-btn { font-size: 11px; padding: 4px 8px; }
         }
-
-        @media (max-width: 360px) {
-            .topbar-nav a { padding: 3px 4px; }
-            .topbar-nav a .material-icons { font-size: 16px; }
-            .search-bar { max-width: 50px; }
-            .search-bar input { min-width: 20px; width: 20px; }
-        }
     </style>
 </head>
 <body>
@@ -812,6 +827,10 @@
                 <a href="/create.html">
                     <span class="material-icons">add_box</span>
                     <span>Создать</span>
+                </a>
+                <a href="/communities.html">
+                    <span class="material-icons">group</span>
+                    <span>Сообщества</span>
                 </a>
             </nav>
 
@@ -916,6 +935,71 @@ let authModalCallback = null;
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
 
+// ============================================================
+// BBC ПАРСЕР
+// ============================================================
+function parseBBC(text) {
+    if (!text) return '';
+    
+    let html = escapeHtml(text);
+    
+    html = html.replace(/\[b\](.*?)\[\/b\]/g, '<span class="bbc-bold">$1</span>');
+    html = html.replace(/\[i\](.*?)\[\/i\]/g, '<span class="bbc-italic">$1</span>');
+    html = html.replace(/\[u\](.*?)\[\/u\]/g, '<span class="bbc-underline">$1</span>');
+    html = html.replace(/\[s\](.*?)\[\/s\]/g, '<span class="bbc-strike">$1</span>');
+    html = html.replace(/\[code\](.*?)\[\/code\]/g, '<span class="bbc-code">$1</span>');
+    html = html.replace(/\[quote\](.*?)\[\/quote\]/g, '<div class="bbc-quote">$1</div>');
+    html = html.replace(/\[spoiler\](.*?)\[\/spoiler\]/g, '<span class="bbc-spoiler">$1</span>');
+    html = html.replace(/\[size=small\](.*?)\[\/size\]/g, '<span class="bbc-size-small">$1</span>');
+    html = html.replace(/\[size=normal\](.*?)\[\/size\]/g, '<span class="bbc-size-normal">$1</span>');
+    html = html.replace(/\[size=large\](.*?)\[\/size\]/g, '<span class="bbc-size-large">$1</span>');
+    html = html.replace(/\[size=huge\](.*?)\[\/size\]/g, '<span class="bbc-size-huge">$1</span>');
+    html = html.replace(/\[color=(#[0-9a-fA-F]{6})\](.*?)\[\/color\]/g, '<span class="bbc-color" style="color:$1;">$2</span>');
+    html = html.replace(/\[bg=(#[0-9a-fA-F]{6})\](.*?)\[\/bg\]/g, '<span class="bbc-bg" style="background:$1;padding:2px 4px;border-radius:var(--radius);">$2</span>');
+    html = html.replace(/\[url\](.*?)\[\/url\]/g, '<a href="$1" target="_blank" style="color:var(--accent);">$1</a>');
+    html = html.replace(/\[url=(.*?)\](.*?)\[\/url\]/g, '<a href="$1" target="_blank" style="color:var(--accent);">$2</a>');
+    html = html.replace(/\[img\](.*?)\[\/img\]/g, '<img src="$1" style="max-width:100%;max-height:300px;border-radius:var(--radius);margin:4px 0;" loading="lazy">');
+    
+    html = html.replace(/@([a-zA-Z0-9_.-]+)/g, '<span class="mention" onclick="goToProfileByUsername(\'$1\')">@$1</span>');
+    
+    html = html.replace(/\n/g, '<br>');
+    
+    return html;
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function createUserInFirestore(user) {
+    return db.collection('users').doc(user.uid).get().then(doc => {
+        if (!doc.exists) {
+            let username = user.displayName || 'user_' + Date.now().toString(36);
+            username = username.toLowerCase().replace(/[^a-z0-9_.-]/g, '');
+            if (!username || username.length < 2) {
+                username = 'user_' + Date.now().toString(36);
+            }
+            return db.collection('users').doc(user.uid).set({
+                username: username,
+                displayName: user.displayName || username,
+                email: user.email || '',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                avatar: user.photoURL || null,
+                cover: null,
+                bio: '',
+                reputation: 0,
+                followers: [],
+                following: [],
+                theme: currentTheme
+            });
+        }
+        return doc;
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('themeToggle').addEventListener('click', () => {
         currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -968,6 +1052,7 @@ function loadUserData() {
             ? `<img src="${user.photoURL}" alt="avatar">` 
             : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
         avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+        createUserInFirestore(user).catch(err => console.error('Error creating user:', err));
     } else {
         avatarEl.innerHTML = '<span>?</span>';
         avatarEl.onclick = () => openAuthModal();
@@ -1044,11 +1129,11 @@ function renderAuthForm(mode) {
         <div class="auth-divider">или</div>
         
         <button class="google-btn" id="googleAuthBtn">
-            <svg width="20" height="20" viewBox="0 0 24 24">
-                <path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582l3.277-3.277C17.508 1.027 14.932 0 12 0 7.315 0 3.21 2.607 1.24 6.344l4.026 3.421z"/>
-                <path fill="#34A853" d="M16.218 18.362c-1.24.823-2.836 1.366-4.218 1.366-3.145 0-5.873-1.645-7.367-4.127l-4.026 3.421C3.21 21.393 7.315 24 12 24c2.932 0 5.508-1.027 7.518-2.818l-3.3-2.82z"/>
-                <path fill="#4A90E2" d="M21.455 12.109c0-.793-.072-1.6-.216-2.364H12v4.582h5.146c-.218 1.273-.873 2.363-1.855 3.091l3.3 2.82c1.964-1.8 3.2-4.455 3.2-7.129z"/>
-                <path fill="#FBBC05" d="M5.266 9.765a7.077 7.077 0 0 0-.454 2.418c0 .856.155 1.673.454 2.418l4.026-3.421c-.273-.809-.427-1.7-.427-2.636 0-.936.154-1.827.427-2.636L5.266 9.765z"/>
+            <svg viewBox="0 0 48 48" width="20" height="20">
+                <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+                <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+                <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+                <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
             </svg>
             Войти через Google
         </button>
@@ -1089,9 +1174,11 @@ function renderAuthForm(mode) {
                     }).then(() => {
                         return db.collection('users').doc(cred.user.uid).set({
                             username: username,
+                            displayName: username,
                             email: email,
                             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                             avatar: null,
+                            cover: null,
                             bio: '',
                             reputation: 0,
                             followers: [],
@@ -1124,11 +1211,18 @@ function renderAuthForm(mode) {
                 const user = result.user;
                 return db.collection('users').doc(user.uid).get().then(doc => {
                     if (!doc.exists) {
+                        let username = user.displayName || 'user_' + Date.now().toString(36);
+                        username = username.toLowerCase().replace(/[^a-z0-9_.-]/g, '');
+                        if (!username || username.length < 2) {
+                            username = 'user_' + Date.now().toString(36);
+                        }
                         return db.collection('users').doc(user.uid).set({
-                            username: user.displayName || 'user_' + Date.now(),
+                            username: username,
+                            displayName: user.displayName || username,
                             email: user.email,
                             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                             avatar: user.photoURL || null,
+                            cover: null,
                             bio: '',
                             reputation: 0,
                             followers: [],
@@ -1193,16 +1287,55 @@ function renderFeed(posts) {
     const container = document.getElementById('feedContainer');
     
     if (!posts || !posts.length) {
-        container.innerHTML = `
-            <div style="text-align:center;padding:40px 20px;color:var(--text-muted);">
-                <span class="material-icons" style="font-size:48px;display:block;margin-bottom:12px;">inbox</span>
-                <h3 style="font-weight:500;margin-bottom:8px;">Пока нет тейков</h3>
-                <p style="font-size:14px;">Будьте первым, кто создаст тейк!</p>
-                <a href="/create.html" class="ripple-btn primary" style="margin-top:12px;">
-                    <span class="material-icons">add</span> Создать тейк
-                </a>
-            </div>
-        `;
+        if (currentUser) {
+            db.collection('communities').where('members', 'array-contains', currentUser.uid).limit(1).get()
+                .then(snapshot => {
+                    if (snapshot.empty) {
+                        container.innerHTML = `
+                            <div style="text-align:center;padding:60px 20px;color:var(--text-muted);">
+                                <span class="material-icons" style="font-size:64px;display:block;margin-bottom:16px;">inbox</span>
+                                <h3 style="font-weight:600;margin-bottom:8px;color:var(--text-primary);">Пока нет тейков</h3>
+                                <p style="font-size:15px;margin-bottom:16px;">Присоединитесь к сообществу или создайте свой первый тейк!</p>
+                                <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+                                    <a href="/communities.html" class="ripple-btn primary">
+                                        <span class="material-icons">group_add</span> Найти сообщество
+                                    </a>
+                                    <a href="/create.html" class="ripple-btn outline">
+                                        <span class="material-icons">add</span> Создать тейк
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        container.innerHTML = `
+                            <div style="text-align:center;padding:60px 20px;color:var(--text-muted);">
+                                <span class="material-icons" style="font-size:64px;display:block;margin-bottom:16px;">inbox</span>
+                                <h3 style="font-weight:600;margin-bottom:8px;color:var(--text-primary);">Пока нет тейков</h3>
+                                <p style="font-size:15px;margin-bottom:16px;">Будьте первым, кто создаст тейк в вашем сообществе!</p>
+                                <a href="/create.html" class="ripple-btn primary">
+                                    <span class="material-icons">add</span> Создать тейк
+                                </a>
+                            </div>
+                        `;
+                    }
+                });
+        } else {
+            container.innerHTML = `
+                <div style="text-align:center;padding:60px 20px;color:var(--text-muted);">
+                    <span class="material-icons" style="font-size:64px;display:block;margin-bottom:16px;">inbox</span>
+                    <h3 style="font-weight:600;margin-bottom:8px;color:var(--text-primary);">Пока нет тейков</h3>
+                    <p style="font-size:15px;margin-bottom:16px;">Войдите в аккаунт или создайте свой первый тейк!</p>
+                    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+                        <button class="ripple-btn primary" onclick="openAuthModal()">
+                            <span class="material-icons">login</span> Войти
+                        </button>
+                        <a href="/create.html" class="ripple-btn outline">
+                            <span class="material-icons">add</span> Создать тейк
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
         return;
     }
 
@@ -1251,7 +1384,7 @@ function createPostHTML(post, index) {
             <div class="post-title" onclick="openPost('${post.id}')">${escapeHtml(post.title || 'Без заголовка')}</div>
             
             <div class="post-content" onclick="openPost('${post.id}')">
-                ${renderContent(post.content || '')}
+                ${parseBBC(post.content || '')}
             </div>
             
             ${post.images && post.images.length ? `
@@ -1294,25 +1427,6 @@ function createPostHTML(post, index) {
             </div>
         </div>
     `;
-}
-
-function renderContent(text) {
-    if (!text) return '';
-    let html = escapeHtml(text);
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    html = html.replace(/__(.*?)__/g, '<u>$1</u>');
-    html = html.replace(/~~(.*?)~~/g, '<s>$1</s>');
-    html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" style="color:var(--accent);">$1</a>');
-    html = html.replace(/@([a-zA-Z0-9_.-]+)/g, '<span class="mention" onclick="goToProfileByUsername(\'$1\')">@$1</span>');
-    return html;
-}
-
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
 }
 
 // ============================================================
