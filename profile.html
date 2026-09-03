@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- ===== OPEN GRAPH ===== -->
     <meta property="og:title" id="ogTitleMeta" content="Профиль пользователя">
     <meta property="og:description" id="ogDescriptionMeta" content="Профиль пользователя на Takean">
     <meta property="og:image" id="ogImageMeta" content="">
@@ -20,6 +19,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
+        /* ===== ВСЕ СТИЛИ КАК В ПРЕДЫДУЩЕЙ ВЕРСИИ ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -654,6 +654,145 @@
         .post-action-btn:hover { background: var(--bg-hover); }
         .post-action-btn .material-icons { font-size: 18px; }
 
+        /* ===== COMMENT CARD ===== */
+        .comment-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+
+        .comment-card:hover {
+            border-color: var(--border-light);
+        }
+
+        .comment-card .comment-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 4px;
+        }
+
+        .comment-card .comment-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg-hover);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .comment-card .comment-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .comment-card .comment-username {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .comment-card .comment-username:hover { color: var(--accent); }
+
+        .comment-card .comment-time {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        .comment-card .comment-text {
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--text-secondary);
+            margin: 4px 0 0 42px;
+            word-wrap: break-word;
+        }
+
+        .comment-card .comment-text .mention {
+            color: var(--accent);
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .comment-card .comment-on {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-left: 42px;
+            margin-top: 4px;
+        }
+
+        .comment-card .comment-on a {
+            color: var(--accent);
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .comment-card .comment-on a:hover {
+            text-decoration: underline;
+        }
+
+        .comment-card .comment-image {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: var(--radius);
+            margin-top: 4px;
+            cursor: pointer;
+        }
+
+        .comment-card .comment-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-left: 42px;
+            margin-top: 4px;
+        }
+
+        .comment-card .comment-actions button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: var(--font);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 6px;
+            border-radius: var(--radius);
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .comment-card .comment-actions button:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .comment-card .comment-actions .comment-score {
+            font-weight: 600;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .comment-card .comment-actions .comment-score.positive { color: var(--green); }
+        .comment-card .comment-actions .comment-score.negative { color: var(--red); }
+
+        .comment-card .comment-actions button.liked { color: var(--green); }
+        .comment-card .comment-actions button.disliked { color: var(--red); }
+
         /* ===== MODAL EDIT ===== */
         .modal-overlay {
             position: fixed;
@@ -707,7 +846,6 @@
             color: var(--text-primary);
         }
 
-        /* Avatar & Cover upload in modal */
         .edit-media-row {
             display: flex;
             gap: 20px;
@@ -930,6 +1068,35 @@
             padding: 8px 24px;
         }
 
+        /* ===== PROGRESS BAR ===== */
+        .upload-progress-wrap {
+            display: none;
+            margin: 8px 0 16px;
+            width: 100%;
+        }
+
+        .upload-progress-wrap .progress-bar {
+            height: 4px;
+            background: var(--bg-hover);
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .upload-progress-wrap .progress-bar .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .upload-progress-wrap .progress-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            text-align: center;
+        }
+
         /* ===== MODAL FOLLOWERS ===== */
         .modal-user-item {
             display: flex;
@@ -1051,6 +1218,29 @@
             margin-bottom: 12px;
         }
 
+        .error-state {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--red);
+            border: 1px solid var(--red);
+            border-radius: var(--radius);
+            background: rgba(244, 67, 54, 0.05);
+        }
+
+        .error-state .material-icons {
+            font-size: 36px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .error-state .error-details {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
         /* ===== RESPONSIVE ===== */
         @media (max-width: 992px) {
             .search-bar { max-width: 120px; }
@@ -1081,6 +1271,10 @@
             .modal-box { padding: 20px; margin: 8px; }
             .edit-media-row { flex-direction: column; align-items: center; }
             .edit-cover-box { width: 100%; }
+            .comment-card { padding: 12px; }
+            .comment-card .comment-text { margin-left: 0; }
+            .comment-card .comment-actions { margin-left: 0; }
+            .comment-card .comment-on { margin-left: 0; }
         }
 
         @media (max-width: 480px) {
@@ -1104,6 +1298,8 @@
             .post-avatar { width: 30px; height: 30px; font-size: 12px; }
             .modal-box { padding: 16px; }
             .modal-box .modal-header h2 { font-size: 18px; }
+            .comment-card { padding: 10px; }
+            .comment-card .comment-text { font-size: 13px; }
         }
     </style>
 </head>
@@ -1206,12 +1402,10 @@ let userPosts = [];
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
 
-// ===== ФУНКЦИЯ СОЗДАНИЯ ПОЛЬЗОВАТЕЛЯ В FIRESTORE =====
 function createUserInFirestore(user) {
     return db.collection('users').doc(user.uid).get().then(doc => {
         if (!doc.exists) {
             let username = user.displayName || 'user_' + Date.now().toString(36);
-            // Очищаем username: только латиница, цифры, _ . -
             username = username.toLowerCase().replace(/[^a-z0-9_.-]/g, '');
             if (!username || username.length < 2) {
                 username = 'user_' + Date.now().toString(36);
@@ -1346,10 +1540,10 @@ function loadProfile(uid) {
         .catch(err => {
             console.error('Profile load error:', err);
             container.innerHTML = `
-                <div class="empty-state">
+                <div class="error-state">
                     <span class="material-icons">error</span>
-                    <h3 style="font-weight:500;">Ошибка загрузки</h3>
-                    <p style="font-size:14px;">${err.message}</p>
+                    <h3 style="font-weight:500;">Ошибка загрузки профиля</h3>
+                    <div class="error-details">${err.message}</div>
                     <button class="ripple-btn primary" style="margin-top:12px;" onclick="location.reload()">
                         <span class="material-icons">refresh</span> Обновить
                     </button>
@@ -1472,180 +1666,8 @@ function renderProfile(user) {
 }
 
 // ============================================================
-// EDIT MODAL
+// LOAD USER POSTS
 // ============================================================
-function openEditModal() {
-    if (!currentUser || !profileUser) return;
-    
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.id = 'editModal';
-    
-    const username = profileUser.username || '';
-    const bio = profileUser.bio || '';
-    const avatar = profileUser.avatar || '';
-    const cover = profileUser.cover || '';
-    
-    modal.innerHTML = `
-        <div class="modal-box">
-            <div class="modal-header">
-                <h2>Редактировать профиль</h2>
-                <button class="close-btn" onclick="closeEditModal()">×</button>
-            </div>
-            
-            <div class="edit-media-row">
-                <div class="edit-avatar-box">
-                    <div class="preview" id="editAvatarPreview" onclick="document.getElementById('avatarInput').click()">
-                        ${avatar ? `<img src="${avatar}" alt="avatar">` : `<div class="empty-avatar">${(username || '?')[0].toUpperCase()}</div>`}
-                        <div class="upload-overlay">
-                            <span class="material-icons">photo_camera</span>
-                        </div>
-                    </div>
-                    <div class="label">Аватар</div>
-                    <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
-                </div>
-                
-                <div class="edit-cover-box">
-                    <div class="preview" id="editCoverPreview" onclick="document.getElementById('coverInput').click()">
-                        ${cover ? `<img src="${cover}" alt="cover">` : `<div class="empty-cover">Шапка профиля</div>`}
-                        <div class="upload-overlay">
-                            <span class="material-icons">photo_camera</span>
-                        </div>
-                    </div>
-                    <div class="label">Шапка</div>
-                    <input type="file" id="coverInput" accept="image/*" style="display:none;" onchange="handleCoverUpload(event)">
-                </div>
-            </div>
-            
-            <div class="edit-field">
-                <label>Имя пользователя</label>
-                <div class="input-prefix">
-                    <span>@</span>
-                    <input type="text" id="editUsername" value="${escapeHtml(username)}" 
-                           placeholder="username" 
-                           oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9_.-]/g, '')">
-                </div>
-                <div class="input-hint">
-                    <span class="material-icons">info</span> Только латиница, цифры, _ . -
-                </div>
-            </div>
-            
-            <div class="edit-field">
-                <label>Описание</label>
-                <textarea id="editBio" placeholder="Расскажите о себе...">${escapeHtml(bio)}</textarea>
-            </div>
-            
-            <div class="modal-actions">
-                <button class="ripple-btn outline" onclick="closeEditModal()">Отмена</button>
-                <button class="ripple-btn primary" onclick="saveProfileChanges()">
-                    <span class="material-icons">save</span> Сохранить
-                </button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-}
-
-function closeEditModal() {
-    const modal = document.getElementById('editModal');
-    if (modal) modal.remove();
-}
-
-function handleAvatarUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const preview = document.getElementById('editAvatarPreview');
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        preview.innerHTML = `
-            <img src="${e.target.result}" alt="avatar">
-            <div class="upload-overlay">
-                <span class="material-icons">photo_camera</span>
-            </div>
-        `;
-    };
-    reader.readAsDataURL(file);
-    
-    // Сохраняем файл для загрузки
-    window._avatarFile = file;
-}
-
-function handleCoverUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const preview = document.getElementById('editCoverPreview');
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        preview.innerHTML = `
-            <img src="${e.target.result}" alt="cover">
-            <div class="upload-overlay">
-                <span class="material-icons">photo_camera</span>
-            </div>
-        `;
-    };
-    reader.readAsDataURL(file);
-    
-    window._coverFile = file;
-}
-
-function saveProfileChanges() {
-    const username = document.getElementById('editUsername').value.trim();
-    const bio = document.getElementById('editBio').value.trim();
-    
-    if (!username || username.length < 2) {
-        alert('Имя пользователя должно быть минимум 2 символа');
-        return;
-    }
-    
-    const btn = document.querySelector('#editModal .modal-actions .ripple-btn.primary');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
-    
-    let updates = { username: username, bio: bio };
-    let uploadPromises = [];
-    
-    // Загрузка аватара
-    if (window._avatarFile) {
-        const avatarRef = storage.ref(`avatars/${currentUser.uid}`);
-        const promise = avatarRef.put(window._avatarFile)
-            .then(snapshot => snapshot.ref.getDownloadURL())
-            .then(url => {
-                updates.avatar = url;
-                return currentUser.updateProfile({ photoURL: url });
-            });
-        uploadPromises.push(promise);
-    }
-    
-    // Загрузка шапки
-    if (window._coverFile) {
-        const coverRef = storage.ref(`covers/${currentUser.uid}`);
-        const promise = coverRef.put(window._coverFile)
-            .then(snapshot => snapshot.ref.getDownloadURL())
-            .then(url => {
-                updates.cover = url;
-            });
-        uploadPromises.push(promise);
-    }
-    
-    Promise.all(uploadPromises)
-        .then(() => {
-            return db.collection('users').doc(currentUser.uid).update(updates);
-        })
-        .then(() => {
-            closeEditModal();
-            loadProfile(profileUserId);
-            alert('Профиль обновлён!');
-        })
-        .catch(err => {
-            alert('Ошибка: ' + err.message);
-            btn.disabled = false;
-            btn.innerHTML = '<span class="material-icons">save</span> Сохранить';
-        });
-}
-
 function loadUserPosts(uid) {
     const container = document.getElementById('profilePosts');
     container.innerHTML = '<div class="loading-spinner"><span class="material-icons">refresh</span> Загрузка...</div>';
@@ -1663,13 +1685,23 @@ function loadUserPosts(uid) {
             renderPosts(userPosts);
         })
         .catch(err => {
-            container.innerHTML = `<div class="empty-state"><span class="material-icons">error</span><p>Ошибка загрузки</p></div>`;
+            console.error('Load posts error:', err);
+            container.innerHTML = `
+                <div class="error-state">
+                    <span class="material-icons">error</span>
+                    <h3 style="font-weight:500;">Ошибка загрузки тейков</h3>
+                    <div class="error-details">${err.message}</div>
+                    <button class="ripple-btn primary" style="margin-top:12px;" onclick="loadUserPosts('${uid}')">
+                        <span class="material-icons">refresh</span> Повторить
+                    </button>
+                </div>
+            `;
         });
 }
 
 function renderPosts(posts) {
     const container = document.getElementById('profilePosts');
-    if (!posts.length) {
+    if (!posts || !posts.length) {
         container.innerHTML = `
             <div class="empty-state">
                 <span class="material-icons">inbox</span>
@@ -1686,7 +1718,7 @@ function renderPosts(posts) {
                     ${post.authorAvatar ? `<img src="${post.authorAvatar}" alt="">` : `<span>${(post.authorName || '?')[0].toUpperCase()}</span>`}
                 </div>
                 <div class="post-user">
-                    <div class="post-username">${post.authorName || 'Аноним'}</div>
+                    <div class="post-username">${escapeHtml(post.authorName || 'Аноним')}</div>
                     <div class="post-time">${post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleDateString('ru-RU') : 'недавно'}</div>
                 </div>
             </div>
@@ -1707,15 +1739,164 @@ function renderPosts(posts) {
     `).join('');
 }
 
+// ============================================================
+// LOAD USER COMMENTS
+// ============================================================
 function loadUserComments(uid) {
     const container = document.getElementById('profilePosts');
-    container.innerHTML = `
-        <div class="empty-state">
-            <span class="material-icons">chat</span>
-            <p>Комментарии пользователя</p>
-            <p style="font-size:13px;">В разработке</p>
+    container.innerHTML = '<div class="loading-spinner"><span class="material-icons">refresh</span> Загрузка...</div>';
+
+    db.collection('comments')
+        .where('authorId', '==', uid)
+        .orderBy('createdAt', 'desc')
+        .limit(30)
+        .get()
+        .then(snapshot => {
+            const comments = [];
+            snapshot.forEach(doc => {
+                comments.push({ id: doc.id, ...doc.data() });
+            });
+            renderComments(comments);
+        })
+        .catch(err => {
+            console.error('Load comments error:', err);
+            container.innerHTML = `
+                <div class="error-state">
+                    <span class="material-icons">error</span>
+                    <h3 style="font-weight:500;">Ошибка загрузки комментариев</h3>
+                    <div class="error-details">${err.message}</div>
+                    <button class="ripple-btn primary" style="margin-top:12px;" onclick="loadUserComments('${uid}')">
+                        <span class="material-icons">refresh</span> Повторить
+                    </button>
+                </div>
+            `;
+        });
+}
+
+function renderComments(comments) {
+    const container = document.getElementById('profilePosts');
+    if (!comments || !comments.length) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <span class="material-icons">chat</span>
+                <p>Нет комментариев</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = comments.map(comment => `
+        <div class="comment-card">
+            <div class="comment-header">
+                <div class="comment-avatar" onclick="window.location.href='/profile.html?uid=${comment.authorId}'">
+                    ${comment.authorAvatar ? `<img src="${comment.authorAvatar}" alt="">` : `<span>${(comment.authorName || '?')[0].toUpperCase()}</span>`}
+                </div>
+                <div class="comment-username" onclick="window.location.href='/profile.html?uid=${comment.authorId}'">
+                    ${escapeHtml(comment.authorName || 'Аноним')}
+                </div>
+                <span class="comment-time">${comment.createdAt ? new Date(comment.createdAt.seconds * 1000).toLocaleDateString('ru-RU') : 'недавно'}</span>
+            </div>
+            <div class="comment-text">
+                ${renderContent(comment.text || '')}
+                ${comment.image ? `<br><img src="${comment.image}" class="comment-image" onclick="window.open('${comment.image}', '_blank')">` : ''}
+            </div>
+            <div class="comment-on">
+                Комментарий к <a onclick="window.location.href='/post.html?id=${comment.postId}'">тейку</a>
+            </div>
+            <div class="comment-actions">
+                <button onclick="voteComment('${comment.id}', 1)" class="${comment.likes && currentUser && comment.likes.includes(currentUser.uid) ? 'liked' : ''}">
+                    <span class="material-icons" style="font-size:16px;">thumb_up</span>
+                    ${comment.likes?.length || 0}
+                </button>
+                <button onclick="voteComment('${comment.id}', -1)" class="${comment.dislikes && currentUser && comment.dislikes.includes(currentUser.uid) ? 'disliked' : ''}">
+                    <span class="material-icons" style="font-size:16px;">thumb_down</span>
+                    ${comment.dislikes?.length || 0}
+                </button>
+                <span class="comment-score ${((comment.likes?.length || 0) - (comment.dislikes?.length || 0)) > 0 ? 'positive' : ((comment.likes?.length || 0) - (comment.dislikes?.length || 0)) < 0 ? 'negative' : ''}">
+                    ${(comment.likes?.length || 0) - (comment.dislikes?.length || 0)}
+                </span>
+                ${comment.authorId === currentUser?.uid ? `
+                    <button onclick="deleteComment('${comment.id}')" style="color:var(--red);">
+                        <span class="material-icons" style="font-size:16px;">delete</span>
+                    </button>
+                ` : ''}
+            </div>
         </div>
-    `;
+    `).join('');
+}
+
+function renderContent(text) {
+    if (!text) return '';
+    let html = escapeHtml(text);
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    html = html.replace(/__(.*?)__/g, '<u>$1</u>');
+    html = html.replace(/~~(.*?)~~/g, '<s>$1</s>');
+    html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" style="color:var(--accent);">$1</a>');
+    html = html.replace(/@([a-zA-Z0-9_.-]+)/g, '<span class="mention">@$1</span>');
+    return html;
+}
+
+function voteComment(commentId, direction) {
+    if (!currentUser) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    const commentRef = db.collection('comments').doc(commentId);
+    
+    db.runTransaction(transaction => {
+        return transaction.get(commentRef).then(doc => {
+            if (!doc.exists) return;
+            const data = doc.data();
+            const likes = data.likes || [];
+            const dislikes = data.dislikes || [];
+            const uid = currentUser.uid;
+            
+            let newLikes = likes.filter(id => id !== uid);
+            let newDislikes = dislikes.filter(id => id !== uid);
+            
+            if (direction === 1) {
+                if (!likes.includes(uid)) newLikes.push(uid);
+            } else if (direction === -1) {
+                if (!dislikes.includes(uid)) newDislikes.push(uid);
+            }
+            
+            transaction.update(commentRef, {
+                likes: newLikes,
+                dislikes: newDislikes
+            });
+        });
+    }).then(() => {
+        loadUserComments(profileUserId);
+    }).catch(err => console.error('Vote comment error:', err));
+}
+
+function deleteComment(commentId) {
+    if (!currentUser) return;
+    if (!confirm('Удалить комментарий?')) return;
+    
+    db.collection('comments').doc(commentId).delete()
+        .then(() => {
+            loadUserComments(profileUserId);
+            updateCommentCount(commentId);
+        })
+        .catch(err => alert('Ошибка: ' + err.message));
+}
+
+function updateCommentCount(commentId) {
+    db.collection('comments').doc(commentId).get()
+        .then(doc => {
+            if (doc.exists) {
+                const postId = doc.data().postId;
+                if (postId) {
+                    db.collection('comments').where('postId', '==', postId).get()
+                        .then(snapshot => {
+                            db.collection('posts').doc(postId).update({ commentsCount: snapshot.size });
+                        });
+                }
+            }
+        });
 }
 
 function loadUserLikes(uid) {
@@ -1729,6 +1910,9 @@ function loadUserLikes(uid) {
     `;
 }
 
+// ============================================================
+// FOLLOW
+// ============================================================
 function toggleFollow() {
     if (!currentUser) {
         window.location.href = '/login.html';
@@ -1815,6 +1999,235 @@ function showFollowers(type) {
 function showReputation() {
     if (!profileUser) return;
     alert(`Репутация: ${profileUser.reputation || 0}\n\nПодробная статистика будет доступна в следующей версии`);
+}
+
+// ============================================================
+// EDIT MODAL
+// ============================================================
+function openEditModal() {
+    if (!currentUser || !profileUser) return;
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'editModal';
+    
+    const username = profileUser.username || '';
+    const bio = profileUser.bio || '';
+    const avatar = profileUser.avatar || '';
+    const cover = profileUser.cover || '';
+    
+    modal.innerHTML = `
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>Редактировать профиль</h2>
+                <button class="close-btn" onclick="closeEditModal()">×</button>
+            </div>
+            
+            <div class="edit-media-row">
+                <div class="edit-avatar-box">
+                    <div class="preview" id="editAvatarPreview" onclick="document.getElementById('avatarInput').click()">
+                        ${avatar ? `<img src="${avatar}" alt="avatar">` : `<div class="empty-avatar">${(username || '?')[0].toUpperCase()}</div>`}
+                        <div class="upload-overlay">
+                            <span class="material-icons">photo_camera</span>
+                        </div>
+                    </div>
+                    <div class="label">Аватар</div>
+                    <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
+                </div>
+                
+                <div class="edit-cover-box">
+                    <div class="preview" id="editCoverPreview" onclick="document.getElementById('coverInput').click()">
+                        ${cover ? `<img src="${cover}" alt="cover">` : `<div class="empty-cover">Шапка профиля</div>`}
+                        <div class="upload-overlay">
+                            <span class="material-icons">photo_camera</span>
+                        </div>
+                    </div>
+                    <div class="label">Шапка</div>
+                    <input type="file" id="coverInput" accept="image/*" style="display:none;" onchange="handleCoverUpload(event)">
+                </div>
+            </div>
+            
+            <div id="uploadProgressWrap" class="upload-progress-wrap">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="uploadProgressFill"></div>
+                </div>
+                <div class="progress-text" id="uploadProgressText">Загрузка...</div>
+            </div>
+            
+            <div class="edit-field">
+                <label>Имя пользователя</label>
+                <div class="input-prefix">
+                    <span>@</span>
+                    <input type="text" id="editUsername" value="${escapeHtml(username)}" 
+                           placeholder="username" 
+                           oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9_.-]/g, '')">
+                </div>
+                <div class="input-hint">
+                    <span class="material-icons">info</span> Только латиница, цифры, _ . -
+                </div>
+            </div>
+            
+            <div class="edit-field">
+                <label>Описание</label>
+                <textarea id="editBio" placeholder="Расскажите о себе...">${escapeHtml(bio)}</textarea>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="ripple-btn outline" onclick="closeEditModal()">Отмена</button>
+                <button class="ripple-btn primary" id="saveProfileBtn" onclick="saveProfileChanges()">
+                    <span class="material-icons">save</span> Сохранить
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function closeEditModal() {
+    const modal = document.getElementById('editModal');
+    if (modal) modal.remove();
+    window._avatarFile = null;
+    window._coverFile = null;
+}
+
+function handleAvatarUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const preview = document.getElementById('editAvatarPreview');
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        preview.innerHTML = `
+            <img src="${e.target.result}" alt="avatar">
+            <div class="upload-overlay">
+                <span class="material-icons">photo_camera</span>
+            </div>
+        `;
+    };
+    reader.readAsDataURL(file);
+    
+    window._avatarFile = file;
+}
+
+function handleCoverUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const preview = document.getElementById('editCoverPreview');
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        preview.innerHTML = `
+            <img src="${e.target.result}" alt="cover">
+            <div class="upload-overlay">
+                <span class="material-icons">photo_camera</span>
+            </div>
+        `;
+    };
+    reader.readAsDataURL(file);
+    
+    window._coverFile = file;
+}
+
+function saveProfileChanges() {
+    const username = document.getElementById('editUsername').value.trim();
+    const bio = document.getElementById('editBio').value.trim();
+    
+    if (!username || username.length < 2) {
+        alert('Имя пользователя должно быть минимум 2 символа');
+        return;
+    }
+    
+    const btn = document.getElementById('saveProfileBtn');
+    const progressWrap = document.getElementById('uploadProgressWrap');
+    const progressFill = document.getElementById('uploadProgressFill');
+    const progressText = document.getElementById('uploadProgressText');
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
+    
+    let updates = { username: username, bio: bio };
+    let uploadPromises = [];
+    let totalUploads = 0;
+    let completedUploads = 0;
+    
+    // Функция обновления прогресса
+    function updateProgress() {
+        completedUploads++;
+        const percent = totalUploads > 0 ? Math.round((completedUploads / totalUploads) * 100) : 100;
+        progressFill.style.width = percent + '%';
+        progressText.textContent = `Загрузка... ${percent}%`;
+    }
+    
+    // Загрузка аватара
+    if (window._avatarFile) {
+        totalUploads++;
+        progressWrap.style.display = 'block';
+        progressText.textContent = 'Загрузка аватара...';
+        
+        const avatarRef = storage.ref(`avatars/${currentUser.uid}`);
+        const promise = avatarRef.put(window._avatarFile)
+            .then(snapshot => snapshot.ref.getDownloadURL())
+            .then(url => {
+                updates.avatar = url;
+                updateProgress();
+                return currentUser.updateProfile({ photoURL: url });
+            })
+            .catch(err => {
+                console.error('Avatar upload error:', err);
+                throw new Error('Ошибка загрузки аватара: ' + err.message);
+            });
+        uploadPromises.push(promise);
+    }
+    
+    // Загрузка шапки
+    if (window._coverFile) {
+        totalUploads++;
+        if (!progressWrap.style.display || progressWrap.style.display === 'none') {
+            progressWrap.style.display = 'block';
+        }
+        progressText.textContent = 'Загрузка шапки...';
+        
+        const coverRef = storage.ref(`covers/${currentUser.uid}`);
+        const promise = coverRef.put(window._coverFile)
+            .then(snapshot => snapshot.ref.getDownloadURL())
+            .then(url => {
+                updates.cover = url;
+                updateProgress();
+            })
+            .catch(err => {
+                console.error('Cover upload error:', err);
+                throw new Error('Ошибка загрузки шапки: ' + err.message);
+            });
+        uploadPromises.push(promise);
+    }
+    
+    if (totalUploads === 0) {
+        progressWrap.style.display = 'none';
+    }
+    
+    Promise.all(uploadPromises)
+        .then(() => {
+            if (totalUploads > 0) {
+                progressText.textContent = 'Сохранение данных...';
+            }
+            return db.collection('users').doc(currentUser.uid).update(updates);
+        })
+        .then(() => {
+            progressText.textContent = 'Готово!';
+            setTimeout(() => {
+                closeEditModal();
+                loadProfile(profileUserId);
+                alert('Профиль обновлён!');
+            }, 500);
+        })
+        .catch(err => {
+            console.error('Save error:', err);
+            alert('Ошибка: ' + err.message);
+            btn.disabled = false;
+            btn.innerHTML = '<span class="material-icons">save</span> Сохранить';
+            progressWrap.style.display = 'none';
+        });
 }
 
 function escapeHtml(text) {
