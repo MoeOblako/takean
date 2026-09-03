@@ -304,7 +304,7 @@
 
         .community-cover {
             width: 100%;
-            height: 140px;
+            height: 160px;
             background: linear-gradient(135deg, var(--accent), var(--accent-hover));
             position: relative;
             overflow: hidden;
@@ -316,6 +316,27 @@
             object-fit: cover;
         }
 
+        .community-cover .cover-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+            cursor: pointer;
+        }
+
+        .community-cover:hover .cover-overlay {
+            opacity: 1;
+        }
+
+        .community-cover .cover-overlay .material-icons {
+            font-size: 40px;
+            color: #fff;
+        }
+
         .community-info {
             padding: 16px 20px 20px;
         }
@@ -323,33 +344,51 @@
         .community-name-wrap {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
             flex-wrap: wrap;
         }
 
-        .community-icon {
-            width: 56px;
-            height: 56px;
+        .community-avatar {
+            width: 64px;
+            height: 64px;
             border-radius: var(--radius);
             background: var(--bg-hover);
+            overflow: hidden;
+            flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 28px;
             color: var(--text-secondary);
-            overflow: hidden;
-            flex-shrink: 0;
+            position: relative;
+            cursor: pointer;
         }
 
-        .community-icon img {
+        .community-avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .community-icon .material-icons {
-            font-size: 32px;
-            color: var(--text-muted);
+        .community-avatar .avatar-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+            border-radius: var(--radius);
+        }
+
+        .community-avatar:hover .avatar-overlay {
+            opacity: 1;
+        }
+
+        .community-avatar .avatar-overlay .material-icons {
+            font-size: 24px;
+            color: #fff;
         }
 
         .community-name {
@@ -371,7 +410,7 @@
 
         .community-stats {
             display: flex;
-            gap: 20px;
+            gap: 24px;
             flex-wrap: wrap;
         }
 
@@ -588,9 +627,9 @@
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -603,7 +642,7 @@
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: var(--radius);
-            padding: 24px;
+            padding: 24px 28px;
             max-width: 500px;
             width: 100%;
             max-height: 80vh;
@@ -673,6 +712,160 @@
         .modal-user-item .username {
             font-size: 12px;
             color: var(--text-muted);
+        }
+
+        /* ===== EDIT MODAL ===== */
+        .edit-field {
+            margin-bottom: 16px;
+        }
+
+        .edit-field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .edit-field input,
+        .edit-field textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .edit-field input:focus,
+        .edit-field textarea:focus {
+            border-color: var(--accent);
+        }
+
+        .edit-field textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .edit-media-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .edit-avatar-box {
+            text-align: center;
+        }
+
+        .edit-avatar-box .preview {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--radius);
+            background: var(--bg-hover);
+            overflow: hidden;
+            margin: 0 auto 8px;
+            border: 2px solid var(--border-color);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .edit-avatar-box .preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .edit-avatar-box .preview .upload-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .edit-avatar-box .preview:hover .upload-overlay {
+            opacity: 1;
+        }
+
+        .edit-avatar-box .preview .upload-overlay .material-icons {
+            font-size: 28px;
+            color: #fff;
+        }
+
+        .edit-avatar-box .label {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .edit-cover-box {
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .edit-cover-box .preview {
+            width: 100%;
+            height: 80px;
+            background: var(--bg-hover);
+            overflow: hidden;
+            border-radius: var(--radius);
+            margin: 0 auto 8px;
+            border: 2px solid var(--border-color);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .edit-cover-box .preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .edit-cover-box .preview .upload-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .edit-cover-box .preview:hover .upload-overlay {
+            opacity: 1;
+        }
+
+        .edit-cover-box .preview .upload-overlay .material-icons {
+            font-size: 28px;
+            color: #fff;
+        }
+
+        .edit-cover-box .label {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 16px;
+        }
+
+        .modal-actions .ripple-btn {
+            padding: 8px 24px;
         }
 
         /* ===== FOOTER ===== */
@@ -747,6 +940,29 @@
             margin-bottom: 12px;
         }
 
+        .error-state {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--red);
+            border: 1px solid var(--red);
+            border-radius: var(--radius);
+            background: rgba(244, 67, 54, 0.05);
+        }
+
+        .error-state .material-icons {
+            font-size: 36px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .error-state .error-details {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
         /* ===== RESPONSIVE ===== */
         @media (max-width: 992px) {
             .search-bar { max-width: 120px; }
@@ -763,14 +979,17 @@
             .topbar-nav a .material-icons { font-size: 20px; }
             .search-bar { max-width: 100px; }
             .search-bar input { min-width: 40px; width: 40px; font-size: 11px; }
-            .community-cover { height: 100px; }
-            .community-icon { width: 48px; height: 48px; font-size: 22px; }
+            .community-cover { height: 120px; }
+            .community-avatar { width: 52px; height: 52px; font-size: 20px; }
             .community-name { font-size: 18px; }
             .community-info { padding: 12px 16px 16px; }
             .post-card { padding: 12px; }
             .post-title { font-size: 15px; }
             .post-images { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
             .footer-inner { flex-direction: column; align-items: center; text-align: center; }
+            .modal-box { padding: 20px; margin: 8px; }
+            .edit-media-row { flex-direction: column; align-items: center; }
+            .edit-cover-box { width: 100%; }
         }
 
         @media (max-width: 480px) {
@@ -783,13 +1002,12 @@
             .topbar-actions .avatar-small { width: 26px; height: 26px; font-size: 10px; }
             .topbar-actions .material-icons { font-size: 18px; }
             .community-cover { height: 80px; }
-            .community-icon { width: 40px; height: 40px; font-size: 18px; }
-            .community-icon .material-icons { font-size: 24px; }
+            .community-avatar { width: 44px; height: 44px; font-size: 16px; }
             .community-name { font-size: 16px; }
             .post-card { padding: 10px; }
             .post-title { font-size: 14px; }
             .post-content { font-size: 13px; }
-            .modal-box { padding: 16px; margin: 8px; }
+            .modal-box { padding: 16px; }
         }
     </style>
 </head>
@@ -812,6 +1030,10 @@
                 <a href="/create.html">
                     <span class="material-icons">add_box</span>
                     <span>Создать</span>
+                </a>
+                <a href="/communities.html">
+                    <span class="material-icons">group</span>
+                    <span>Сообщества</span>
                 </a>
             </nav>
 
@@ -866,6 +1088,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
 <script>
 const firebaseConfig = {
@@ -881,13 +1104,43 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+const storage = firebase.storage();
+
+const IMGBB_API_KEY = '82ba1ce293103084398ae828937d95d4';
 
 let currentUser = null;
 let communityData = null;
 let communityId = null;
+let communityPosts = [];
 
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
+
+function createUserInFirestore(user) {
+    return db.collection('users').doc(user.uid).get().then(doc => {
+        if (!doc.exists) {
+            let username = user.displayName || 'user_' + Date.now().toString(36);
+            username = username.toLowerCase().replace(/[^a-z0-9_.-]/g, '');
+            if (!username || username.length < 2) {
+                username = 'user_' + Date.now().toString(36);
+            }
+            return db.collection('users').doc(user.uid).set({
+                username: username,
+                displayName: user.displayName || username,
+                email: user.email || '',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                avatar: user.photoURL || null,
+                cover: null,
+                bio: '',
+                reputation: 0,
+                followers: [],
+                following: [],
+                theme: currentTheme
+            });
+        }
+        return doc;
+    });
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('themeToggle').addEventListener('click', () => {
@@ -908,8 +1161,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="empty-state">
                 <span class="material-icons">group_off</span>
                 <h3 style="font-weight:500;">Сообщество не найдено</h3>
-                <button class="ripple-btn primary" style="margin-top:12px;" onclick="window.location.href='/'">
-                    На главную
+                <button class="ripple-btn primary" style="margin-top:12px;" onclick="window.location.href='/communities.html'">
+                    Все сообщества
                 </button>
             </div>
         `;
@@ -938,6 +1191,7 @@ function loadUserData() {
             ? `<img src="${user.photoURL}" alt="avatar">` 
             : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
         avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+        createUserInFirestore(user).catch(err => console.error('Error creating user:', err));
     } else {
         avatarEl.innerHTML = '<span>?</span>';
         avatarEl.onclick = () => window.location.href = '/login.html';
@@ -953,54 +1207,64 @@ function loadCommunity(id) {
     db.collection('communities').doc(id).get()
         .then(doc => {
             if (!doc.exists) {
-                showDemoCommunity(id);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <span class="material-icons">group_off</span>
+                        <h3 style="font-weight:500;">Сообщество не найдено</h3>
+                        <button class="ripple-btn primary" style="margin-top:12px;" onclick="window.location.href='/communities.html'">
+                            Все сообщества
+                        </button>
+                    </div>
+                `;
                 return;
             }
             communityData = { id: doc.id, ...doc.data() };
-            document.title = `Takean - ${communityData.name || 'Сообщество'}`;
+            document.title = `${communityData.name || 'Сообщество'} | Takean`;
             renderCommunity(communityData);
             loadCommunityPosts(id);
         })
-        .catch(() => {
-            showDemoCommunity(id);
+        .catch(err => {
+            console.error('Load community error:', err);
+            container.innerHTML = `
+                <div class="error-state">
+                    <span class="material-icons">error</span>
+                    <h3 style="font-weight:500;">Ошибка загрузки сообщества</h3>
+                    <div class="error-details">${err.message}</div>
+                    <button class="ripple-btn primary" style="margin-top:12px;" onclick="loadCommunity('${id}')">
+                        <span class="material-icons">refresh</span> Повторить
+                    </button>
+                </div>
+            `;
         });
-}
-
-function showDemoCommunity(id) {
-    const demoData = {
-        id: id,
-        name: id.charAt(0).toUpperCase() + id.slice(1).replace(/_/g, ' '),
-        handle: id,
-        description: 'Описание сообщества будет добавлено позже.',
-        avatar: null,
-        cover: null,
-        members: ['user1', 'user2', 'user3', 'user4', 'user5'],
-        memberCount: 5,
-        posts: [],
-        createdAt: Date.now()
-    };
-    communityData = demoData;
-    document.title = `Takean - ${demoData.name}`;
-    renderCommunity(demoData);
-    loadDemoPosts();
 }
 
 function renderCommunity(community) {
     const container = document.getElementById('communityContainer');
     const isMember = currentUser && community.members && community.members.includes(currentUser.uid);
+    const isOwner = currentUser && community.ownerId === currentUser.uid;
     const displayMembers = community.members || [];
     const memberCount = community.memberCount || displayMembers.length;
-
+    
     container.innerHTML = `
         <div class="community-header">
             <div class="community-cover">
-                ${community.cover ? `<img src="${community.cover}" alt="cover">` : ''}
+                ${community.cover ? `<img src="${community.cover}" alt="cover" id="communityCover">` : ''}
+                ${isOwner ? `
+                    <div class="cover-overlay" onclick="editCommunityMedia('cover')">
+                        <span class="material-icons">photo_camera</span>
+                    </div>
+                ` : ''}
             </div>
             
             <div class="community-info">
                 <div class="community-name-wrap">
-                    <div class="community-icon">
-                        ${community.avatar ? `<img src="${community.avatar}" alt="">` : `<span class="material-icons">group</span>`}
+                    <div class="community-avatar" ${isOwner ? `onclick="editCommunityMedia('avatar')"` : ''}>
+                        ${community.avatar ? `<img src="${community.avatar}" alt="avatar" id="communityAvatar">` : `<span class="material-icons">group</span>`}
+                        ${isOwner ? `
+                            <div class="avatar-overlay">
+                                <span class="material-icons">photo_camera</span>
+                            </div>
+                        ` : ''}
                     </div>
                     <div>
                         <div class="community-name">${escapeHtml(community.name)}</div>
@@ -1012,7 +1276,8 @@ function renderCommunity(community) {
                 
                 <div class="community-stats">
                     <span class="stat"><span class="num">${memberCount}</span> участников</span>
-                    <span class="stat"><span class="num">${community.posts?.length || 0}</span> тейков</span>
+                    <span class="stat"><span class="num">${community.postsCount || 0}</span> тейков</span>
+                    ${community.ownerName ? `<span class="stat">Создатель: <span style="color:var(--text-primary);">${escapeHtml(community.ownerName)}</span></span>` : ''}
                 </div>
                 
                 <div class="community-members">
@@ -1032,11 +1297,23 @@ function renderCommunity(community) {
                 </div>
                 
                 <div class="community-actions">
-                    <button class="ripple-btn ${isMember ? 'outline' : 'primary'}" onclick="toggleJoin()">
-                        ${isMember ? 'Выйти' : 'Вступить'}
-                    </button>
+                    ${!isOwner ? `
+                        <button class="ripple-btn ${isMember ? 'outline' : 'primary'}" onclick="toggleJoinCommunity()">
+                            ${isMember ? 'Выйти' : 'Вступить'}
+                        </button>
+                    ` : `
+                        <button class="ripple-btn outline" onclick="editCommunity()">
+                            <span class="material-icons">edit</span> Редактировать
+                        </button>
+                        <button class="ripple-btn danger" onclick="deleteCommunity()" style="color:var(--red);">
+                            <span class="material-icons">delete</span> Удалить
+                        </button>
+                    `}
                     <button class="ripple-btn outline" onclick="createPostInCommunity()">
                         <span class="material-icons">add</span> Создать тейк
+                    </button>
+                    <button class="ripple-btn outline" onclick="copyCommunityLink()">
+                        <span class="material-icons">link</span> Скопировать ссылку
                     </button>
                 </div>
             </div>
@@ -1057,32 +1334,25 @@ function loadCommunityPosts(id) {
         .limit(30)
         .get()
         .then(snapshot => {
-            const posts = [];
+            communityPosts = [];
             snapshot.forEach(doc => {
-                posts.push({ id: doc.id, ...doc.data() });
+                communityPosts.push({ id: doc.id, ...doc.data() });
             });
-            renderPosts(posts);
+            renderPosts(communityPosts);
         })
-        .catch(() => {
-            loadDemoPosts();
+        .catch(err => {
+            console.error('Load posts error:', err);
+            container.innerHTML = `
+                <div class="error-state">
+                    <span class="material-icons">error</span>
+                    <h3 style="font-weight:500;">Ошибка загрузки тейков</h3>
+                    <div class="error-details">${err.message}</div>
+                    <button class="ripple-btn primary" style="margin-top:12px;" onclick="loadCommunityPosts('${id}')">
+                        <span class="material-icons">refresh</span> Повторить
+                    </button>
+                </div>
+            `;
         });
-}
-
-function loadDemoPosts() {
-    const container = document.getElementById('communityPosts');
-    const demoPosts = [
-        {
-            id: 'demo1',
-            title: 'Добро пожаловать в сообщество!',
-            content: 'Это демонстрационный пост. Присоединяйтесь к обсуждениям.',
-            authorName: 'Takean',
-            authorAvatar: null,
-            likes: [],
-            commentsCount: 0,
-            createdAt: { seconds: Date.now() / 1000 }
-        }
-    ];
-    renderPosts(demoPosts);
 }
 
 function renderPosts(posts) {
@@ -1130,7 +1400,7 @@ function renderPosts(posts) {
     `).join('');
 }
 
-function toggleJoin() {
+function toggleJoinCommunity() {
     if (!currentUser) {
         window.location.href = '/login.html';
         return;
@@ -1202,8 +1472,6 @@ function showMembers() {
                 </div>
             </div>
         `).join('');
-    }).catch(() => {
-        list.innerHTML = '<div class="empty-state"><span class="material-icons">error</span><p>Ошибка загрузки</p></div>';
     });
 }
 
@@ -1213,6 +1481,115 @@ function createPostInCommunity() {
         return;
     }
     window.location.href = `/create.html?community=${communityData.id}`;
+}
+
+function copyCommunityLink() {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+        alert('Ссылка скопирована!');
+    }).catch(() => {
+        prompt('Скопируйте ссылку:', url);
+    });
+}
+
+function editCommunity() {
+    if (!currentUser || communityData.ownerId !== currentUser.uid) return;
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-box">
+            <button class="close-modal" onclick="this.closest('.modal-overlay').remove()">×</button>
+            <h3>Редактировать сообщество</h3>
+            <div class="edit-field">
+                <label>Название</label>
+                <input type="text" id="editCommunityName" value="${escapeHtml(communityData.name || '')}">
+            </div>
+            <div class="edit-field">
+                <label>Описание</label>
+                <textarea id="editCommunityDesc">${escapeHtml(communityData.description || '')}</textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="ripple-btn outline" onclick="this.closest('.modal-overlay').remove()">Отмена</button>
+                <button class="ripple-btn primary" id="saveCommunityBtn">Сохранить</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    document.getElementById('saveCommunityBtn').addEventListener('click', function() {
+        const name = document.getElementById('editCommunityName').value.trim();
+        const description = document.getElementById('editCommunityDesc').value.trim();
+        
+        if (!name) {
+            alert('Введите название');
+            return;
+        }
+        
+        this.disabled = true;
+        this.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
+        
+        db.collection('communities').doc(communityData.id).update({
+            name: name,
+            description: description || 'Нет описания'
+        }).then(() => {
+            communityData.name = name;
+            communityData.description = description || 'Нет описания';
+            modal.remove();
+            renderCommunity(communityData);
+            alert('Обновлено!');
+        }).catch(err => {
+            alert('Ошибка: ' + err.message);
+            this.disabled = false;
+            this.innerHTML = 'Сохранить';
+        });
+    });
+}
+
+function editCommunityMedia(type) {
+    if (!currentUser || communityData.ownerId !== currentUser.uid) return;
+    
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const dataUrl = ev.target.result;
+            const ref = storage.ref(`communities/${communityData.id}/${type}`);
+            ref.putString(dataUrl, 'data_url')
+                .then(snapshot => snapshot.ref.getDownloadURL())
+                .then(url => {
+                    const update = {};
+                    update[type] = url;
+                    return db.collection('communities').doc(communityData.id).update(update);
+                })
+                .then(() => {
+                    communityData[type] = url;
+                    renderCommunity(communityData);
+                    alert('Обновлено!');
+                })
+                .catch(err => alert('Ошибка: ' + err.message));
+        };
+        reader.readAsDataURL(file);
+    };
+    input.click();
+}
+
+function deleteCommunity() {
+    if (!currentUser || communityData.ownerId !== currentUser.uid) return;
+    if (!confirm('Вы уверены, что хотите удалить сообщество? Это действие необратимо!')) return;
+    if (!confirm('Подтвердите удаление сообщества ещё раз:')) return;
+    
+    db.collection('communities').doc(communityData.id).delete()
+        .then(() => {
+            alert('Сообщество удалено');
+            window.location.href = '/communities.html';
+        })
+        .catch(err => alert('Ошибка: ' + err.message));
 }
 
 function escapeHtml(text) {
