@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- ===== OPEN GRAPH (базовые, обновляются через JS) ===== -->
     <meta property="og:title" id="ogTitle" content="Takean - Тейк">
     <meta property="og:description" id="ogDesc" content="Читайте тейк на платформе Takean">
     <meta property="og:image" id="ogImage" content="https://takean.pages.dev/og-image.png">
@@ -20,6 +19,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
+        /* ===== ВСЕ СТИЛИ ИЗ profile.html (такие же) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -728,6 +728,29 @@
             margin-bottom: 12px;
         }
 
+        .error-state {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--red);
+            border: 1px solid var(--red);
+            border-radius: var(--radius);
+            background: rgba(244, 67, 54, 0.05);
+        }
+
+        .error-state .material-icons {
+            font-size: 36px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .error-state .error-details {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
         /* ===== LOADING ===== */
         .loading-spinner {
             display: flex;
@@ -937,11 +960,36 @@ let currentPost = null;
 let postId = null;
 let comments = [];
 let commentImage = null;
+let isLoadingComments = false;
 
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
 
-// ===== ФУНКЦИЯ ОБНОВЛЕНИЯ OG ТЕГОВ =====
+function createUserInFirestore(user) {
+    return db.collection('users').doc(user.uid).get().then(doc => {
+        if (!doc.exists) {
+            let username = user.displayName || 'user_' + Date.now().toString(36);
+            username = username.toLowerCase().replace(/[^a-z0-9_.-]/g, '');
+            if (!username || username.length < 2) {
+                username = 'user_' + Date.now().toString(36);
+            }
+            return db.collection('users').doc(user.uid).set({
+                username: username,
+                email: user.email || '',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                avatar: user.photoURL || null,
+                cover: null,
+                bio: '',
+                reputation: 0,
+                followers: [],
+                following: [],
+                theme: currentTheme
+            });
+        }
+        return doc;
+    });
+}
+
 function updatePostOGTags(data) {
     const title = data.title || 'Тейк на Takean';
     const description = data.description || 'Читайте тейк на платформе Takean';
@@ -971,26 +1019,6 @@ function updatePostOGTags(data) {
     }
 }
 
-// ===== ФУНКЦИЯ СОЗДАНИЯ ПОЛЬЗОВАТЕЛЯ В FIRESTORE =====
-function createUserInFirestore(user) {
-    return db.collection('users').doc(user.uid).get().then(doc => {
-        if (!doc.exists) {
-            return db.collection('users').doc(user.uid).set({
-                username: user.displayName || 'user_' + Date.now().toString(36),
-                email: user.email || '',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                avatar: user.photoURL || null,
-                bio: '',
-                reputation: 0,
-                followers: [],
-                following: [],
-                theme: currentTheme
-            });
-        }
-        return doc;
-    });
-}
-
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('themeToggle').addEventListener('click', () => {
         currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -1005,7 +1033,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (postId) {
         loadPost(postId);
-        loadComments(postId);
     } else {
         document.getElementById('postContainer').innerHTML = `
             <div class="empty-state">
@@ -1041,8 +1068,6 @@ function loadUserData() {
             ? `<img src="${user.photoURL}" alt="avatar">` 
             : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
         avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
-        
-        // Гарантируем создание пользователя в Firestore
         createUserInFirestore(user).catch(err => console.error('Error creating user:', err));
     } else {
         avatarEl.innerHTML = '<span>?</span>';
@@ -1054,7 +1079,8 @@ auth.onAuthStateChanged(user => { loadUserData(); });
 
 function loadPost(id) {
     const container = document.getElementById('postContainer');
-    
+    container.innerHTML = '<div class="loading-spinner"><span class="material-icons">refresh</span> Загрузка...</div>';
+
     db.collection('posts').doc(id).get()
         .then(doc => {
             if (!doc.exists) {
@@ -1073,7 +1099,6 @@ function loadPost(id) {
             
             currentPost = { id: doc.id, ...doc.data() };
             
-            // ===== ОБНОВЛЯЕМ OG ТЕГИ =====
             const title = currentPost.title || 'Тейк на Takean';
             const description = (currentPost.content || '').substring(0, 200) + '...';
             const image = currentPost.images && currentPost.images.length > 0 
@@ -1094,10 +1119,13 @@ function loadPost(id) {
         .catch(err => {
             console.error('Load post error:', err);
             container.innerHTML = `
-                <div class="empty-state">
+                <div class="error-state">
                     <span class="material-icons">error</span>
-                    <h3 style="font-weight:500;">Ошибка загрузки</h3>
-                    <p style="font-size:14px;">${err.message}</p>
+                    <h3 style="font-weight:500;">Ошибка загрузки тейка</h3>
+                    <div class="error-details">${err.message}</div>
+                    <button class="ripple-btn primary" style="margin-top:12px;" onclick="loadPost('${id}')">
+                        <span class="material-icons">refresh</span> Повторить
+                    </button>
                 </div>
             `;
         });
@@ -1216,8 +1244,6 @@ function renderPost(post) {
             </div>
         </div>
     `;
-    
-    renderComments();
 }
 
 function renderContent(text) {
@@ -1313,7 +1339,18 @@ function deletePost() {
         .catch(err => alert('Ошибка: ' + err.message));
 }
 
+// ============================================================
+// LOAD COMMENTS - ИСПРАВЛЕННАЯ ВЕРСИЯ
+// ============================================================
 function loadComments(postId) {
+    if (isLoadingComments) return;
+    isLoadingComments = true;
+    
+    const container = document.getElementById('commentsContainer');
+    if (container) {
+        container.innerHTML = '<div class="loading-spinner"><span class="material-icons">refresh</span> Загрузка комментариев...</div>';
+    }
+    
     db.collection('comments')
         .where('postId', '==', postId)
         .where('parentId', '==', null)
@@ -1324,6 +1361,8 @@ function loadComments(postId) {
             snapshot.forEach(doc => {
                 comments.push({ id: doc.id, ...doc.data() });
             });
+            
+            // Загружаем ответы
             if (comments.length) {
                 const promises = comments.map(c => 
                     db.collection('comments')
@@ -1338,21 +1377,38 @@ function loadComments(postId) {
                             });
                         })
                 );
-                Promise.all(promises).then(() => {
-                    renderComments();
-                });
-            } else {
-                renderComments();
+                return Promise.all(promises);
             }
+            return Promise.resolve();
         })
-        .catch(err => console.error('Load comments error:', err));
+        .then(() => {
+            isLoadingComments = false;
+            renderComments();
+        })
+        .catch(err => {
+            console.error('Load comments error:', err);
+            isLoadingComments = false;
+            const container = document.getElementById('commentsContainer');
+            if (container) {
+                container.innerHTML = `
+                    <div class="error-state">
+                        <span class="material-icons">error</span>
+                        <h3 style="font-weight:500;">Ошибка загрузки комментариев</h3>
+                        <div class="error-details">${err.message}</div>
+                        <button class="ripple-btn primary" style="margin-top:12px;" onclick="loadComments('${postId}')">
+                            <span class="material-icons">refresh</span> Повторить
+                        </button>
+                    </div>
+                `;
+            }
+        });
 }
 
 function renderComments() {
     const container = document.getElementById('commentsContainer');
     if (!container) return;
     
-    if (!comments.length) {
+    if (!comments || !comments.length) {
         container.innerHTML = `
             <div class="empty-state" style="padding:20px;">
                 <span class="material-icons" style="font-size:32px;">chat_bubble_outline</span>
@@ -1377,7 +1433,10 @@ function createCommentHTML(comment, depth = 0) {
     const score = (comment.likes?.length || 0) - (comment.dislikes?.length || 0);
     const scoreClass = score > 0 ? 'positive' : score < 0 ? 'negative' : '';
     const timeStr = comment.createdAt 
-        ? new Date(comment.createdAt.seconds * 1000).toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })
+        ? new Date(comment.createdAt.seconds * 1000).toLocaleString('ru-RU', { 
+            hour: '2-digit', minute: '2-digit', 
+            day: '2-digit', month: '2-digit' 
+          })
         : 'недавно';
     
     let repliesHtml = '';
