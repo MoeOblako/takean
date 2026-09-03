@@ -4,14 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <meta property="og:title" id="ogTitleMeta" content="Профиль пользователя">
+    <!-- ===== OPEN GRAPH ===== -->
+    <meta property="og:title" id="ogTitleMeta" content="Takean - Профиль">
     <meta property="og:description" id="ogDescriptionMeta" content="Профиль пользователя на Takean">
     <meta property="og:image" id="ogImageMeta" content="">
     <meta property="og:url" id="ogUrlMeta" content="">
     <meta property="og:type" content="profile">
     <meta property="og:site_name" content="Takean">
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" id="twitterTitle" content="Профиль пользователя">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" id="twitterTitle" content="Takean - Профиль">
     <meta name="twitter:description" id="twitterDescription" content="Профиль пользователя на Takean">
     <meta name="twitter:image" id="twitterImage" content="">
     
@@ -19,7 +20,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
-        /* ===== ВСЕ СТИЛИ КАК В ПРЕДЫДУЩЕЙ ВЕРСИИ ===== */
+        /* ===== ВСЕ СТИЛИ ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -404,7 +405,7 @@
             color: #fff;
         }
 
-        .profile-name {
+        .profile-display-name {
             font-size: 22px;
             font-weight: 700;
             display: flex;
@@ -413,7 +414,7 @@
             flex-wrap: wrap;
         }
 
-        .profile-name .badge {
+        .profile-display-name .badge {
             font-size: 11px;
             background: var(--accent-light);
             color: var(--accent);
@@ -1068,7 +1069,6 @@
             padding: 8px 24px;
         }
 
-        /* ===== PROGRESS BAR ===== */
         .upload-progress-wrap {
             display: none;
             margin: 8px 0 16px;
@@ -1095,6 +1095,14 @@
             color: var(--text-muted);
             margin-top: 4px;
             text-align: center;
+        }
+
+        .upload-error {
+            display: none;
+            font-size: 12px;
+            color: var(--red);
+            text-align: center;
+            margin-top: 4px;
         }
 
         /* ===== MODAL FOLLOWERS ===== */
@@ -1259,7 +1267,7 @@
             .search-bar input { min-width: 40px; width: 40px; font-size: 11px; }
             .profile-cover { height: 120px; }
             .profile-avatar { width: 64px; height: 64px; font-size: 24px; }
-            .profile-name { font-size: 18px; }
+            .profile-display-name { font-size: 18px; }
             .profile-stats { gap: 16px; }
             .profile-stats .stat .num { font-size: 16px; }
             .profile-tabs { margin: 0 10px 12px; }
@@ -1289,7 +1297,7 @@
             .profile-cover { height: 80px; }
             .profile-avatar { width: 56px; height: 56px; font-size: 20px; border-width: 3px; }
             .profile-info { padding: 12px 14px 16px; }
-            .profile-name { font-size: 16px; }
+            .profile-display-name { font-size: 16px; }
             .profile-bio { font-size: 13px; }
             .profile-stats .stat .num { font-size: 14px; }
             .post-card { padding: 10px; }
@@ -1398,10 +1406,14 @@ let currentUser = null;
 let profileUser = null;
 let profileUserId = null;
 let userPosts = [];
+let userComments = [];
 
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
 
+// ============================================================
+// СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ
+// ============================================================
 function createUserInFirestore(user) {
     return db.collection('users').doc(user.uid).get().then(doc => {
         if (!doc.exists) {
@@ -1412,6 +1424,7 @@ function createUserInFirestore(user) {
             }
             return db.collection('users').doc(user.uid).set({
                 username: username,
+                displayName: user.displayName || username,
                 email: user.email || '',
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 avatar: user.photoURL || null,
@@ -1427,6 +1440,65 @@ function createUserInFirestore(user) {
     });
 }
 
+// ============================================================
+// РАСЧЁТ РЕПУТАЦИИ
+// ============================================================
+function calculateReputation(uid) {
+    let totalRep = 0;
+    
+    // Считаем лайки с постов
+    return db.collection('posts').where('authorId', '==', uid).get()
+        .then(snapshot => {
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const likes = data.likes || [];
+                const dislikes = data.dislikes || [];
+                totalRep += (likes.length - dislikes.length);
+            });
+            
+            // Считаем лайки с комментариев
+            return db.collection('comments').where('authorId', '==', uid).get();
+        })
+        .then(snapshot => {
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const likes = data.likes || [];
+                const dislikes = data.dislikes || [];
+                totalRep += (likes.length - dislikes.length);
+            });
+            
+            return totalRep;
+        });
+}
+
+// ============================================================
+// ОБНОВЛЕНИЕ OG ТЕГОВ
+// ============================================================
+function updateOGTags(data) {
+    const metaMap = {
+        'og:title': data.title,
+        'og:description': data.description,
+        'og:image': data.image || 'https://takean.pages.dev/og-image.png',
+        'og:url': data.url || window.location.href,
+        'twitter:title': data.title,
+        'twitter:description': data.description,
+        'twitter:image': data.image || 'https://takean.pages.dev/og-image.png'
+    };
+    
+    for (const [property, content] of Object.entries(metaMap)) {
+        let meta = document.querySelector(`meta[property="${property}"]`);
+        if (!meta) {
+            meta = document.querySelector(`meta[name="${property}"]`);
+        }
+        if (meta) {
+            meta.setAttribute('content', content);
+        }
+    }
+}
+
+// ============================================================
+// DOM CONTENT LOADED
+// ============================================================
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('themeToggle').addEventListener('click', () => {
         currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -1474,6 +1546,9 @@ function setupEventListeners() {
     });
 }
 
+// ============================================================
+// USER DATA
+// ============================================================
 function loadUserData() {
     const user = auth.currentUser;
     currentUser = user;
@@ -1499,6 +1574,9 @@ auth.onAuthStateChanged(user => {
     }
 });
 
+// ============================================================
+// LOAD PROFILE
+// ============================================================
 function loadProfile(uid) {
     const container = document.getElementById('profileContainer');
     container.innerHTML = '<div class="loading-spinner"><span class="material-icons">refresh</span> Загрузка...</div>';
@@ -1520,22 +1598,29 @@ function loadProfile(uid) {
             }
             profileUser = { id: doc.id, ...doc.data() };
             
-            const username = profileUser.username || 'Пользователь';
-            const bio = profileUser.bio || 'Профиль пользователя на Takean';
-            const avatar = profileUser.avatar || '';
-            const url = window.location.href;
-            
-            document.title = `${username} | Takean`;
-            
-            updateOGTags({
-                title: username,
-                description: bio.substring(0, 160),
-                image: avatar,
-                url: url
+            // Расчёт репутации
+            calculateReputation(uid).then(rep => {
+                profileUser.reputation = rep;
+                // Обновляем в БД
+                db.collection('users').doc(uid).update({ reputation: rep }).catch(() => {});
+                
+                const displayName = profileUser.displayName || profileUser.username || 'Пользователь';
+                const bio = profileUser.bio || 'Профиль пользователя на Takean';
+                const avatar = profileUser.avatar || '';
+                const url = window.location.href;
+                
+                document.title = `${displayName} | Takean`;
+                
+                updateOGTags({
+                    title: displayName,
+                    description: bio.substring(0, 160),
+                    image: avatar,
+                    url: url
+                });
+                
+                renderProfile(profileUser);
+                loadUserPosts(uid);
             });
-            
-            renderProfile(profileUser);
-            loadUserPosts(uid);
         })
         .catch(err => {
             console.error('Profile load error:', err);
@@ -1552,33 +1637,15 @@ function loadProfile(uid) {
         });
 }
 
-function updateOGTags(data) {
-    const metaMap = {
-        'og:title': data.title,
-        'og:description': data.description,
-        'og:image': data.image || 'https://takean.pages.dev/og-image.png',
-        'og:url': data.url || window.location.href,
-        'twitter:title': data.title,
-        'twitter:description': data.description,
-        'twitter:image': data.image || 'https://takean.pages.dev/og-image.png'
-    };
-    
-    for (const [property, content] of Object.entries(metaMap)) {
-        let meta = document.querySelector(`meta[property="${property}"]`);
-        if (!meta) {
-            meta = document.querySelector(`meta[name="${property}"]`);
-        }
-        if (meta) {
-            meta.setAttribute('content', content);
-        }
-    }
-}
-
+// ============================================================
+// RENDER PROFILE
+// ============================================================
 function renderProfile(user) {
     const container = document.getElementById('profileContainer');
     const isOwn = currentUser && user.id === currentUser.uid;
     const isFollowing = currentUser && user.followers && user.followers.includes(currentUser.uid);
     const rep = user.reputation || 0;
+    const displayName = user.displayName || user.username || 'Аноним';
     
     container.innerHTML = `
         <div class="profile-header">
@@ -1594,7 +1661,7 @@ function renderProfile(user) {
             <div class="profile-info">
                 <div class="profile-avatar-wrap">
                     <div class="profile-avatar" id="profileAvatar" ${isOwn ? `onclick="openEditModal()"` : ''}>
-                        ${user.avatar ? `<img src="${user.avatar}" alt="avatar" id="avatarImage">` : `<span>${(user.username || '?')[0].toUpperCase()}</span>`}
+                        ${user.avatar ? `<img src="${user.avatar}" alt="avatar" id="avatarImage">` : `<span>${(displayName || '?')[0].toUpperCase()}</span>`}
                         ${isOwn ? `
                             <div class="avatar-overlay">
                                 <span class="material-icons">photo_camera</span>
@@ -1603,21 +1670,21 @@ function renderProfile(user) {
                     </div>
                 </div>
                 
-                <div class="profile-name">
-                    ${user.username || 'Аноним'}
+                <div class="profile-display-name">
+                    ${displayName}
                     ${user.badge ? `<span class="badge">${user.badge}</span>` : ''}
                 </div>
                 <div class="profile-username">@${user.username || 'anonymous'}</div>
                 <div class="profile-bio">${user.bio || 'Нет описания'}</div>
                 
                 <div class="profile-stats">
-                    <div class="stat" onclick="showFollowers('followers')">
-                        <span class="num">${user.followers?.length || 0}</span>
-                        <span class="label">Подписчики</span>
-                    </div>
                     <div class="stat" onclick="showFollowers('following')">
                         <span class="num">${user.following?.length || 0}</span>
                         <span class="label">Подписки</span>
+                    </div>
+                    <div class="stat" onclick="showFollowers('followers')">
+                        <span class="num">${user.followers?.length || 0}</span>
+                        <span class="label">Подписчики</span>
                     </div>
                     <div class="stat" onclick="showReputation()">
                         <span class="num">${rep}</span>
@@ -1752,11 +1819,11 @@ function loadUserComments(uid) {
         .limit(30)
         .get()
         .then(snapshot => {
-            const comments = [];
+            userComments = [];
             snapshot.forEach(doc => {
-                comments.push({ id: doc.id, ...doc.data() });
+                userComments.push({ id: doc.id, ...doc.data() });
             });
-            renderComments(comments);
+            renderComments(userComments);
         })
         .catch(err => {
             console.error('Load comments error:', err);
@@ -1879,24 +1946,8 @@ function deleteComment(commentId) {
     db.collection('comments').doc(commentId).delete()
         .then(() => {
             loadUserComments(profileUserId);
-            updateCommentCount(commentId);
         })
         .catch(err => alert('Ошибка: ' + err.message));
-}
-
-function updateCommentCount(commentId) {
-    db.collection('comments').doc(commentId).get()
-        .then(doc => {
-            if (doc.exists) {
-                const postId = doc.data().postId;
-                if (postId) {
-                    db.collection('comments').where('postId', '==', postId).get()
-                        .then(snapshot => {
-                            db.collection('posts').doc(postId).update({ commentsCount: snapshot.size });
-                        });
-                }
-            }
-        });
 }
 
 function loadUserLikes(uid) {
@@ -1998,7 +2049,8 @@ function showFollowers(type) {
 
 function showReputation() {
     if (!profileUser) return;
-    alert(`Репутация: ${profileUser.reputation || 0}\n\nПодробная статистика будет доступна в следующей версии`);
+    const rep = profileUser.reputation || 0;
+    alert(`Репутация: ${rep}\n\nРепутация рассчитывается из:\n- Лайков на тейках\n- Лайков на комментариях\n- Минус дизлайки`);
 }
 
 // ============================================================
@@ -2012,6 +2064,7 @@ function openEditModal() {
     modal.id = 'editModal';
     
     const username = profileUser.username || '';
+    const displayName = profileUser.displayName || username || '';
     const bio = profileUser.bio || '';
     const avatar = profileUser.avatar || '';
     const cover = profileUser.cover || '';
@@ -2026,7 +2079,7 @@ function openEditModal() {
             <div class="edit-media-row">
                 <div class="edit-avatar-box">
                     <div class="preview" id="editAvatarPreview" onclick="document.getElementById('avatarInput').click()">
-                        ${avatar ? `<img src="${avatar}" alt="avatar">` : `<div class="empty-avatar">${(username || '?')[0].toUpperCase()}</div>`}
+                        ${avatar ? `<img src="${avatar}" alt="avatar">` : `<div class="empty-avatar">${(displayName || '?')[0].toUpperCase()}</div>`}
                         <div class="upload-overlay">
                             <span class="material-icons">photo_camera</span>
                         </div>
@@ -2052,10 +2105,16 @@ function openEditModal() {
                     <div class="progress-fill" id="uploadProgressFill"></div>
                 </div>
                 <div class="progress-text" id="uploadProgressText">Загрузка...</div>
+                <div class="upload-error" id="uploadError"></div>
             </div>
             
             <div class="edit-field">
-                <label>Имя пользователя</label>
+                <label>Отображаемое имя</label>
+                <input type="text" id="editDisplayName" value="${escapeHtml(displayName)}" placeholder="Как вас называть">
+            </div>
+            
+            <div class="edit-field">
+                <label>Имя пользователя (уникальное)</label>
                 <div class="input-prefix">
                     <span>@</span>
                     <input type="text" id="editUsername" value="${escapeHtml(username)}" 
@@ -2130,6 +2189,7 @@ function handleCoverUpload(event) {
 }
 
 function saveProfileChanges() {
+    const displayName = document.getElementById('editDisplayName').value.trim() || 'Пользователь';
     const username = document.getElementById('editUsername').value.trim();
     const bio = document.getElementById('editBio').value.trim();
     
@@ -2138,25 +2198,36 @@ function saveProfileChanges() {
         return;
     }
     
+    if (!/^[a-z0-9_.-]+$/.test(username)) {
+        alert('Имя пользователя может содержать только латиницу, цифры, _ . -');
+        return;
+    }
+    
     const btn = document.getElementById('saveProfileBtn');
     const progressWrap = document.getElementById('uploadProgressWrap');
     const progressFill = document.getElementById('uploadProgressFill');
     const progressText = document.getElementById('uploadProgressText');
+    const errorEl = document.getElementById('uploadError');
     
     btn.disabled = true;
     btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
+    errorEl.style.display = 'none';
     
-    let updates = { username: username, bio: bio };
+    let updates = { displayName: displayName, username: username, bio: bio };
     let uploadPromises = [];
     let totalUploads = 0;
     let completedUploads = 0;
     
-    // Функция обновления прогресса
     function updateProgress() {
         completedUploads++;
         const percent = totalUploads > 0 ? Math.round((completedUploads / totalUploads) * 100) : 100;
         progressFill.style.width = percent + '%';
         progressText.textContent = `Загрузка... ${percent}%`;
+    }
+    
+    function showError(message) {
+        errorEl.style.display = 'block';
+        errorEl.textContent = '❌ ' + message;
     }
     
     // Загрузка аватара
@@ -2175,7 +2246,8 @@ function saveProfileChanges() {
             })
             .catch(err => {
                 console.error('Avatar upload error:', err);
-                throw new Error('Ошибка загрузки аватара: ' + err.message);
+                showError('Ошибка загрузки аватара: ' + err.message);
+                throw err;
             });
         uploadPromises.push(promise);
     }
@@ -2197,7 +2269,8 @@ function saveProfileChanges() {
             })
             .catch(err => {
                 console.error('Cover upload error:', err);
-                throw new Error('Ошибка загрузки шапки: ' + err.message);
+                showError('Ошибка загрузки шапки: ' + err.message);
+                throw err;
             });
         uploadPromises.push(promise);
     }
@@ -2214,19 +2287,23 @@ function saveProfileChanges() {
             return db.collection('users').doc(currentUser.uid).update(updates);
         })
         .then(() => {
-            progressText.textContent = 'Готово!';
+            // Обновляем displayName в Firebase Auth
+            return currentUser.updateProfile({ displayName: displayName });
+        })
+        .then(() => {
+            progressText.textContent = '✅ Готово!';
             setTimeout(() => {
                 closeEditModal();
                 loadProfile(profileUserId);
-                alert('Профиль обновлён!');
             }, 500);
         })
         .catch(err => {
             console.error('Save error:', err);
-            alert('Ошибка: ' + err.message);
+            if (!errorEl.style.display || errorEl.style.display === 'none') {
+                alert('Ошибка: ' + err.message);
+            }
             btn.disabled = false;
             btn.innerHTML = '<span class="material-icons">save</span> Сохранить';
-            progressWrap.style.display = 'none';
         });
 }
 
