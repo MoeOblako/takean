@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- ===== OPEN GRAPH ===== -->
     <meta property="og:title" id="ogTitleMeta" content="Takean - Профиль">
     <meta property="og:description" id="ogDescriptionMeta" content="Профиль пользователя на Takean">
     <meta property="og:image" id="ogImageMeta" content="">
@@ -20,7 +19,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
-        /* ===== ВСЕ СТИЛИ ===== */
+        /* ===== ВСЕ СТИЛИ КАК В ПРЕДЫДУЩЕЙ ВЕРСИИ ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -1446,7 +1445,6 @@ function createUserInFirestore(user) {
 function calculateReputation(uid) {
     let totalRep = 0;
     
-    // Считаем лайки с постов
     return db.collection('posts').where('authorId', '==', uid).get()
         .then(snapshot => {
             snapshot.forEach(doc => {
@@ -1455,8 +1453,6 @@ function calculateReputation(uid) {
                 const dislikes = data.dislikes || [];
                 totalRep += (likes.length - dislikes.length);
             });
-            
-            // Считаем лайки с комментариев
             return db.collection('comments').where('authorId', '==', uid).get();
         })
         .then(snapshot => {
@@ -1466,7 +1462,10 @@ function calculateReputation(uid) {
                 const dislikes = data.dislikes || [];
                 totalRep += (likes.length - dislikes.length);
             });
-            
+            return totalRep;
+        })
+        .catch(err => {
+            console.error('Reputation calculation error:', err);
             return totalRep;
         });
 }
@@ -1598,10 +1597,8 @@ function loadProfile(uid) {
             }
             profileUser = { id: doc.id, ...doc.data() };
             
-            // Расчёт репутации
             calculateReputation(uid).then(rep => {
                 profileUser.reputation = rep;
-                // Обновляем в БД
                 db.collection('users').doc(uid).update({ reputation: rep }).catch(() => {});
                 
                 const displayName = profileUser.displayName || profileUser.username || 'Пользователь';
@@ -2167,6 +2164,8 @@ function handleAvatarUpload(event) {
     reader.readAsDataURL(file);
     
     window._avatarFile = file;
+    // Скрываем ошибку если была
+    document.getElementById('uploadError').style.display = 'none';
 }
 
 function handleCoverUpload(event) {
@@ -2186,6 +2185,7 @@ function handleCoverUpload(event) {
     reader.readAsDataURL(file);
     
     window._coverFile = file;
+    document.getElementById('uploadError').style.display = 'none';
 }
 
 function saveProfileChanges() {
@@ -2212,11 +2212,13 @@ function saveProfileChanges() {
     btn.disabled = true;
     btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
     errorEl.style.display = 'none';
+    errorEl.textContent = '';
     
     let updates = { displayName: displayName, username: username, bio: bio };
     let uploadPromises = [];
     let totalUploads = 0;
     let completedUploads = 0;
+    let hasError = false;
     
     function updateProgress() {
         completedUploads++;
@@ -2226,8 +2228,10 @@ function saveProfileChanges() {
     }
     
     function showError(message) {
+        hasError = true;
         errorEl.style.display = 'block';
         errorEl.textContent = '❌ ' + message;
+        console.error('Upload error:', message);
     }
     
     // Загрузка аватара
@@ -2237,18 +2241,32 @@ function saveProfileChanges() {
         progressText.textContent = 'Загрузка аватара...';
         
         const avatarRef = storage.ref(`avatars/${currentUser.uid}`);
-        const promise = avatarRef.put(window._avatarFile)
-            .then(snapshot => snapshot.ref.getDownloadURL())
-            .then(url => {
-                updates.avatar = url;
-                updateProgress();
-                return currentUser.updateProfile({ photoURL: url });
-            })
-            .catch(err => {
-                console.error('Avatar upload error:', err);
-                showError('Ошибка загрузки аватара: ' + err.message);
-                throw err;
-            });
+        const uploadTask = avatarRef.put(window._avatarFile);
+        
+        const promise = new Promise((resolve, reject) => {
+            uploadTask.on('state_changed',
+                (snapshot) => {
+                    const percent = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    progressFill.style.width = percent + '%';
+                    progressText.textContent = `Загрузка аватара... ${Math.round(percent)}%`;
+                },
+                (err) => {
+                    console.error('Avatar upload error:', err);
+                    showError('Ошибка загрузки аватара: ' + err.message);
+                    reject(err);
+                },
+                () => {
+                    uploadTask.snapshot.ref.getDownloadURL().then(url => {
+                        updates.avatar = url;
+                        updateProgress();
+                        resolve(url);
+                    }).catch(err => {
+                        showError('Ошибка получения URL аватара: ' + err.message);
+                        reject(err);
+                    });
+                }
+            );
+        });
         uploadPromises.push(promise);
     }
     
@@ -2261,17 +2279,32 @@ function saveProfileChanges() {
         progressText.textContent = 'Загрузка шапки...';
         
         const coverRef = storage.ref(`covers/${currentUser.uid}`);
-        const promise = coverRef.put(window._coverFile)
-            .then(snapshot => snapshot.ref.getDownloadURL())
-            .then(url => {
-                updates.cover = url;
-                updateProgress();
-            })
-            .catch(err => {
-                console.error('Cover upload error:', err);
-                showError('Ошибка загрузки шапки: ' + err.message);
-                throw err;
-            });
+        const uploadTask = coverRef.put(window._coverFile);
+        
+        const promise = new Promise((resolve, reject) => {
+            uploadTask.on('state_changed',
+                (snapshot) => {
+                    const percent = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    progressFill.style.width = percent + '%';
+                    progressText.textContent = `Загрузка шапки... ${Math.round(percent)}%`;
+                },
+                (err) => {
+                    console.error('Cover upload error:', err);
+                    showError('Ошибка загрузки шапки: ' + err.message);
+                    reject(err);
+                },
+                () => {
+                    uploadTask.snapshot.ref.getDownloadURL().then(url => {
+                        updates.cover = url;
+                        updateProgress();
+                        resolve(url);
+                    }).catch(err => {
+                        showError('Ошибка получения URL шапки: ' + err.message);
+                        reject(err);
+                    });
+                }
+            );
+        });
         uploadPromises.push(promise);
     }
     
@@ -2283,11 +2316,11 @@ function saveProfileChanges() {
         .then(() => {
             if (totalUploads > 0) {
                 progressText.textContent = 'Сохранение данных...';
+                progressFill.style.width = '100%';
             }
             return db.collection('users').doc(currentUser.uid).update(updates);
         })
         .then(() => {
-            // Обновляем displayName в Firebase Auth
             return currentUser.updateProfile({ displayName: displayName });
         })
         .then(() => {
@@ -2299,8 +2332,8 @@ function saveProfileChanges() {
         })
         .catch(err => {
             console.error('Save error:', err);
-            if (!errorEl.style.display || errorEl.style.display === 'none') {
-                alert('Ошибка: ' + err.message);
+            if (!hasError) {
+                showError('Ошибка сохранения: ' + err.message);
             }
             btn.disabled = false;
             btn.innerHTML = '<span class="material-icons">save</span> Сохранить';
