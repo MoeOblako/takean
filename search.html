@@ -514,6 +514,29 @@
             color: var(--text-muted);
         }
 
+        .error-state {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--red);
+            border: 1px solid var(--red);
+            border-radius: var(--radius);
+            background: rgba(244, 67, 54, 0.05);
+        }
+
+        .error-state .material-icons {
+            font-size: 36px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .error-state .error-details {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
         /* ===== USER CARD ===== */
         .user-card {
             background: var(--bg-card);
@@ -582,6 +605,73 @@
             color: var(--text-muted);
         }
 
+        /* ===== COMMUNITY CARD ===== */
+        .community-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .community-card:hover {
+            border-color: var(--accent);
+        }
+
+        .community-card .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius);
+            background: var(--bg-hover);
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--text-secondary);
+        }
+
+        .community-card .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .community-card .info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .community-card .info .name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .community-card .info .handle {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .community-card .info .desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .community-card .info .stats {
+            display: flex;
+            gap: 16px;
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
         /* ===== FOOTER ===== */
         .footer {
             margin-top: auto;
@@ -642,6 +732,22 @@
             margin-right: 10px;
         }
 
+        /* ===== BBC TAGS STYLES ===== */
+        .bbc-bold { font-weight: 700; }
+        .bbc-italic { font-style: italic; }
+        .bbc-underline { text-decoration: underline; }
+        .bbc-strike { text-decoration: line-through; }
+        .bbc-code { font-family: monospace; background: var(--bg-input); padding: 2px 6px; border-radius: var(--radius); }
+        .bbc-quote { border-left: 3px solid var(--accent); padding-left: 12px; margin: 4px 0; color: var(--text-secondary); }
+        .bbc-spoiler { background: var(--bg-hover); color: var(--bg-hover); cursor: pointer; padding: 2px 6px; border-radius: var(--radius); transition: color 0.3s; }
+        .bbc-spoiler:hover { color: var(--text-primary); }
+        .bbc-size-small { font-size: 12px; }
+        .bbc-size-normal { font-size: 15px; }
+        .bbc-size-large { font-size: 20px; }
+        .bbc-size-huge { font-size: 26px; }
+        .bbc-color { transition: color 0.2s; }
+        .bbc-bg { transition: background 0.2s; }
+
         /* ===== RESPONSIVE ===== */
         @media (max-width: 992px) {
             .search-bar { max-width: 120px; }
@@ -667,6 +773,8 @@
             .footer-inner { flex-direction: column; align-items: center; text-align: center; }
             .user-card { padding: 12px; }
             .user-card .avatar { width: 40px; height: 40px; font-size: 14px; }
+            .community-card { padding: 12px; }
+            .community-card .avatar { width: 40px; height: 40px; font-size: 18px; }
         }
 
         @media (max-width: 480px) {
@@ -686,6 +794,7 @@
             .post-avatar { width: 30px; height: 30px; font-size: 12px; }
             .user-card .avatar { width: 36px; height: 36px; font-size: 12px; }
             .user-card .info .name { font-size: 14px; }
+            .community-card .avatar { width: 36px; height: 36px; font-size: 14px; }
         }
     </style>
 </head>
@@ -708,6 +817,10 @@
                 <a href="/create.html">
                     <span class="material-icons">add_box</span>
                     <span>Создать</span>
+                </a>
+                <a href="/communities.html">
+                    <span class="material-icons">group</span>
+                    <span>Сообщества</span>
                 </a>
             </nav>
 
@@ -747,6 +860,7 @@
         <button class="filter-btn active" data-filter="all">Все</button>
         <button class="filter-btn" data-filter="posts">Тейки</button>
         <button class="filter-btn" data-filter="users">Пользователи</button>
+        <button class="filter-btn" data-filter="communities">Сообщества</button>
         <button class="filter-btn" data-filter="politics">Политика</button>
         <button class="filter-btn" data-filter="games">Игры</button>
         <button class="filter-btn" data-filter="tech">Технологии</button>
@@ -811,6 +925,71 @@ let searchQuery = '';
 
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
+
+// ============================================================
+// BBC ПАРСЕР
+// ============================================================
+function parseBBC(text) {
+    if (!text) return '';
+    
+    let html = escapeHtml(text);
+    
+    html = html.replace(/\[b\](.*?)\[\/b\]/g, '<span class="bbc-bold">$1</span>');
+    html = html.replace(/\[i\](.*?)\[\/i\]/g, '<span class="bbc-italic">$1</span>');
+    html = html.replace(/\[u\](.*?)\[\/u\]/g, '<span class="bbc-underline">$1</span>');
+    html = html.replace(/\[s\](.*?)\[\/s\]/g, '<span class="bbc-strike">$1</span>');
+    html = html.replace(/\[code\](.*?)\[\/code\]/g, '<span class="bbc-code">$1</span>');
+    html = html.replace(/\[quote\](.*?)\[\/quote\]/g, '<div class="bbc-quote">$1</div>');
+    html = html.replace(/\[spoiler\](.*?)\[\/spoiler\]/g, '<span class="bbc-spoiler">$1</span>');
+    html = html.replace(/\[size=small\](.*?)\[\/size\]/g, '<span class="bbc-size-small">$1</span>');
+    html = html.replace(/\[size=normal\](.*?)\[\/size\]/g, '<span class="bbc-size-normal">$1</span>');
+    html = html.replace(/\[size=large\](.*?)\[\/size\]/g, '<span class="bbc-size-large">$1</span>');
+    html = html.replace(/\[size=huge\](.*?)\[\/size\]/g, '<span class="bbc-size-huge">$1</span>');
+    html = html.replace(/\[color=(#[0-9a-fA-F]{6})\](.*?)\[\/color\]/g, '<span class="bbc-color" style="color:$1;">$2</span>');
+    html = html.replace(/\[bg=(#[0-9a-fA-F]{6})\](.*?)\[\/bg\]/g, '<span class="bbc-bg" style="background:$1;padding:2px 4px;border-radius:var(--radius);">$2</span>');
+    html = html.replace(/\[url\](.*?)\[\/url\]/g, '<a href="$1" target="_blank" style="color:var(--accent);">$1</a>');
+    html = html.replace(/\[url=(.*?)\](.*?)\[\/url\]/g, '<a href="$1" target="_blank" style="color:var(--accent);">$2</a>');
+    html = html.replace(/\[img\](.*?)\[\/img\]/g, '<img src="$1" style="max-width:100%;max-height:300px;border-radius:var(--radius);margin:4px 0;" loading="lazy">');
+    
+    html = html.replace(/@([a-zA-Z0-9_.-]+)/g, '<span class="mention" style="color:var(--accent);font-weight:500;cursor:pointer;" onclick="goToProfileByUsername(\'$1\')">@$1</span>');
+    
+    html = html.replace(/\n/g, '<br>');
+    
+    return html;
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function createUserInFirestore(user) {
+    return db.collection('users').doc(user.uid).get().then(doc => {
+        if (!doc.exists) {
+            let username = user.displayName || 'user_' + Date.now().toString(36);
+            username = username.toLowerCase().replace(/[^a-z0-9_.-]/g, '');
+            if (!username || username.length < 2) {
+                username = 'user_' + Date.now().toString(36);
+            }
+            return db.collection('users').doc(user.uid).set({
+                username: username,
+                displayName: user.displayName || username,
+                email: user.email || '',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                avatar: user.photoURL || null,
+                cover: null,
+                bio: '',
+                reputation: 0,
+                followers: [],
+                following: [],
+                theme: currentTheme
+            });
+        }
+        return doc;
+    });
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('themeToggle').addEventListener('click', () => {
@@ -882,6 +1061,7 @@ function loadUserData() {
             ? `<img src="${user.photoURL}" alt="avatar">` 
             : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
         avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+        createUserInFirestore(user).catch(err => console.error('Error creating user:', err));
     } else {
         avatarEl.innerHTML = '<span>?</span>';
         avatarEl.onclick = () => window.location.href = '/login.html';
@@ -900,7 +1080,9 @@ function performSearch(query) {
     window.history.pushState({}, '', url);
 
     let promises = [];
+    const q = query.toLowerCase();
 
+    // Поиск постов
     if (currentFilter === 'all' || currentFilter === 'posts' || ['politics','games','tech','science'].includes(currentFilter)) {
         let postsQuery = db.collection('posts');
         if (!['all','posts'].includes(currentFilter)) {
@@ -910,7 +1092,6 @@ function performSearch(query) {
             postsQuery.orderBy('createdAt', 'desc').limit(50).get()
                 .then(snapshot => {
                     const posts = [];
-                    const q = query.toLowerCase();
                     snapshot.forEach(doc => {
                         const data = doc.data();
                         if ((data.title && data.title.toLowerCase().includes(q)) ||
@@ -920,15 +1101,19 @@ function performSearch(query) {
                     });
                     return posts;
                 })
+                .catch(err => {
+                    console.error('Posts search error:', err);
+                    return [];
+                })
         );
     }
 
+    // Поиск пользователей
     if (currentFilter === 'all' || currentFilter === 'users') {
         promises.push(
             db.collection('users').limit(30).get()
                 .then(snapshot => {
                     const users = [];
-                    const q = query.toLowerCase();
                     snapshot.forEach(doc => {
                         const data = doc.data();
                         if (data.username && data.username.toLowerCase().includes(q)) {
@@ -936,6 +1121,33 @@ function performSearch(query) {
                         }
                     });
                     return users;
+                })
+                .catch(err => {
+                    console.error('Users search error:', err);
+                    return [];
+                })
+        );
+    }
+
+    // Поиск сообществ
+    if (currentFilter === 'all' || currentFilter === 'communities') {
+        promises.push(
+            db.collection('communities').limit(30).get()
+                .then(snapshot => {
+                    const communities = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        if ((data.name && data.name.toLowerCase().includes(q)) ||
+                            (data.handle && data.handle.toLowerCase().includes(q)) ||
+                            (data.description && data.description.toLowerCase().includes(q))) {
+                            communities.push({ id: doc.id, ...data, type: 'community' });
+                        }
+                    });
+                    return communities;
+                })
+                .catch(err => {
+                    console.error('Communities search error:', err);
+                    return [];
                 })
         );
     }
@@ -948,7 +1160,13 @@ function performSearch(query) {
         })
         .catch(err => {
             console.error('Search error:', err);
-            results.innerHTML = '<div class="search-empty"><span class="material-icons">error</span><h3 style="font-weight:500;">Ошибка поиска</h3></div>';
+            results.innerHTML = `
+                <div class="error-state">
+                    <span class="material-icons">error</span>
+                    <h3 style="font-weight:500;">Ошибка поиска</h3>
+                    <div class="error-details">${err.message}</div>
+                </div>
+            `;
         });
 }
 
@@ -969,6 +1187,7 @@ function renderResults(results, query) {
     container.innerHTML = results.map(item => {
         if (item.type === 'post') return createPostCard(item, query);
         if (item.type === 'user') return createUserCard(item, query);
+        if (item.type === 'community') return createCommunityCard(item, query);
         return '';
     }).join('');
 }
@@ -991,7 +1210,7 @@ function createPostCard(post, query) {
                 </div>
             </div>
             <div class="post-title">${highlightText(escapeHtml(post.title || 'Без заголовка'), query)}</div>
-            <div class="post-content">${highlightText(escapeHtml((post.content || '').substring(0, 300)), query)}${(post.content || '').length > 300 ? '...' : ''}</div>
+            <div class="post-content">${parseBBC(post.content || '').substring(0, 300)}${(post.content || '').length > 300 ? '...' : ''}</div>
             ${post.images && post.images.length ? `
                 <div class="post-images">
                     ${post.images.slice(0, 3).map(img => `
@@ -1015,12 +1234,31 @@ function createUserCard(user, query) {
                 ${user.avatar ? `<img src="${user.avatar}" alt="">` : `<span>${(user.username || '?')[0].toUpperCase()}</span>`}
             </div>
             <div class="info">
-                <div class="name">${highlightText(escapeHtml(user.username || 'Аноним'), query)}</div>
+                <div class="name">${highlightText(escapeHtml(user.displayName || user.username || 'Аноним'), query)}</div>
                 <div class="username">@${escapeHtml(user.username || 'anonymous')}</div>
                 <div class="bio">${escapeHtml(user.bio || 'Нет описания')}</div>
                 <div class="stats">
                     <span>Подписчики: ${user.followers?.length || 0}</span>
                     <span>Репутация: ${user.reputation || 0}</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function createCommunityCard(community, query) {
+    return `
+        <div class="community-card" onclick="window.location.href='/community.html?id=${community.id}'">
+            <div class="avatar">
+                ${community.avatar ? `<img src="${community.avatar}" alt="">` : `<span class="material-icons">group</span>`}
+            </div>
+            <div class="info">
+                <div class="name">${highlightText(escapeHtml(community.name || community.id), query)}</div>
+                <div class="handle">@${escapeHtml(community.handle || community.id)}</div>
+                <div class="desc">${escapeHtml(community.description || 'Нет описания')}</div>
+                <div class="stats">
+                    <span>Участников: ${community.memberCount || 0}</span>
+                    <span>Тейков: ${community.postsCount || 0}</span>
                 </div>
             </div>
         </div>
@@ -1037,11 +1275,14 @@ function escapeRegex(text) {
     return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+function goToProfileByUsername(username) {
+    db.collection('users').where('username', '==', username).get()
+        .then(snapshot => {
+            if (!snapshot.empty) {
+                window.location.href = `/profile.html?uid=${snapshot.docs[0].id}`;
+            }
+        })
+        .catch(() => {});
 }
 
 console.log('🔍 Search page loaded');
