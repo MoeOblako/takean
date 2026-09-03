@@ -4,18 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- ===== OPEN GRAPH ===== -->
-    <title id="ogTitle">Takean - Тейк</title>
-    <meta property="og:title" id="ogTitleMeta" content="Тейк на Takean">
-    <meta property="og:description" id="ogDescriptionMeta" content="Читайте тейк на платформе Takean">
-    <meta property="og:image" id="ogImageMeta" content="">
-    <meta property="og:url" id="ogUrlMeta" content="">
+    <!-- ===== OPEN GRAPH (базовые, обновляются через JS) ===== -->
+    <meta property="og:title" id="ogTitle" content="Takean - Тейк">
+    <meta property="og:description" id="ogDesc" content="Читайте тейк на платформе Takean">
+    <meta property="og:image" id="ogImage" content="https://takean.pages.dev/og-image.png">
+    <meta property="og:url" id="ogUrl" content="https://takean.pages.dev/post.html">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Takean">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" id="twitterTitle" content="Тейк на Takean">
-    <meta name="twitter:description" id="twitterDescription" content="Читайте тейк на платформе Takean">
-    <meta name="twitter:image" id="twitterImage" content="">
+    <meta name="twitter:title" id="twTitle" content="Takean - Тейк">
+    <meta name="twitter:description" id="twDesc" content="Читайте тейк на платформе Takean">
+    <meta name="twitter:image" id="twImage" content="https://takean.pages.dev/og-image.png">
     
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -716,6 +715,34 @@
 
         .comment-reply-form button:hover { background: var(--accent-hover); }
 
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state .material-icons {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        /* ===== LOADING ===== */
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .loading-spinner .material-icons {
+            animation: spin 1s linear infinite;
+            font-size: 28px;
+            margin-right: 10px;
+        }
+
         /* ===== FOOTER ===== */
         .footer {
             margin-top: auto;
@@ -759,33 +786,6 @@
             margin-top: 12px;
             text-align: center;
             width: 100%;
-        }
-
-        /* ===== LOADING ===== */
-        .loading-spinner {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px;
-            color: var(--text-muted);
-        }
-
-        .loading-spinner .material-icons {
-            animation: spin 1s linear infinite;
-            font-size: 28px;
-            margin-right: 10px;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--text-muted);
-        }
-
-        .empty-state .material-icons {
-            font-size: 48px;
-            display: block;
-            margin-bottom: 12px;
         }
 
         /* ===== RESPONSIVE ===== */
@@ -941,6 +941,56 @@ let commentImage = null;
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
 
+// ===== ФУНКЦИЯ ОБНОВЛЕНИЯ OG ТЕГОВ =====
+function updatePostOGTags(data) {
+    const title = data.title || 'Тейк на Takean';
+    const description = data.description || 'Читайте тейк на платформе Takean';
+    const image = data.image || 'https://takean.pages.dev/og-image.png';
+    const url = data.url || window.location.href;
+    
+    document.title = `${title} | Takean`;
+    
+    const metaMap = {
+        'og:title': title,
+        'og:description': description,
+        'og:image': image,
+        'og:url': url,
+        'twitter:title': title,
+        'twitter:description': description,
+        'twitter:image': image
+    };
+    
+    for (const [property, content] of Object.entries(metaMap)) {
+        let meta = document.querySelector(`meta[property="${property}"]`);
+        if (!meta) {
+            meta = document.querySelector(`meta[name="${property}"]`);
+        }
+        if (meta) {
+            meta.setAttribute('content', content);
+        }
+    }
+}
+
+// ===== ФУНКЦИЯ СОЗДАНИЯ ПОЛЬЗОВАТЕЛЯ В FIRESTORE =====
+function createUserInFirestore(user) {
+    return db.collection('users').doc(user.uid).get().then(doc => {
+        if (!doc.exists) {
+            return db.collection('users').doc(user.uid).set({
+                username: user.displayName || 'user_' + Date.now().toString(36),
+                email: user.email || '',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                avatar: user.photoURL || null,
+                bio: '',
+                reputation: 0,
+                followers: [],
+                following: [],
+                theme: currentTheme
+            });
+        }
+        return doc;
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('themeToggle').addEventListener('click', () => {
         currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -991,6 +1041,9 @@ function loadUserData() {
             ? `<img src="${user.photoURL}" alt="avatar">` 
             : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
         avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+        
+        // Гарантируем создание пользователя в Firestore
+        createUserInFirestore(user).catch(err => console.error('Error creating user:', err));
     } else {
         avatarEl.innerHTML = '<span>?</span>';
         avatarEl.onclick = () => window.location.href = '/login.html';
@@ -1020,33 +1073,26 @@ function loadPost(id) {
             
             currentPost = { id: doc.id, ...doc.data() };
             
-            // ===== OPEN GRAPH =====
+            // ===== ОБНОВЛЯЕМ OG ТЕГИ =====
             const title = currentPost.title || 'Тейк на Takean';
             const description = (currentPost.content || '').substring(0, 200) + '...';
             const image = currentPost.images && currentPost.images.length > 0 
                 ? currentPost.images[0] 
-                : '';
+                : 'https://takean.pages.dev/og-image.png';
             const url = window.location.href;
-            const author = currentPost.authorName || 'Аноним';
             
-            document.title = `${title} | Takean`;
-            document.getElementById('ogTitleMeta').setAttribute('content', title);
-            document.getElementById('twitterTitle').setAttribute('content', title);
-            
-            document.getElementById('ogDescriptionMeta').setAttribute('content', description);
-            document.getElementById('twitterDescription').setAttribute('content', description);
-            
-            if (image) {
-                document.getElementById('ogImageMeta').setAttribute('content', image);
-                document.getElementById('twitterImage').setAttribute('content', image);
-            }
-            
-            document.getElementById('ogUrlMeta').setAttribute('content', url);
+            updatePostOGTags({
+                title: title,
+                description: description,
+                image: image,
+                url: url
+            });
             
             renderPost(currentPost);
             loadComments(postId);
         })
         .catch(err => {
+            console.error('Load post error:', err);
             container.innerHTML = `
                 <div class="empty-state">
                     <span class="material-icons">error</span>
