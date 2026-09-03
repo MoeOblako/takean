@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Takean - Вход</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-card: #1c1c1c;
+            --bg-hover: #2a2a2a;
+            --bg-input: #252525;
+            --text-primary: #e8e8e8;
+            --text-secondary: #a0a0a0;
+            --text-muted: #6b6b6b;
+            --border-color: #2c2c2c;
+            --border-light: #3a3a3a;
+            --accent: #4f8cff;
+            --accent-hover: #6b9fff;
+            --accent-light: rgba(79, 140, 255, 0.15);
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+            --radius: 4px;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --topbar-height: 60px;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f0f0f0;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-hover: #e8e8e8;
+            --bg-input: #f0f0f0;
+            --text-primary: #1a1a1a;
+            --text-secondary: #555555;
+            --text-muted: #888888;
+            --border-color: #e0e0e0;
+            --border-light: #d0d0d0;
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        html {
+            font-family: var(--font);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background 0.3s, color 0.3s;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: var(--radius); }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 0 16px; width: 100%; }
+
+        @keyframes ripple {
+            0% { transform: scale(0); opacity: 0.4; }
+            100% { transform: scale(4); opacity: 0; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .animate-fade { animation: fadeIn 0.25s ease-out; }
+        .animate-slide { animation: slideUp 0.3s ease-out; }
+
+        /* ===== TOP BAR ===== */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 6px 0;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            min-height: var(--topbar-height);
+        }
+
+        .topbar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .topbar-logo {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+            text-decoration: none;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .topbar-logo span { color: var(--accent); }
+
+        .topbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .topbar-nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .topbar-nav a:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .topbar-nav a .material-icons { font-size: 20px; }
+        .topbar-nav a span:not(.material-icons) { display: inline; }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .topbar-actions .material-icons {
+            font-size: 22px;
+            color: var(--text-secondary);
+        }
+
+        .topbar-actions .avatar-small {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--bg-hover);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .topbar-actions .avatar-small:hover { border-color: var(--accent); }
+        .topbar-actions .avatar-small img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 0 8px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            max-width: 160px;
+        }
+
+        .search-bar:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        .search-bar input {
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 13px;
+            padding: 6px 6px;
+            width: 100%;
+            min-width: 60px;
+        }
+
+        .search-bar input::placeholder {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .search-bar .material-icons {
+            color: var(--text-muted);
+            font-size: 18px;
+        }
+
+        /* ===== RIPPLE BUTTON ===== */
+        .ripple-btn {
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: var(--font);
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            transition: background 0.2s, transform 0.1s;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .ripple-btn .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(0);
+            animation: ripple 0.5s ease-out;
+            pointer-events: none;
+        }
+
+        [data-theme="light"] .ripple-btn .ripple-effect {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .ripple-btn:hover { background: var(--bg-hover); }
+        .ripple-btn:active { transform: scale(0.97); }
+
+        .ripple-btn.primary {
+            background: var(--accent);
+            color: #fff;
+        }
+        .ripple-btn.primary:hover { background: var(--accent-hover); }
+
+        .ripple-btn.outline {
+            border: 1px solid var(--border-color);
+        }
+        .ripple-btn.outline:hover { background: var(--bg-hover); }
+
+        /* ===== AUTH PAGE ===== */
+        .auth-page {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 16px;
+        }
+
+        .auth-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 32px;
+            max-width: 420px;
+            width: 100%;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .auth-box .logo {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .auth-box .logo span { color: var(--accent); }
+
+        .auth-box .subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .auth-box .field { margin-bottom: 16px; }
+
+        .auth-box .field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .auth-box .field .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            transition: border-color 0.2s;
+        }
+
+        .auth-box .field .input-wrap:focus-within {
+            border-color: var(--accent);
+        }
+
+        .auth-box .field .input-wrap input {
+            width: 100%;
+            padding: 10px 12px;
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 14px;
+        }
+
+        .auth-box .field .input-wrap .toggle-password {
+            position: absolute;
+            right: 10px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .auth-box .field .input-wrap .toggle-password:hover {
+            color: var(--text-primary);
+        }
+
+        .auth-box .field .input-wrap .toggle-password .material-icons {
+            font-size: 20px;
+        }
+
+        .auth-box .checkbox-field {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .auth-box .checkbox-field input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+        }
+
+        .auth-box .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 16px 0;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .auth-box .auth-divider::before,
+        .auth-box .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .auth-box .google-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            background: none;
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .auth-box .google-btn:hover { background: var(--bg-hover); }
+
+        .auth-box .google-btn svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .auth-box .auth-bottom {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .auth-box .auth-bottom a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .auth-box .auth-bottom a:hover { text-decoration: underline; }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            margin-top: auto;
+            padding: 30px 0 16px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+
+        .footer-inner {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .footer-brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .footer-brand span { color: var(--accent); }
+
+        .footer-links {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover { color: var(--accent); }
+
+        .footer-copy {
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-top: 12px;
+            text-align: center;
+            width: 100%;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 992px) {
+            .search-bar { max-width: 120px; }
+            .search-bar input { min-width: 50px; font-size: 12px; }
+            .topbar-nav a { padding: 4px 8px; font-size: 12px; }
+            .topbar-nav a .material-icons { font-size: 18px; }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 0 10px; }
+            .topbar-logo { font-size: 17px; }
+            .topbar-nav a span:not(.material-icons) { display: none; }
+            .topbar-nav a { padding: 6px 8px; }
+            .topbar-nav a .material-icons { font-size: 20px; }
+            .search-bar { max-width: 100px; }
+            .search-bar input { min-width: 40px; width: 40px; font-size: 11px; }
+            .auth-box { padding: 24px; margin: 0 8px; }
+            .auth-box .logo { font-size: 24px; }
+            .footer-inner { flex-direction: column; align-items: center; text-align: center; }
+        }
+
+        @media (max-width: 480px) {
+            .topbar { padding: 4px 0; }
+            .topbar-logo { font-size: 15px; }
+            .topbar-nav a { padding: 4px 6px; }
+            .topbar-nav a .material-icons { font-size: 18px; }
+            .search-bar { max-width: 70px; }
+            .search-bar input { min-width: 30px; width: 30px; padding: 4px 4px; font-size: 10px; }
+            .topbar-actions .avatar-small { width: 26px; height: 26px; font-size: 10px; }
+            .topbar-actions .material-icons { font-size: 18px; }
+            .auth-box { padding: 20px; }
+            .auth-box .logo { font-size: 20px; }
+            .auth-box .field input { font-size: 13px; padding: 8px 10px; }
+            .auth-box .field .input-wrap .toggle-password .material-icons { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="topbar">
+    <div class="container">
+        <div class="topbar-inner">
+            <a href="/" class="topbar-logo">Take<span>an</span></a>
+            
+            <nav class="topbar-nav">
+                <a href="/">
+                    <span class="material-icons">home</span>
+                    <span>Главная</span>
+                </a>
+                <a href="/search.html">
+                    <span class="material-icons">search</span>
+                    <span>Поиск</span>
+                </a>
+                <a href="/create.html">
+                    <span class="material-icons">add_box</span>
+                    <span>Создать</span>
+                </a>
+            </nav>
+
+            <div class="topbar-actions">
+                <div class="search-bar">
+                    <span class="material-icons">search</span>
+                    <input type="text" placeholder="Поиск..." id="globalSearch">
+                </div>
+                
+                <button class="ripple-btn" id="themeToggle" aria-label="Переключить тему" style="padding:4px 6px;">
+                    <span class="material-icons">dark_mode</span>
+                </button>
+
+                <div class="avatar-small" id="userAvatar">
+                    <span>?</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="auth-page">
+    <div class="auth-box">
+        <div class="logo">Take<span>an</span></div>
+        <div class="subtitle">Войдите в свой аккаунт</div>
+
+        <div class="field">
+            <label>Email</label>
+            <div class="input-wrap">
+                <input type="email" id="emailInput" placeholder="your@email.com">
+            </div>
+        </div>
+
+        <div class="field">
+            <label>Пароль</label>
+            <div class="input-wrap">
+                <input type="password" id="passwordInput" placeholder="••••••••">
+                <button class="toggle-password" type="button" onclick="togglePasswordVisibility('passwordInput', this)" aria-label="Показать пароль">
+                    <span class="material-icons">visibility</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="field">
+            <label class="checkbox-field">
+                <input type="checkbox" id="rememberCheck"> Запомнить меня
+            </label>
+        </div>
+
+        <button class="ripple-btn primary" style="width:100%;justify-content:center;padding:12px;" id="loginBtn">
+            Войти
+        </button>
+
+        <div class="auth-divider">или</div>
+
+        <button class="google-btn" id="googleBtn">
+            <svg viewBox="0 0 48 48" width="20" height="20">
+                <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+                <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+                <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+                <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+            </svg>
+            Войти через Google
+        </button>
+
+        <div class="auth-bottom">
+            Нет аккаунта? <a href="/register.html">Зарегистрироваться</a>
+        </div>
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <div class="footer-inner">
+            <div>
+                <div class="footer-brand">Take<span>an</span></div>
+                <div style="color: var(--text-muted); font-size: 13px; margin-top: 2px;">
+                    Платформа для тейков
+                </div>
+            </div>
+            <div class="footer-links">
+                <a href="/settings.html">Настройки</a>
+                <a href="#" onclick="alert('Страница в разработке')">Политика конфиденциальности</a>
+                <a href="#" onclick="alert('Страница в разработке')">Задать вопрос</a>
+                <a href="/404.html">404</a>
+            </div>
+        </div>
+        <div class="footer-copy">
+            &copy; 2026 Takean. Все права защищены.
+        </div>
+    </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyBDzDIwiObevnlfqfm6p9fzAvsHHpT2QZU",
+    authDomain: "takean.firebaseapp.com",
+    projectId: "takean",
+    storageBucket: "takean.firebasestorage.app",
+    messagingSenderId: "359116659063",
+    appId: "1:359116659063:web:eb81859e5a8f885e546972",
+    measurementId: "G-VXLM679GKK"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let currentTheme = localStorage.getItem('takean-theme') || 'dark';
+document.documentElement.setAttribute('data-theme', currentTheme);
+
+function togglePasswordVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const icon = btn.querySelector('.material-icons');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.textContent = 'visibility_off';
+    } else {
+        input.type = 'password';
+        icon.textContent = 'visibility';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('themeToggle').addEventListener('click', () => {
+        currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        localStorage.setItem('takean-theme', currentTheme);
+        document.getElementById('themeToggle').innerHTML = 
+            `<span class="material-icons">${currentTheme === 'dark' ? 'dark_mode' : 'light_mode'}</span>`;
+    });
+
+    document.getElementById('globalSearch').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const q = document.getElementById('globalSearch').value.trim();
+            if (q) window.location.href = `/search.html?q=${encodeURIComponent(q)}`;
+        }
+    });
+
+    loadUserData();
+
+    document.getElementById('loginBtn').addEventListener('click', login);
+    document.getElementById('passwordInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') login();
+    });
+    document.getElementById('emailInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') document.getElementById('passwordInput').focus();
+    });
+    document.getElementById('googleBtn').addEventListener('click', googleLogin);
+});
+
+function loadUserData() {
+    const user = auth.currentUser;
+    const avatarEl = document.getElementById('userAvatar');
+    if (user) {
+        avatarEl.innerHTML = user.photoURL 
+            ? `<img src="${user.photoURL}" alt="avatar">` 
+            : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
+        avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+    } else {
+        avatarEl.innerHTML = '<span>?</span>';
+        avatarEl.onclick = () => window.location.href = '/login.html';
+    }
+}
+
+auth.onAuthStateChanged(user => {
+    loadUserData();
+    if (user) window.location.href = '/';
+});
+
+function login() {
+    const email = document.getElementById('emailInput').value.trim();
+    const password = document.getElementById('passwordInput').value;
+    const remember = document.getElementById('rememberCheck').checked;
+
+    if (!email || !password) {
+        alert('Заполните все поля');
+        return;
+    }
+
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Вход...';
+
+    auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+            if (remember) {
+                localStorage.setItem('takean-remember', 'true');
+            }
+            window.location.href = '/';
+        })
+        .catch(err => {
+            alert('Ошибка: ' + err.message);
+            btn.disabled = false;
+            btn.innerHTML = 'Войти';
+        });
+}
+
+function googleLogin() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const btn = document.getElementById('googleBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Загрузка...';
+
+    auth.signInWithPopup(provider)
+        .then(result => {
+            const user = result.user;
+            return db.collection('users').doc(user.uid).get().then(doc => {
+                if (!doc.exists) {
+                    return db.collection('users').doc(user.uid).set({
+                        username: user.displayName || 'user_' + Date.now(),
+                        email: user.email,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        avatar: user.photoURL || null,
+                        bio: '',
+                        reputation: 0,
+                        followers: [],
+                        following: [],
+                        theme: currentTheme
+                    });
+                }
+            });
+        })
+        .then(() => {
+            window.location.href = '/';
+        })
+        .catch(err => {
+            alert('Ошибка Google: ' + err.message);
+            btn.disabled = false;
+            btn.innerHTML = 'Войти через Google';
+        });
+}
+
+console.log('🔐 Login page loaded');
+</script>
+</body>
+</html>

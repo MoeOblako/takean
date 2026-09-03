@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Takean - Поиск</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-card: #1c1c1c;
+            --bg-hover: #2a2a2a;
+            --bg-input: #252525;
+            --text-primary: #e8e8e8;
+            --text-secondary: #a0a0a0;
+            --text-muted: #6b6b6b;
+            --border-color: #2c2c2c;
+            --border-light: #3a3a3a;
+            --accent: #4f8cff;
+            --accent-hover: #6b9fff;
+            --accent-light: rgba(79, 140, 255, 0.15);
+            --green: #4caf50;
+            --red: #f44336;
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+            --radius: 4px;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --topbar-height: 60px;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f0f0f0;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-hover: #e8e8e8;
+            --bg-input: #f0f0f0;
+            --text-primary: #1a1a1a;
+            --text-secondary: #555555;
+            --text-muted: #888888;
+            --border-color: #e0e0e0;
+            --border-light: #d0d0d0;
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        html {
+            font-family: var(--font);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background 0.3s, color 0.3s;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: var(--radius); }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 0 16px; width: 100%; }
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .flex-center { display: flex; align-items: center; justify-content: center; }
+        .flex-between { display: flex; align-items: center; justify-content: space-between; }
+        .flex-col { display: flex; flex-direction: column; }
+        .gap-8 { gap: 8px; }
+        .gap-12 { gap: 12px; }
+        .gap-16 { gap: 16px; }
+        .gap-24 { gap: 24px; }
+        .text-center { text-align: center; }
+        .text-muted { color: var(--text-muted); }
+
+        @keyframes ripple {
+            0% { transform: scale(0); opacity: 0.4; }
+            100% { transform: scale(4); opacity: 0; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .animate-fade { animation: fadeIn 0.25s ease-out; }
+        .animate-slide { animation: slideUp 0.3s ease-out; }
+
+        /* ===== TOP BAR ===== */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 6px 0;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            min-height: var(--topbar-height);
+        }
+
+        .topbar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .topbar-logo {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+            text-decoration: none;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .topbar-logo span { color: var(--accent); }
+
+        .topbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .topbar-nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .topbar-nav a:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .topbar-nav a.active {
+            color: var(--accent);
+            background: var(--accent-light);
+        }
+
+        .topbar-nav a .material-icons { font-size: 20px; }
+        .topbar-nav a span:not(.material-icons) { display: inline; }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .topbar-actions .material-icons {
+            font-size: 22px;
+            color: var(--text-secondary);
+        }
+
+        .topbar-actions .avatar-small {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--bg-hover);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .topbar-actions .avatar-small:hover {
+            border-color: var(--accent);
+        }
+
+        .topbar-actions .avatar-small img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 0 8px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            max-width: 160px;
+        }
+
+        .search-bar:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        .search-bar input {
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 13px;
+            padding: 6px 6px;
+            width: 100%;
+            min-width: 60px;
+        }
+
+        .search-bar input::placeholder {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .search-bar .material-icons {
+            color: var(--text-muted);
+            font-size: 18px;
+        }
+
+        /* ===== RIPPLE BUTTON ===== */
+        .ripple-btn {
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: var(--font);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            transition: background 0.2s, transform 0.1s;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .ripple-btn .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(0);
+            animation: ripple 0.5s ease-out;
+            pointer-events: none;
+        }
+
+        [data-theme="light"] .ripple-btn .ripple-effect {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .ripple-btn:hover { background: var(--bg-hover); }
+        .ripple-btn:active { transform: scale(0.97); }
+
+        .ripple-btn.primary {
+            background: var(--accent);
+            color: #fff;
+        }
+        .ripple-btn.primary:hover { background: var(--accent-hover); }
+
+        .ripple-btn.outline {
+            border: 1px solid var(--border-color);
+        }
+        .ripple-btn.outline:hover { background: var(--bg-hover); }
+
+        /* ===== SEARCH PAGE ===== */
+        .search-page { padding: 16px 0 24px; }
+        .search-page h1 { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+        .search-page .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 16px; }
+
+        .search-input-wrap {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .search-input-wrap .search-bar {
+            flex: 1;
+            max-width: none;
+        }
+
+        .search-input-wrap .search-bar input {
+            min-width: 120px;
+        }
+
+        .search-filters {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .search-filters .filter-btn {
+            padding: 6px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            color: var(--text-secondary);
+            font-family: var(--font);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .search-filters .filter-btn:hover {
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+
+        .search-filters .filter-btn.active {
+            border-color: var(--accent);
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+
+        .search-stats {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .search-stats span { color: var(--text-primary); font-weight: 600; }
+
+        /* ===== POST CARD ===== */
+        .post-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .post-card:hover {
+            border-color: var(--border-light);
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .post-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg-hover);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .post-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .post-user {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .post-username {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .post-username:hover { color: var(--accent); }
+
+        .post-time {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .post-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 6px 0 8px;
+            line-height: 1.4;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .post-title:hover { color: var(--accent); }
+
+        .post-content {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            word-wrap: break-word;
+        }
+
+        .post-content .highlight {
+            background: var(--accent-light);
+            color: var(--accent);
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        .post-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 4px;
+            margin: 8px 0;
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .post-images .img-wrap {
+            position: relative;
+            padding-bottom: 100%;
+            background: var(--bg-hover);
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .post-images .img-wrap img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .post-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+
+        .post-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: var(--radius);
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: var(--font);
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .post-action-btn:hover { background: var(--bg-hover); }
+        .post-action-btn .material-icons { font-size: 18px; }
+
+        .search-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .search-empty .material-icons {
+            font-size: 64px;
+            display: block;
+            margin-bottom: 16px;
+            color: var(--text-muted);
+        }
+
+        /* ===== USER CARD ===== */
+        .user-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-card:hover {
+            border-color: var(--accent);
+        }
+
+        .user-card .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--bg-hover);
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 18px;
+            color: var(--text-secondary);
+        }
+
+        .user-card .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .user-card .info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-card .info .name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .user-card .info .username {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .user-card .info .bio {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .user-card .info .stats {
+            display: flex;
+            gap: 16px;
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            margin-top: auto;
+            padding: 30px 0 16px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+
+        .footer-inner {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .footer-brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .footer-brand span { color: var(--accent); }
+
+        .footer-links {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover { color: var(--accent); }
+
+        .footer-copy {
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-top: 12px;
+            text-align: center;
+            width: 100%;
+        }
+
+        /* ===== LOADING ===== */
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .loading-spinner .material-icons {
+            animation: spin 1s linear infinite;
+            font-size: 28px;
+            margin-right: 10px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 992px) {
+            .search-bar { max-width: 120px; }
+            .search-bar input { min-width: 50px; font-size: 12px; }
+            .topbar-nav a { padding: 4px 8px; font-size: 12px; }
+            .topbar-nav a .material-icons { font-size: 18px; }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 0 10px; }
+            .topbar-logo { font-size: 17px; }
+            .topbar-nav a span:not(.material-icons) { display: none; }
+            .topbar-nav a { padding: 6px 8px; }
+            .topbar-nav a .material-icons { font-size: 20px; }
+            .search-bar { max-width: 100px; }
+            .search-bar input { min-width: 40px; width: 40px; font-size: 11px; }
+            .search-input-wrap { flex-direction: column; }
+            .search-input-wrap .search-bar input { min-width: 80px; }
+            .search-filters .filter-btn { font-size: 12px; padding: 5px 10px; }
+            .post-card { padding: 12px; }
+            .post-title { font-size: 15px; }
+            .post-images { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
+            .footer-inner { flex-direction: column; align-items: center; text-align: center; }
+            .user-card { padding: 12px; }
+            .user-card .avatar { width: 40px; height: 40px; font-size: 14px; }
+        }
+
+        @media (max-width: 480px) {
+            .topbar { padding: 4px 0; }
+            .topbar-logo { font-size: 15px; }
+            .topbar-nav a { padding: 4px 6px; }
+            .topbar-nav a .material-icons { font-size: 18px; }
+            .search-bar { max-width: 70px; }
+            .search-bar input { min-width: 30px; width: 30px; padding: 4px 4px; font-size: 10px; }
+            .topbar-actions .avatar-small { width: 26px; height: 26px; font-size: 10px; }
+            .topbar-actions .material-icons { font-size: 18px; }
+            .search-page h1 { font-size: 20px; }
+            .search-filters .filter-btn { font-size: 11px; padding: 4px 8px; }
+            .post-card { padding: 10px; }
+            .post-title { font-size: 14px; }
+            .post-content { font-size: 13px; }
+            .post-avatar { width: 30px; height: 30px; font-size: 12px; }
+            .user-card .avatar { width: 36px; height: 36px; font-size: 12px; }
+            .user-card .info .name { font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="topbar">
+    <div class="container">
+        <div class="topbar-inner">
+            <a href="/" class="topbar-logo">Take<span>an</span></a>
+            
+            <nav class="topbar-nav">
+                <a href="/">
+                    <span class="material-icons">home</span>
+                    <span>Главная</span>
+                </a>
+                <a href="/search.html" class="active">
+                    <span class="material-icons">search</span>
+                    <span>Поиск</span>
+                </a>
+                <a href="/create.html">
+                    <span class="material-icons">add_box</span>
+                    <span>Создать</span>
+                </a>
+            </nav>
+
+            <div class="topbar-actions">
+                <div class="search-bar">
+                    <span class="material-icons">search</span>
+                    <input type="text" placeholder="Поиск..." id="globalSearch">
+                </div>
+                
+                <button class="ripple-btn" id="themeToggle" aria-label="Переключить тему" style="padding:4px 6px;">
+                    <span class="material-icons">dark_mode</span>
+                </button>
+
+                <div class="avatar-small" id="userAvatar">
+                    <span>?</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="container search-page" style="flex:1;">
+    <h1>Поиск</h1>
+    <p class="subtitle">Найдите тейки, сообщества и пользователей</p>
+
+    <div class="search-input-wrap">
+        <div class="search-bar">
+            <span class="material-icons">search</span>
+            <input type="text" id="searchInput" placeholder="Введите запрос..." style="min-width:120px;">
+        </div>
+        <button class="ripple-btn primary" id="searchBtn">
+            <span class="material-icons">search</span> Найти
+        </button>
+    </div>
+
+    <div class="search-filters" id="searchFilters">
+        <button class="filter-btn active" data-filter="all">Все</button>
+        <button class="filter-btn" data-filter="posts">Тейки</button>
+        <button class="filter-btn" data-filter="users">Пользователи</button>
+        <button class="filter-btn" data-filter="politics">Политика</button>
+        <button class="filter-btn" data-filter="games">Игры</button>
+        <button class="filter-btn" data-filter="tech">Технологии</button>
+        <button class="filter-btn" data-filter="science">Наука</button>
+    </div>
+
+    <div class="search-stats">Найдено: <span id="resultCount">0</span> результатов</div>
+
+    <div id="searchResults">
+        <div class="search-empty">
+            <span class="material-icons">search</span>
+            <h3 style="font-weight:500;">Введите запрос для поиска</h3>
+            <p style="font-size:14px;">Ищите тейки, пользователей и сообщества</p>
+        </div>
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <div class="footer-inner">
+            <div>
+                <div class="footer-brand">Take<span>an</span></div>
+                <div style="color: var(--text-muted); font-size: 13px; margin-top: 2px;">
+                    Платформа для тейков
+                </div>
+            </div>
+            <div class="footer-links">
+                <a href="/settings.html">Настройки</a>
+                <a href="#" onclick="alert('Страница в разработке')">Политика конфиденциальности</a>
+                <a href="#" onclick="alert('Страница в разработке')">Задать вопрос</a>
+                <a href="/404.html">404</a>
+            </div>
+        </div>
+        <div class="footer-copy">
+            &copy; 2026 Takean. Все права защищены.
+        </div>
+    </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyBDzDIwiObevnlfqfm6p9fzAvsHHpT2QZU",
+    authDomain: "takean.firebaseapp.com",
+    projectId: "takean",
+    storageBucket: "takean.firebasestorage.app",
+    messagingSenderId: "359116659063",
+    appId: "1:359116659063:web:eb81859e5a8f885e546972",
+    measurementId: "G-VXLM679GKK"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let currentUser = null;
+let currentFilter = 'all';
+let searchQuery = '';
+
+let currentTheme = localStorage.getItem('takean-theme') || 'dark';
+document.documentElement.setAttribute('data-theme', currentTheme);
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('themeToggle').addEventListener('click', () => {
+        currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        localStorage.setItem('takean-theme', currentTheme);
+        document.getElementById('themeToggle').innerHTML = 
+            `<span class="material-icons">${currentTheme === 'dark' ? 'dark_mode' : 'light_mode'}</span>`;
+    });
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const q = urlParams.get('q');
+    if (q) {
+        document.getElementById('searchInput').value = q;
+        document.getElementById('globalSearch').value = q;
+        searchQuery = q;
+        performSearch(q);
+    }
+
+    setupEventListeners();
+    loadUserData();
+});
+
+function setupEventListeners() {
+    document.getElementById('searchBtn').addEventListener('click', () => {
+        const q = document.getElementById('searchInput').value.trim();
+        if (q) {
+            searchQuery = q;
+            performSearch(q);
+        }
+    });
+
+    document.getElementById('searchInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const q = document.getElementById('searchInput').value.trim();
+            if (q) {
+                searchQuery = q;
+                performSearch(q);
+            }
+        }
+    });
+
+    document.getElementById('globalSearch').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const q = document.getElementById('globalSearch').value.trim();
+            if (q) {
+                window.location.href = `/search.html?q=${encodeURIComponent(q)}`;
+            }
+        }
+    });
+
+    document.querySelectorAll('#searchFilters .filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('#searchFilters .filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentFilter = this.dataset.filter;
+            if (searchQuery) performSearch(searchQuery);
+        });
+    });
+}
+
+function loadUserData() {
+    const user = auth.currentUser;
+    currentUser = user;
+    
+    const avatarEl = document.getElementById('userAvatar');
+    if (user) {
+        avatarEl.innerHTML = user.photoURL 
+            ? `<img src="${user.photoURL}" alt="avatar">` 
+            : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
+        avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+    } else {
+        avatarEl.innerHTML = '<span>?</span>';
+        avatarEl.onclick = () => window.location.href = '/login.html';
+    }
+}
+
+auth.onAuthStateChanged(user => { loadUserData(); });
+
+function performSearch(query) {
+    const results = document.getElementById('searchResults');
+    const count = document.getElementById('resultCount');
+    results.innerHTML = '<div class="loading-spinner"><span class="material-icons">refresh</span> Поиск...</div>';
+
+    const url = new URL(window.location);
+    url.searchParams.set('q', query);
+    window.history.pushState({}, '', url);
+
+    let promises = [];
+
+    if (currentFilter === 'all' || currentFilter === 'posts' || ['politics','games','tech','science'].includes(currentFilter)) {
+        let postsQuery = db.collection('posts');
+        if (!['all','posts'].includes(currentFilter)) {
+            postsQuery = postsQuery.where('category', '==', currentFilter);
+        }
+        promises.push(
+            postsQuery.orderBy('createdAt', 'desc').limit(50).get()
+                .then(snapshot => {
+                    const posts = [];
+                    const q = query.toLowerCase();
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        if ((data.title && data.title.toLowerCase().includes(q)) ||
+                            (data.content && data.content.toLowerCase().includes(q))) {
+                            posts.push({ id: doc.id, ...data, type: 'post' });
+                        }
+                    });
+                    return posts;
+                })
+        );
+    }
+
+    if (currentFilter === 'all' || currentFilter === 'users') {
+        promises.push(
+            db.collection('users').limit(30).get()
+                .then(snapshot => {
+                    const users = [];
+                    const q = query.toLowerCase();
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        if (data.username && data.username.toLowerCase().includes(q)) {
+                            users.push({ id: doc.id, ...data, type: 'user' });
+                        }
+                    });
+                    return users;
+                })
+        );
+    }
+
+    Promise.all(promises)
+        .then(resultsArrays => {
+            const allResults = resultsArrays.flat();
+            count.textContent = allResults.length;
+            renderResults(allResults, query);
+        })
+        .catch(err => {
+            console.error('Search error:', err);
+            results.innerHTML = '<div class="search-empty"><span class="material-icons">error</span><h3 style="font-weight:500;">Ошибка поиска</h3></div>';
+        });
+}
+
+function renderResults(results, query) {
+    const container = document.getElementById('searchResults');
+    
+    if (!results.length) {
+        container.innerHTML = `
+            <div class="search-empty">
+                <span class="material-icons">search_off</span>
+                <h3 style="font-weight:500;margin-bottom:8px;">Ничего не найдено</h3>
+                <p style="font-size:14px;">Попробуйте изменить запрос или фильтр</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = results.map(item => {
+        if (item.type === 'post') return createPostCard(item, query);
+        if (item.type === 'user') return createUserCard(item, query);
+        return '';
+    }).join('');
+}
+
+function createPostCard(post, query) {
+    const score = (post.likes?.length || 0) - (post.dislikes?.length || 0);
+    const timeStr = post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleDateString('ru-RU') : 'недавно';
+    
+    return `
+        <div class="post-card" onclick="window.location.href='/post.html?id=${post.id}'" style="cursor:pointer;">
+            <div class="post-header">
+                <div class="post-avatar" onclick="event.stopPropagation(); window.location.href='/profile.html?uid=${post.authorId}'">
+                    ${post.authorAvatar ? `<img src="${post.authorAvatar}" alt="">` : `<span>${(post.authorName || '?')[0].toUpperCase()}</span>`}
+                </div>
+                <div class="post-user">
+                    <div class="post-username" onclick="event.stopPropagation(); window.location.href='/profile.html?uid=${post.authorId}'">
+                        ${escapeHtml(post.authorName || 'Аноним')}
+                    </div>
+                    <div class="post-time">${timeStr} ${post.category ? '• #' + escapeHtml(post.category) : ''}</div>
+                </div>
+            </div>
+            <div class="post-title">${highlightText(escapeHtml(post.title || 'Без заголовка'), query)}</div>
+            <div class="post-content">${highlightText(escapeHtml((post.content || '').substring(0, 300)), query)}${(post.content || '').length > 300 ? '...' : ''}</div>
+            ${post.images && post.images.length ? `
+                <div class="post-images">
+                    ${post.images.slice(0, 3).map(img => `
+                        <div class="img-wrap"><img src="${img}" alt=""></div>
+                    `).join('')}
+                </div>
+            ` : ''}
+            <div class="post-actions">
+                <span class="post-action-btn"><span class="material-icons">thumb_up</span> ${post.likes?.length || 0}</span>
+                <span class="post-action-btn"><span class="material-icons">comment</span> ${post.commentsCount || 0}</span>
+                <span class="post-action-btn" style="color:${score >= 0 ? 'var(--green)' : 'var(--red)'};">${score >= 0 ? '+' : ''}${score}</span>
+            </div>
+        </div>
+    `;
+}
+
+function createUserCard(user, query) {
+    return `
+        <div class="user-card" onclick="window.location.href='/profile.html?uid=${user.id}'">
+            <div class="avatar">
+                ${user.avatar ? `<img src="${user.avatar}" alt="">` : `<span>${(user.username || '?')[0].toUpperCase()}</span>`}
+            </div>
+            <div class="info">
+                <div class="name">${highlightText(escapeHtml(user.username || 'Аноним'), query)}</div>
+                <div class="username">@${escapeHtml(user.username || 'anonymous')}</div>
+                <div class="bio">${escapeHtml(user.bio || 'Нет описания')}</div>
+                <div class="stats">
+                    <span>Подписчики: ${user.followers?.length || 0}</span>
+                    <span>Репутация: ${user.reputation || 0}</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function highlightText(text, query) {
+    if (!query || !text) return text;
+    const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+    return text.replace(regex, '<span class="highlight">$1</span>');
+}
+
+function escapeRegex(text) {
+    return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+console.log('🔍 Search page loaded');
+</script>
+</body>
+</html>

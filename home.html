@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Takean - Главная</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-card: #1c1c1c;
+            --bg-hover: #2a2a2a;
+            --bg-input: #252525;
+            --text-primary: #e8e8e8;
+            --text-secondary: #a0a0a0;
+            --text-muted: #6b6b6b;
+            --border-color: #2c2c2c;
+            --border-light: #3a3a3a;
+            --accent: #4f8cff;
+            --accent-hover: #6b9fff;
+            --accent-light: rgba(79, 140, 255, 0.15);
+            --green: #4caf50;
+            --red: #f44336;
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+            --radius: 4px;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --topbar-height: 60px;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f0f0f0;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-hover: #e8e8e8;
+            --bg-input: #f0f0f0;
+            --text-primary: #1a1a1a;
+            --text-secondary: #555555;
+            --text-muted: #888888;
+            --border-color: #e0e0e0;
+            --border-light: #d0d0d0;
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        html {
+            font-family: var(--font);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background 0.3s, color 0.3s;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: var(--radius); }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 0 16px; width: 100%; }
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .flex-center { display: flex; align-items: center; justify-content: center; }
+        .flex-between { display: flex; align-items: center; justify-content: space-between; }
+        .flex-col { display: flex; flex-direction: column; }
+        .gap-8 { gap: 8px; }
+        .gap-12 { gap: 12px; }
+        .gap-16 { gap: 16px; }
+        .gap-24 { gap: 24px; }
+        .text-center { text-align: center; }
+        .text-muted { color: var(--text-muted); }
+
+        @keyframes ripple {
+            0% { transform: scale(0); opacity: 0.4; }
+            100% { transform: scale(4); opacity: 0; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .animate-fade { animation: fadeIn 0.25s ease-out; }
+        .animate-slide { animation: slideUp 0.3s ease-out; }
+
+        /* ===== TOP BAR ===== */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 6px 0;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            min-height: var(--topbar-height);
+        }
+
+        .topbar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .topbar-logo {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+            text-decoration: none;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .topbar-logo span { color: var(--accent); }
+
+        .topbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .topbar-nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .topbar-nav a:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .topbar-nav a.active {
+            color: var(--accent);
+            background: var(--accent-light);
+        }
+
+        .topbar-nav a .material-icons { font-size: 20px; }
+        .topbar-nav a span:not(.material-icons) { display: inline; }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .topbar-actions .material-icons {
+            font-size: 22px;
+            color: var(--text-secondary);
+        }
+
+        .topbar-actions .avatar-small {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--bg-hover);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .topbar-actions .avatar-small:hover {
+            border-color: var(--accent);
+        }
+
+        .topbar-actions .avatar-small img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 0 8px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            max-width: 160px;
+        }
+
+        .search-bar:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        .search-bar input {
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 13px;
+            padding: 6px 6px;
+            width: 100%;
+            min-width: 60px;
+        }
+
+        .search-bar input::placeholder {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .search-bar .material-icons {
+            color: var(--text-muted);
+            font-size: 18px;
+        }
+
+        /* ===== RIPPLE BUTTON ===== */
+        .ripple-btn {
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: var(--font);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            transition: background 0.2s, transform 0.1s;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .ripple-btn .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(0);
+            animation: ripple 0.5s ease-out;
+            pointer-events: none;
+        }
+
+        [data-theme="light"] .ripple-btn .ripple-effect {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .ripple-btn:hover { background: var(--bg-hover); }
+        .ripple-btn:active { transform: scale(0.97); }
+
+        .ripple-btn.primary {
+            background: var(--accent);
+            color: #fff;
+        }
+        .ripple-btn.primary:hover { background: var(--accent-hover); }
+
+        .ripple-btn.outline {
+            border: 1px solid var(--border-color);
+        }
+        .ripple-btn.outline:hover { background: var(--bg-hover); }
+
+        /* ===== POST CARD ===== */
+        .post-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .post-card:hover {
+            border-color: var(--border-light);
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .post-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg-hover);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .post-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .post-user {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .post-username {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .post-username:hover { color: var(--accent); }
+
+        .post-badge {
+            font-size: 10px;
+            background: var(--accent-light);
+            color: var(--accent);
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        .post-time {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .post-community {
+            font-size: 11px;
+            color: var(--accent);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .post-community:hover { text-decoration: underline; }
+
+        .post-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 6px 0 8px;
+            line-height: 1.4;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .post-title:hover { color: var(--accent); }
+
+        .post-content {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            word-wrap: break-word;
+        }
+
+        .post-content .mention {
+            color: var(--accent);
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .post-content .mention:hover { text-decoration: underline; }
+
+        .post-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 4px;
+            margin: 8px 0;
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .post-images .img-wrap {
+            position: relative;
+            padding-bottom: 100%;
+            background: var(--bg-hover);
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .post-images .img-wrap img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .post-images .img-wrap:hover img { transform: scale(1.03); }
+
+        .post-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+
+        .post-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: var(--radius);
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: var(--font);
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .post-action-btn:hover { background: var(--bg-hover); }
+        .post-action-btn .material-icons { font-size: 18px; }
+
+        .post-action-btn.liked { color: var(--green); }
+        .post-action-btn.liked .material-icons { font-variation-settings: 'FILL' 1; }
+        .post-action-btn.disliked { color: var(--red); }
+        .post-action-btn.disliked .material-icons { font-variation-settings: 'FILL' 1; }
+
+        .post-score {
+            font-weight: 700;
+            font-size: 14px;
+            min-width: 24px;
+            text-align: center;
+            color: var(--text-primary);
+        }
+
+        .post-score.positive { color: var(--green); }
+        .post-score.negative { color: var(--red); }
+
+        /* ===== SORT FILTERS ===== */
+        .feed-filters {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 4px;
+            flex-wrap: nowrap;
+        }
+
+        .feed-filters .filter-btn {
+            padding: 6px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            color: var(--text-secondary);
+            font-family: var(--font);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
+            flex-shrink: 0;
+        }
+
+        .feed-filters .filter-btn:hover {
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+
+        .feed-filters .filter-btn.active {
+            border-color: var(--accent);
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+
+        /* ===== AUTH MODAL ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            animation: fadeIn 0.2s ease-out;
+            padding: 16px;
+        }
+
+        .modal-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 24px;
+            max-width: 420px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.25s ease-out;
+        }
+
+        .modal-box h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .modal-box .field {
+            margin-bottom: 14px;
+        }
+
+        .modal-box .field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .modal-box .field input {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .modal-box .field input:focus {
+            border-color: var(--accent);
+        }
+
+        .modal-box .field .input-prefix {
+            display: flex;
+            align-items: center;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .modal-box .field .input-prefix span {
+            padding: 10px 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+            background: var(--bg-hover);
+            border-right: 1px solid var(--border-color);
+        }
+
+        .modal-box .field .input-prefix input {
+            border: none;
+            border-radius: 0;
+            background: none;
+            padding: 10px 12px;
+        }
+
+        .modal-box .field .input-prefix input:focus {
+            border-color: transparent;
+            box-shadow: none;
+        }
+
+        .modal-box .checkbox-field {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .modal-box .checkbox-field input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+        }
+
+        .modal-box .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 16px 0;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .modal-box .auth-divider::before,
+        .modal-box .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .modal-box .google-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            background: none;
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .modal-box .google-btn:hover {
+            background: var(--bg-hover);
+        }
+
+        .modal-box .auth-bottom {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .modal-box .auth-bottom a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .modal-box .auth-bottom a:hover { text-decoration: underline; }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            margin-top: auto;
+            padding: 30px 0 16px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+
+        .footer-inner {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .footer-brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .footer-brand span { color: var(--accent); }
+
+        .footer-links {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover { color: var(--accent); }
+
+        .footer-copy {
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-top: 12px;
+            text-align: center;
+            width: 100%;
+        }
+
+        /* ===== LOADING ===== */
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .loading-spinner .material-icons {
+            animation: spin 1s linear infinite;
+            font-size: 28px;
+            margin-right: 10px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 992px) {
+            .search-bar { max-width: 120px; }
+            .search-bar input { min-width: 50px; font-size: 12px; }
+            .topbar-nav a { padding: 4px 8px; font-size: 12px; }
+            .topbar-nav a .material-icons { font-size: 18px; }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 0 10px; }
+            .topbar-logo { font-size: 17px; }
+            .topbar-nav a span:not(.material-icons) { display: none; }
+            .topbar-nav a { padding: 6px 8px; }
+            .topbar-nav a .material-icons { font-size: 20px; }
+            .search-bar { max-width: 100px; }
+            .search-bar input { min-width: 40px; width: 40px; font-size: 11px; }
+            .post-card { padding: 12px; }
+            .post-title { font-size: 15px; }
+            .post-images { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
+            .footer-inner { flex-direction: column; align-items: center; text-align: center; }
+            .feed-filters .filter-btn { font-size: 12px; padding: 5px 10px; }
+        }
+
+        @media (max-width: 480px) {
+            .topbar { padding: 4px 0; }
+            .topbar-logo { font-size: 15px; }
+            .topbar-nav a { padding: 4px 6px; }
+            .topbar-nav a .material-icons { font-size: 18px; }
+            .search-bar { max-width: 70px; }
+            .search-bar input { min-width: 30px; width: 30px; padding: 4px 4px; font-size: 10px; }
+            .topbar-actions .avatar-small { width: 26px; height: 26px; font-size: 10px; }
+            .topbar-actions .material-icons { font-size: 18px; }
+            .post-card { padding: 10px; }
+            .post-title { font-size: 14px; }
+            .post-content { font-size: 13px; }
+            .post-avatar { width: 30px; height: 30px; font-size: 12px; }
+            .modal-box { padding: 16px; margin: 8px; }
+            .feed-filters .filter-btn { font-size: 11px; padding: 4px 8px; }
+        }
+
+        @media (max-width: 360px) {
+            .topbar-nav a { padding: 3px 4px; }
+            .topbar-nav a .material-icons { font-size: 16px; }
+            .search-bar { max-width: 50px; }
+            .search-bar input { min-width: 20px; width: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="topbar">
+    <div class="container">
+        <div class="topbar-inner">
+            <a href="/" class="topbar-logo">Take<span>an</span></a>
+            
+            <nav class="topbar-nav">
+                <a href="/" class="active">
+                    <span class="material-icons">home</span>
+                    <span>Главная</span>
+                </a>
+                <a href="/search.html">
+                    <span class="material-icons">search</span>
+                    <span>Поиск</span>
+                </a>
+                <a href="/create.html">
+                    <span class="material-icons">add_box</span>
+                    <span>Создать</span>
+                </a>
+            </nav>
+
+            <div class="topbar-actions">
+                <div class="search-bar">
+                    <span class="material-icons">search</span>
+                    <input type="text" placeholder="Поиск..." id="globalSearch">
+                </div>
+                
+                <button class="ripple-btn" id="themeToggle" aria-label="Переключить тему" style="padding:4px 6px;">
+                    <span class="material-icons">dark_mode</span>
+                </button>
+
+                <div class="avatar-small" id="userAvatar">
+                    <span>?</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="container" style="flex:1; padding: 16px 0 24px;">
+    <div class="feed-filters" id="feedFilters">
+        <button class="filter-btn active" data-filter="all">Все</button>
+        <button class="filter-btn" data-filter="popular">Популярные</button>
+        <button class="filter-btn" data-filter="new">Новые</button>
+        <button class="filter-btn" data-filter="politics">Политика</button>
+        <button class="filter-btn" data-filter="games">Игры</button>
+        <button class="filter-btn" data-filter="tech">Технологии</button>
+        <button class="filter-btn" data-filter="science">Наука</button>
+    </div>
+
+    <div id="feedContainer">
+        <div class="loading-spinner">
+            <span class="material-icons">refresh</span> Загрузка...
+        </div>
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <div class="footer-inner">
+            <div>
+                <div class="footer-brand">Take<span>an</span></div>
+                <div style="color: var(--text-muted); font-size: 13px; margin-top: 2px;">
+                    Платформа для тейков
+                </div>
+            </div>
+            <div class="footer-links">
+                <a href="/settings.html">Настройки</a>
+                <a href="#" onclick="alert('Страница в разработке')">Политика конфиденциальности</a>
+                <a href="#" onclick="alert('Страница в разработке')">Задать вопрос</a>
+                <a href="/404.html">404</a>
+            </div>
+        </div>
+        <div class="footer-copy">
+            &copy; 2026 Takean. Все права защищены.
+        </div>
+    </div>
+</footer>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay hidden" id="authModal">
+    <div class="modal-box">
+        <div id="authFormContainer"></div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+// ============================================================
+// FIREBASE CONFIG
+// ============================================================
+const firebaseConfig = {
+    apiKey: "AIzaSyBDzDIwiObevnlfqfm6p9fzAvsHHpT2QZU",
+    authDomain: "takean.firebaseapp.com",
+    projectId: "takean",
+    storageBucket: "takean.firebasestorage.app",
+    messagingSenderId: "359116659063",
+    appId: "1:359116659063:web:eb81859e5a8f885e546972",
+    measurementId: "G-VXLM679GKK"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// ============================================================
+// STATE
+// ============================================================
+let currentUser = null;
+let feedPosts = [];
+let currentFilter = 'all';
+let authModalCallback = null;
+
+// ============================================================
+// THEME
+// ============================================================
+let currentTheme = localStorage.getItem('takean-theme') || 'dark';
+document.documentElement.setAttribute('data-theme', currentTheme);
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('themeToggle').addEventListener('click', () => {
+        currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        localStorage.setItem('takean-theme', currentTheme);
+        document.getElementById('themeToggle').innerHTML = 
+            `<span class="material-icons">${currentTheme === 'dark' ? 'dark_mode' : 'light_mode'}</span>`;
+    });
+
+    setupEventListeners();
+    loadUserData();
+    loadFeed();
+});
+
+// ============================================================
+// EVENT LISTENERS
+// ============================================================
+function setupEventListeners() {
+    document.getElementById('globalSearch').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const q = document.getElementById('globalSearch').value.trim();
+            if (q) window.location.href = `/search.html?q=${encodeURIComponent(q)}`;
+        }
+    });
+
+    document.querySelectorAll('#feedFilters .filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('#feedFilters .filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentFilter = this.dataset.filter;
+            loadFeed();
+        });
+    });
+
+    document.getElementById('authModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('authModal')) closeAuthModal();
+    });
+}
+
+// ============================================================
+// USER STATE
+// ============================================================
+function loadUserData() {
+    const user = auth.currentUser;
+    currentUser = user;
+    
+    const avatarEl = document.getElementById('userAvatar');
+    if (user) {
+        avatarEl.innerHTML = user.photoURL 
+            ? `<img src="${user.photoURL}" alt="avatar">` 
+            : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
+        avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+    } else {
+        avatarEl.innerHTML = '<span>?</span>';
+        avatarEl.onclick = () => openAuthModal();
+    }
+}
+
+auth.onAuthStateChanged(user => {
+    loadUserData();
+    if (user) loadFeed();
+});
+
+// ============================================================
+// AUTH MODAL
+// ============================================================
+function openAuthModal(callback) {
+    authModalCallback = callback || null;
+    const modal = document.getElementById('authModal');
+    modal.classList.remove('hidden');
+    renderAuthForm('login');
+}
+
+function closeAuthModal() {
+    document.getElementById('authModal').classList.add('hidden');
+    authModalCallback = null;
+}
+
+function renderAuthForm(mode) {
+    const container = document.getElementById('authFormContainer');
+    const isLogin = mode === 'login';
+    
+    container.innerHTML = `
+        <h2>${isLogin ? 'Вход' : 'Регистрация'}</h2>
+        
+        ${!isLogin ? `
+        <div class="field">
+            <label>Имя пользователя</label>
+            <div class="input-prefix">
+                <span>@</span>
+                <input type="text" id="authUsername" placeholder="username" 
+                       pattern="[a-zA-Z0-9_.-]+" 
+                       oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9_.-]/g, '')">
+            </div>
+        </div>
+        ` : ''}
+        
+        <div class="field">
+            <label>Email</label>
+            <input type="email" id="authEmail" placeholder="your@email.com">
+        </div>
+        
+        <div class="field">
+            <label>Пароль</label>
+            <input type="password" id="authPassword" placeholder="••••••••">
+        </div>
+        
+        ${!isLogin ? `
+        <div class="field">
+            <label>Повторите пароль</label>
+            <input type="password" id="authPassword2" placeholder="••••••••">
+        </div>
+        ` : ''}
+        
+        <div class="field">
+            <label class="checkbox-field">
+                <input type="checkbox" id="authRemember"> Запомнить меня
+            </label>
+        </div>
+        
+        <button class="ripple-btn primary" style="width:100%;justify-content:center;padding:12px;" 
+                id="authSubmitBtn">
+            ${isLogin ? 'Войти' : 'Зарегистрироваться'}
+        </button>
+        
+        <div class="auth-divider">или</div>
+        
+        <button class="google-btn" id="googleAuthBtn">
+            <svg width="20" height="20" viewBox="0 0 24 24">
+                <path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582l3.277-3.277C17.508 1.027 14.932 0 12 0 7.315 0 3.21 2.607 1.24 6.344l4.026 3.421z"/>
+                <path fill="#34A853" d="M16.218 18.362c-1.24.823-2.836 1.366-4.218 1.366-3.145 0-5.873-1.645-7.367-4.127l-4.026 3.421C3.21 21.393 7.315 24 12 24c2.932 0 5.508-1.027 7.518-2.818l-3.3-2.82z"/>
+                <path fill="#4A90E2" d="M21.455 12.109c0-.793-.072-1.6-.216-2.364H12v4.582h5.146c-.218 1.273-.873 2.363-1.855 3.091l3.3 2.82c1.964-1.8 3.2-4.455 3.2-7.129z"/>
+                <path fill="#FBBC05" d="M5.266 9.765a7.077 7.077 0 0 0-.454 2.418c0 .856.155 1.673.454 2.418l4.026-3.421c-.273-.809-.427-1.7-.427-2.636 0-.936.154-1.827.427-2.636L5.266 9.765z"/>
+            </svg>
+            Войти через Google
+        </button>
+        
+        <div class="auth-bottom">
+            ${isLogin ? 'Нет аккаунта?' : 'Уже есть аккаунт?'} 
+            <a onclick="renderAuthForm('${isLogin ? 'register' : 'login'}')">
+                ${isLogin ? 'Зарегистрироваться' : 'Войти'}
+            </a>
+        </div>
+    `;
+    
+    document.getElementById('authSubmitBtn').addEventListener('click', () => {
+        const email = document.getElementById('authEmail').value.trim();
+        const password = document.getElementById('authPassword').value;
+        const remember = document.getElementById('authRemember')?.checked || false;
+        
+        if (!email || !password) {
+            alert('Заполните все поля');
+            return;
+        }
+        
+        if (!isLogin) {
+            const username = document.getElementById('authUsername').value.trim();
+            const pwd2 = document.getElementById('authPassword2').value;
+            if (!username || username.length < 2) {
+                alert('Имя пользователя должно быть минимум 2 символа');
+                return;
+            }
+            if (password !== pwd2) {
+                alert('Пароли не совпадают');
+                return;
+            }
+            auth.createUserWithEmailAndPassword(email, password)
+                .then(cred => {
+                    return cred.user.updateProfile({
+                        displayName: username
+                    }).then(() => {
+                        return db.collection('users').doc(cred.user.uid).set({
+                            username: username,
+                            email: email,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            avatar: null,
+                            bio: '',
+                            reputation: 0,
+                            followers: [],
+                            following: [],
+                            theme: currentTheme
+                        });
+                    });
+                })
+                .then(() => {
+                    closeAuthModal();
+                    if (authModalCallback) authModalCallback();
+                    loadUserData();
+                })
+                .catch(err => alert('Ошибка: ' + err.message));
+        } else {
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    closeAuthModal();
+                    if (authModalCallback) authModalCallback();
+                    loadUserData();
+                })
+                .catch(err => alert('Ошибка: ' + err.message));
+        }
+    });
+    
+    document.getElementById('googleAuthBtn').addEventListener('click', () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider)
+            .then(result => {
+                const user = result.user;
+                return db.collection('users').doc(user.uid).get().then(doc => {
+                    if (!doc.exists) {
+                        return db.collection('users').doc(user.uid).set({
+                            username: user.displayName || 'user_' + Date.now(),
+                            email: user.email,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            avatar: user.photoURL || null,
+                            bio: '',
+                            reputation: 0,
+                            followers: [],
+                            following: [],
+                            theme: currentTheme
+                        });
+                    }
+                });
+            })
+            .then(() => {
+                closeAuthModal();
+                if (authModalCallback) authModalCallback();
+                loadUserData();
+            })
+            .catch(err => alert('Ошибка Google: ' + err.message));
+    });
+}
+
+// ============================================================
+// FEED
+// ============================================================
+function loadFeed() {
+    const container = document.getElementById('feedContainer');
+    container.innerHTML = '<div class="loading-spinner"><span class="material-icons">refresh</span> Загрузка...</div>';
+
+    let query = db.collection('posts');
+    
+    if (currentFilter === 'popular') {
+        query = query.orderBy('likes', 'desc');
+    } else if (currentFilter === 'new') {
+        query = query.orderBy('createdAt', 'desc');
+    } else if (currentFilter !== 'all' && ['politics', 'games', 'tech', 'science'].includes(currentFilter)) {
+        query = query.where('category', '==', currentFilter);
+    } else {
+        query = query.orderBy('createdAt', 'desc');
+    }
+    
+    query.limit(50).get()
+        .then(snapshot => {
+            const posts = [];
+            snapshot.forEach(doc => {
+                posts.push({ id: doc.id, ...doc.data() });
+            });
+            feedPosts = posts;
+            renderFeed(posts);
+        })
+        .catch(err => {
+            container.innerHTML = `
+                <div style="text-align:center;padding:40px;color:var(--text-muted);">
+                    <span class="material-icons" style="font-size:48px;display:block;margin-bottom:12px;">error</span>
+                    <h3 style="font-weight:500;">Ошибка загрузки</h3>
+                    <p style="font-size:14px;">${err.message}</p>
+                    <button class="ripple-btn primary" style="margin-top:12px;" onclick="loadFeed()">
+                        <span class="material-icons">refresh</span> Обновить
+                    </button>
+                </div>
+            `;
+        });
+}
+
+function renderFeed(posts) {
+    const container = document.getElementById('feedContainer');
+    
+    if (!posts || !posts.length) {
+        container.innerHTML = `
+            <div style="text-align:center;padding:40px 20px;color:var(--text-muted);">
+                <span class="material-icons" style="font-size:48px;display:block;margin-bottom:12px;">inbox</span>
+                <h3 style="font-weight:500;margin-bottom:8px;">Пока нет тейков</h3>
+                <p style="font-size:14px;">Будьте первым, кто создаст тейк!</p>
+                <a href="/create.html" class="ripple-btn primary" style="margin-top:12px;">
+                    <span class="material-icons">add</span> Создать тейк
+                </a>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = posts.map((post, index) => createPostHTML(post, index)).join('');
+}
+
+function createPostHTML(post, index) {
+    const isLiked = post.likes && currentUser && post.likes.includes(currentUser.uid);
+    const isDisliked = post.dislikes && currentUser && post.dislikes.includes(currentUser.uid);
+    const score = (post.likes?.length || 0) - (post.dislikes?.length || 0);
+    const scoreClass = score > 0 ? 'positive' : score < 0 ? 'negative' : '';
+    
+    const timeStr = post.createdAt 
+        ? new Date(post.createdAt.seconds * 1000).toLocaleString('ru-RU', { 
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+          })
+        : 'недавно';
+    
+    return `
+        <div class="post-card" data-id="${post.id}">
+            <div class="post-header">
+                <div class="post-avatar" onclick="goToProfile('${post.authorId}')">
+                    ${post.authorAvatar 
+                        ? `<img src="${post.authorAvatar}" alt="">` 
+                        : `<span>${(post.authorName || '?')[0].toUpperCase()}</span>`}
+                </div>
+                <div class="post-user">
+                    <div class="post-username" onclick="goToProfile('${post.authorId}')">
+                        ${escapeHtml(post.authorName || 'Аноним')}
+                        ${post.authorBadge ? `<span class="post-badge">${escapeHtml(post.authorBadge)}</span>` : ''}
+                    </div>
+                    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                        <span class="post-time">${timeStr}</span>
+                        ${post.category ? `<span class="post-community" onclick="applyFilter('${post.category}')">#${escapeHtml(post.category)}</span>` : ''}
+                        ${post.community ? `
+                            <span class="post-community" onclick="goToCommunity('${post.communityId || post.community}')">
+                                <span class="material-icons" style="font-size:14px;">arrow_forward</span>
+                                ${escapeHtml(post.community)}
+                            </span>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="post-title" onclick="openPost('${post.id}')">${escapeHtml(post.title || 'Без заголовка')}</div>
+            
+            <div class="post-content" onclick="openPost('${post.id}')">
+                ${renderContent(post.content || '')}
+            </div>
+            
+            ${post.images && post.images.length ? `
+                <div class="post-images" onclick="openPost('${post.id}')">
+                    ${post.images.slice(0, 4).map(img => `
+                        <div class="img-wrap" onclick="event.stopPropagation(); window.open('${img}', '_blank')">
+                            <img src="${img}" alt="post image" loading="lazy">
+                        </div>
+                    `).join('')}
+                    ${post.images.length > 4 ? `
+                        <div class="img-wrap" style="background:var(--bg-hover);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:20px;font-weight:700;">
+                            +${post.images.length - 4}
+                        </div>
+                    ` : ''}
+                </div>
+            ` : ''}
+            
+            <div class="post-actions">
+                <button class="post-action-btn ${isLiked ? 'liked' : ''}" onclick="votePost('${post.id}', 1)">
+                    <span class="material-icons">thumb_up</span>
+                    ${post.likes?.length || 0}
+                </button>
+                <button class="post-action-btn ${isDisliked ? 'disliked' : ''}" onclick="votePost('${post.id}', -1)">
+                    <span class="material-icons">thumb_down</span>
+                    ${post.dislikes?.length || 0}
+                </button>
+                <span class="post-score ${scoreClass}">${score}</span>
+                <button class="post-action-btn" onclick="openPost('${post.id}')">
+                    <span class="material-icons">comment</span>
+                    ${post.commentsCount || 0}
+                </button>
+                <button class="post-action-btn" onclick="sharePost('${post.id}')">
+                    <span class="material-icons">share</span>
+                </button>
+                ${currentUser && post.authorId === currentUser.uid ? `
+                    <button class="post-action-btn" onclick="deletePost('${post.id}')" style="color:var(--red);">
+                        <span class="material-icons">delete</span>
+                    </button>
+                ` : ''}
+            </div>
+        </div>
+    `;
+}
+
+function renderContent(text) {
+    if (!text) return '';
+    let html = escapeHtml(text);
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    html = html.replace(/__(.*?)__/g, '<u>$1</u>');
+    html = html.replace(/~~(.*?)~~/g, '<s>$1</s>');
+    html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" style="color:var(--accent);">$1</a>');
+    html = html.replace(/@([a-zA-Z0-9_.-]+)/g, '<span class="mention" onclick="goToProfileByUsername(\'$1\')">@$1</span>');
+    return html;
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ============================================================
+// VOTE SYSTEM
+// ============================================================
+function votePost(postId, direction) {
+    if (!currentUser) {
+        openAuthModal(() => votePost(postId, direction));
+        return;
+    }
+    
+    const postRef = db.collection('posts').doc(postId);
+    
+    db.runTransaction(transaction => {
+        return transaction.get(postRef).then(doc => {
+            if (!doc.exists) return;
+            const data = doc.data();
+            const likes = data.likes || [];
+            const dislikes = data.dislikes || [];
+            const uid = currentUser.uid;
+            
+            let newLikes = likes.filter(id => id !== uid);
+            let newDislikes = dislikes.filter(id => id !== uid);
+            
+            if (direction === 1) {
+                if (!likes.includes(uid)) newLikes.push(uid);
+            } else if (direction === -1) {
+                if (!dislikes.includes(uid)) newDislikes.push(uid);
+            }
+            
+            transaction.update(postRef, {
+                likes: newLikes,
+                dislikes: newDislikes
+            });
+        });
+    }).then(() => {
+        const post = feedPosts.find(p => p.id === postId);
+        if (post) {
+            const uid = currentUser.uid;
+            if (direction === 1) {
+                post.likes = [...(post.likes || []).filter(id => id !== uid), uid];
+                post.dislikes = (post.dislikes || []).filter(id => id !== uid);
+            } else {
+                post.dislikes = [...(post.dislikes || []).filter(id => id !== uid), uid];
+                post.likes = (post.likes || []).filter(id => id !== uid);
+            }
+            renderFeed(feedPosts);
+        }
+    }).catch(err => console.error('Vote error:', err));
+}
+
+// ============================================================
+// NAVIGATION HELPERS
+// ============================================================
+function openPost(postId) {
+    window.location.href = `/post.html?id=${postId}`;
+}
+
+function goToProfile(uid) {
+    if (!uid) return;
+    window.location.href = `/profile.html?uid=${uid}`;
+}
+
+function goToProfileByUsername(username) {
+    db.collection('users').where('username', '==', username).get()
+        .then(snapshot => {
+            if (!snapshot.empty) {
+                window.location.href = `/profile.html?uid=${snapshot.docs[0].id}`;
+            }
+        })
+        .catch(() => {});
+}
+
+function goToCommunity(communityId) {
+    if (!communityId) return;
+    window.location.href = `/community.html?id=${communityId}`;
+}
+
+function applyFilter(filter) {
+    document.querySelectorAll('#feedFilters .filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`#feedFilters .filter-btn[data-filter="${filter}"]`)?.classList.add('active');
+    currentFilter = filter;
+    loadFeed();
+}
+
+function sharePost(postId) {
+    const url = window.location.origin + `/post.html?id=${postId}`;
+    if (navigator.share) {
+        navigator.share({ title: 'Тейк на Takean', url });
+    } else {
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Ссылка скопирована!');
+        }).catch(() => {
+            prompt('Скопируйте ссылку:', url);
+        });
+    }
+}
+
+function deletePost(postId) {
+    if (!currentUser) return;
+    if (!confirm('Удалить этот тейк?')) return;
+    
+    db.collection('posts').doc(postId).delete()
+        .then(() => {
+            feedPosts = feedPosts.filter(p => p.id !== postId);
+            renderFeed(feedPosts);
+        })
+        .catch(err => alert('Ошибка: ' + err.message));
+}
+
+console.log('🏠 Takean Home page loaded');
+</script>
+
+</body>
+</html>
