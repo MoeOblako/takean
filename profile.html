@@ -4,23 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- ===== OPEN GRAPH ===== -->
-    <title id="ogTitle">Takean - Профиль</title>
-    <meta property="og:title" id="ogTitleMeta" content="Профиль пользователя">
-    <meta property="og:description" id="ogDescriptionMeta" content="Профиль пользователя на Takean">
-    <meta property="og:image" id="ogImageMeta" content="">
-    <meta property="og:url" id="ogUrlMeta" content="">
+    <!-- ===== OPEN GRAPH (фиксированные для краулеров) ===== -->
+    <meta property="og:title" content="Takean - Профиль">
+    <meta property="og:description" content="Профиль пользователя на Takean">
+    <meta property="og:image" content="https://takean.pages.dev/og-image.png">
+    <meta property="og:url" content="https://takean.pages.dev/profile.html">
     <meta property="og:type" content="profile">
     <meta property="og:site_name" content="Takean">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" id="twitterTitle" content="Профиль пользователя">
-    <meta name="twitter:description" id="twitterDescription" content="Профиль пользователя на Takean">
-    <meta name="twitter:image" id="twitterImage" content="">
+    <meta name="twitter:title" content="Takean - Профиль">
+    <meta name="twitter:description" content="Профиль пользователя на Takean">
+    <meta name="twitter:image" content="https://takean.pages.dev/og-image.png">
     
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
+        /* ===== ВСЕ СТИЛИ КАК РАНЬШЕ ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -968,6 +968,26 @@ let userPosts = [];
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
 
+// ===== ФУНКЦИЯ СОЗДАНИЯ ПОЛЬЗОВАТЕЛЯ В FIRESTORE =====
+function createUserInFirestore(user) {
+    return db.collection('users').doc(user.uid).get().then(doc => {
+        if (!doc.exists) {
+            return db.collection('users').doc(user.uid).set({
+                username: user.displayName || 'user_' + Date.now().toString(36),
+                email: user.email || '',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                avatar: user.photoURL || null,
+                bio: '',
+                reputation: 0,
+                followers: [],
+                following: [],
+                theme: currentTheme
+            });
+        }
+        return doc;
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('themeToggle').addEventListener('click', () => {
         currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -977,21 +997,31 @@ document.addEventListener('DOMContentLoaded', () => {
             `<span class="material-icons">${currentTheme === 'dark' ? 'dark_mode' : 'light_mode'}</span>`;
     });
 
+    // Получаем uid из URL
     const urlParams = new URLSearchParams(window.location.search);
-    profileUserId = urlParams.get('uid') || auth.currentUser?.uid;
+    profileUserId = urlParams.get('uid');
     
+    // Если нет uid в URL, пробуем взять текущего пользователя
+    if (!profileUserId) {
+        const user = auth.currentUser;
+        if (user) {
+            profileUserId = user.uid;
+        } else {
+            document.getElementById('profileContainer').innerHTML = `
+                <div class="empty-state">
+                    <span class="material-icons">person_off</span>
+                    <h3 style="font-weight:500;">Пользователь не найден</h3>
+                    <p style="font-size:14px;">Войдите в аккаунт или проверьте ссылку</p>
+                    <button class="ripple-btn primary" style="margin-top:12px;" onclick="window.location.href='/login.html'">
+                        Войти
+                    </button>
+                </div>
+            `;
+        }
+    }
+
     if (profileUserId) {
         loadProfile(profileUserId);
-    } else {
-        document.getElementById('profileContainer').innerHTML = `
-            <div class="empty-state">
-                <span class="material-icons">person_off</span>
-                <h3 style="font-weight:500;">Пользователь не найден</h3>
-                <button class="ripple-btn primary" style="margin-top:12px;" onclick="window.location.href='/'">
-                    На главную
-                </button>
-            </div>
-        `;
     }
 
     loadUserData();
@@ -1017,6 +1047,9 @@ function loadUserData() {
             ? `<img src="${user.photoURL}" alt="avatar">` 
             : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
         avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+        
+        // Гарантируем создание пользователя в Firestore
+        createUserInFirestore(user).catch(err => console.error('Error creating user:', err));
     } else {
         avatarEl.innerHTML = '<span>?</span>';
         avatarEl.onclick = () => window.location.href = '/login.html';
@@ -1042,45 +1075,77 @@ function loadProfile(uid) {
                     <div class="empty-state">
                         <span class="material-icons">person_off</span>
                         <h3 style="font-weight:500;">Пользователь не найден</h3>
+                        <p style="font-size:14px;">Возможно, аккаунт был удалён</p>
+                        <button class="ripple-btn primary" style="margin-top:12px;" onclick="window.location.href='/'">
+                            На главную
+                        </button>
                     </div>
                 `;
                 return;
             }
             profileUser = { id: doc.id, ...doc.data() };
             
-            // ===== OPEN GRAPH =====
+            // Обновляем OG мета-теги динамически через JS
             const username = profileUser.username || 'Пользователь';
             const bio = profileUser.bio || 'Профиль пользователя на Takean';
             const avatar = profileUser.avatar || '';
             const url = window.location.href;
             
             document.title = `${username} | Takean`;
-            document.getElementById('ogTitleMeta').setAttribute('content', username);
-            document.getElementById('twitterTitle').setAttribute('content', username);
             
-            const desc = bio.length > 160 ? bio.substring(0, 160) + '...' : bio;
-            document.getElementById('ogDescriptionMeta').setAttribute('content', desc);
-            document.getElementById('twitterDescription').setAttribute('content', desc);
-            
-            if (avatar) {
-                document.getElementById('ogImageMeta').setAttribute('content', avatar);
-                document.getElementById('twitterImage').setAttribute('content', avatar);
-            }
-            
-            document.getElementById('ogUrlMeta').setAttribute('content', url);
+            // Динамически обновляем OG мета-теги
+            updateOGTags({
+                title: username,
+                description: bio.substring(0, 160),
+                image: avatar,
+                url: url
+            });
             
             renderProfile(profileUser);
             loadUserPosts(uid);
         })
         .catch(err => {
+            console.error('Profile load error:', err);
             container.innerHTML = `
                 <div class="empty-state">
                     <span class="material-icons">error</span>
                     <h3 style="font-weight:500;">Ошибка загрузки</h3>
                     <p style="font-size:14px;">${err.message}</p>
+                    <button class="ripple-btn primary" style="margin-top:12px;" onclick="location.reload()">
+                        <span class="material-icons">refresh</span> Обновить
+                    </button>
                 </div>
             `;
         });
+}
+
+// ===== ФУНКЦИЯ ОБНОВЛЕНИЯ OG ТЕГОВ =====
+function updateOGTags(data) {
+    // Обновляем мета-теги
+    const metaTags = {
+        'og:title': data.title,
+        'og:description': data.description,
+        'og:image': data.image || 'https://takean.pages.dev/og-image.png',
+        'og:url': data.url || window.location.href,
+        'twitter:title': data.title,
+        'twitter:description': data.description,
+        'twitter:image': data.image || 'https://takean.pages.dev/og-image.png'
+    };
+    
+    for (const [property, content] of Object.entries(metaTags)) {
+        let meta = document.querySelector(`meta[property="${property}"]`);
+        if (!meta) {
+            meta = document.querySelector(`meta[name="${property}"]`);
+        }
+        if (meta) {
+            meta.setAttribute('content', content);
+        }
+    }
+    
+    // Обновляем title
+    if (data.title) {
+        document.title = `${data.title} | Takean`;
+    }
 }
 
 function renderProfile(user) {
