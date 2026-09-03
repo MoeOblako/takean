@@ -1,0 +1,44 @@
+# robots.txt для Takean
+# Разрешает всем поисковикам индексировать сайт
+
+User-agent: *
+Allow: /
+
+# Запрещаем индексацию служебных страниц
+Disallow: /admin/
+Disallow: /api/
+Disallow: /assets/
+Disallow: /temp/
+Disallow: /tmp/
+
+# Запрещаем индексацию страниц с параметрами
+Disallow: /*?*
+Disallow: /*&*
+
+# Запрещаем индексацию страниц авторизации
+Disallow: /login.html
+Disallow: /register.html
+
+# Основные поисковые системы
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Yandex
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Facebookbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Twitterbot
+Allow: /
+Crawl-delay: 1
+
+# Карта сайта
+Sitemap: https://takean.web.app/sitemap.xml
