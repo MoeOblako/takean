@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
+        /* ===== ВСЕ СТИЛИ ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -365,6 +366,35 @@
 
         .settings-item .right { flex-shrink: 0; }
 
+        .settings-select {
+            padding: 6px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .settings-select:focus { border-color: var(--accent); }
+
+        .settings-input {
+            padding: 8px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 13px;
+            outline: none;
+            width: 200px;
+            max-width: 100%;
+        }
+
+        .settings-input:focus { border-color: var(--accent); }
+
         /* Toggle Switch */
         .toggle {
             position: relative;
@@ -396,34 +426,141 @@
 
         .toggle.active .thumb { transform: translateX(18px); }
 
-        .settings-select {
-            padding: 6px 12px;
-            background: var(--bg-input);
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            animation: fadeIn 0.2s ease-out;
+            padding: 16px;
+        }
+
+        .modal-box {
+            background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: var(--radius);
-            color: var(--text-primary);
-            font-family: var(--font);
-            font-size: 13px;
-            outline: none;
+            padding: 28px 32px;
+            max-width: 440px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.25s ease-out;
+        }
+
+        .modal-box .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .modal-box .modal-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .modal-box .modal-header .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
             cursor: pointer;
+            font-size: 24px;
+            padding: 4px;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .settings-select:focus { border-color: var(--accent); }
+        .modal-box .modal-header .close-btn:hover {
+            color: var(--text-primary);
+        }
 
-        .settings-input {
-            padding: 8px 12px;
+        .modal-box .field {
+            margin-bottom: 16px;
+        }
+
+        .modal-box .field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .modal-box .field .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
             background: var(--bg-input);
             border: 1px solid var(--border-color);
             border-radius: var(--radius);
-            color: var(--text-primary);
-            font-family: var(--font);
-            font-size: 13px;
-            outline: none;
-            width: 200px;
-            max-width: 100%;
+            transition: border-color 0.2s;
         }
 
-        .settings-input:focus { border-color: var(--accent); }
+        .modal-box .field .input-wrap:focus-within {
+            border-color: var(--accent);
+        }
+
+        .modal-box .field .input-wrap input {
+            width: 100%;
+            padding: 10px 12px;
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 14px;
+        }
+
+        .modal-box .field .input-wrap .toggle-password {
+            position: absolute;
+            right: 10px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .modal-box .field .input-wrap .toggle-password:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-box .field .input-wrap .toggle-password .material-icons {
+            font-size: 20px;
+        }
+
+        .modal-box .field .input-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .modal-box .field .input-hint .material-icons {
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        .modal-box .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 16px;
+        }
+
+        .modal-box .modal-actions .ripple-btn {
+            padding: 8px 24px;
+        }
 
         /* ===== FOOTER ===== */
         .footer {
@@ -491,6 +628,7 @@
             .settings-item .right { width: 100%; margin-top: 6px; }
             .settings-item .right .settings-input { width: 100%; }
             .footer-inner { flex-direction: column; align-items: center; text-align: center; }
+            .modal-box { padding: 20px; margin: 8px; }
         }
 
         @media (max-width: 480px) {
@@ -507,6 +645,9 @@
             .settings-item { padding: 8px 14px; }
             .settings-item .left .info .label { font-size: 13px; }
             .settings-item .left .material-icons { font-size: 18px; }
+            .modal-box { padding: 16px; }
+            .modal-box .modal-header h2 { font-size: 18px; }
+            .modal-box .field input { font-size: 13px; padding: 8px 10px; }
         }
     </style>
 </head>
@@ -554,6 +695,7 @@
     <h1>Настройки</h1>
     <p class="subtitle">Управляйте своим аккаунтом и внешним видом</p>
 
+    <!-- Внешний вид -->
     <div class="settings-group">
         <div class="group-title">Внешний вид</div>
         <div class="settings-item">
@@ -590,6 +732,7 @@
         </div>
     </div>
 
+    <!-- Аккаунт -->
     <div class="settings-group">
         <div class="group-title">Аккаунт</div>
         <div class="settings-item">
@@ -601,7 +744,7 @@
                 </div>
             </div>
             <div class="right">
-                <button class="ripple-btn outline" onclick="changeEmail()">Изменить</button>
+                <button class="ripple-btn outline" onclick="openChangeEmailModal()">Изменить</button>
             </div>
         </div>
         <div class="settings-item">
@@ -613,23 +756,24 @@
                 </div>
             </div>
             <div class="right">
-                <button class="ripple-btn outline" onclick="changePassword()">Изменить</button>
+                <button class="ripple-btn outline" onclick="openChangePasswordModal()">Изменить</button>
             </div>
         </div>
         <div class="settings-item">
             <div class="left">
                 <span class="material-icons">person</span>
                 <div class="info">
-                    <div class="label">Имя пользователя</div>
+                    <div class="label">Отображаемое имя</div>
                     <div class="desc" id="userDisplayName">Не авторизован</div>
                 </div>
             </div>
             <div class="right">
-                <button class="ripple-btn outline" onclick="changeUsername()">Изменить</button>
+                <button class="ripple-btn outline" onclick="changeDisplayName()">Изменить</button>
             </div>
         </div>
     </div>
 
+    <!-- Конфиденциальность -->
     <div class="settings-group">
         <div class="group-title">Конфиденциальность</div>
         <div class="settings-item">
@@ -664,6 +808,7 @@
         </div>
     </div>
 
+    <!-- Безопасность -->
     <div class="settings-group">
         <div class="group-title">Безопасность</div>
         <div class="settings-item">
@@ -692,6 +837,7 @@
         </div>
     </div>
 
+    <!-- Информация -->
     <div class="settings-group">
         <div class="group-title">Информация</div>
         <div class="settings-item">
@@ -732,6 +878,7 @@
         </div>
     </div>
 
+    <!-- Опасная зона -->
     <div class="settings-group" style="border-color: var(--red);">
         <div class="group-title" style="color: var(--red); border-color: var(--red);">Опасная зона</div>
         <div class="settings-item">
@@ -812,6 +959,19 @@ let userData = null;
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
 
+function togglePasswordVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const icon = btn.querySelector('.material-icons');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.textContent = 'visibility_off';
+    } else {
+        input.type = 'password';
+        icon.textContent = 'visibility';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('themeToggle').addEventListener('click', () => {
         currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -883,37 +1043,215 @@ function loadUserData() {
 
 auth.onAuthStateChanged(user => { loadUserData(); });
 
-function changeEmail() {
+// ============================================================
+// ИЗМЕНЕНИЕ ПОЧТЫ
+// ============================================================
+function openChangeEmailModal() {
     if (!currentUser) { alert('Войдите в аккаунт'); return; }
-    const newEmail = prompt('Введите новый email:', currentUser.email);
-    if (newEmail && newEmail !== currentUser.email) {
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>Изменить Email</h2>
+                <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
+            </div>
+            <div class="field">
+                <label>Новый Email</label>
+                <div class="input-wrap">
+                    <input type="email" id="newEmailInput" placeholder="new@email.com" value="${currentUser.email || ''}">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="ripple-btn outline" onclick="this.closest('.modal-overlay').remove()">Отмена</button>
+                <button class="ripple-btn primary" id="saveEmailBtn">Сохранить</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    document.getElementById('saveEmailBtn').addEventListener('click', function() {
+        const newEmail = document.getElementById('newEmailInput').value.trim();
+        if (!newEmail || !newEmail.includes('@')) {
+            alert('Введите корректный email');
+            return;
+        }
+        
+        this.disabled = true;
+        this.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
+        
         currentUser.updateEmail(newEmail)
-            .then(() => { alert('Email обновлён'); loadUserData(); })
-            .catch(err => alert('Ошибка: ' + err.message));
-    }
+            .then(() => {
+                alert('Email обновлён!');
+                modal.remove();
+                loadUserData();
+            })
+            .catch(err => {
+                alert('Ошибка: ' + err.message);
+                this.disabled = false;
+                this.innerHTML = 'Сохранить';
+            });
+    });
 }
 
-function changePassword() {
+// ============================================================
+// ИЗМЕНЕНИЕ ПАРОЛЯ
+// ============================================================
+function openChangePasswordModal() {
     if (!currentUser) { alert('Войдите в аккаунт'); return; }
-    const newPass = prompt('Введите новый пароль (минимум 6 символов):');
-    if (newPass && newPass.length >= 6) {
-        currentUser.updatePassword(newPass)
-            .then(() => alert('Пароль обновлён'))
-            .catch(err => alert('Ошибка: ' + err.message));
-    } else if (newPass) {
-        alert('Пароль должен быть минимум 6 символов');
-    }
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>Изменить пароль</h2>
+                <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
+            </div>
+            <div class="field">
+                <label>Текущий пароль</label>
+                <div class="input-wrap">
+                    <input type="password" id="oldPasswordInput" placeholder="••••••••">
+                    <button class="toggle-password" type="button" onclick="togglePasswordVisibility('oldPasswordInput', this)">
+                        <span class="material-icons">visibility</span>
+                    </button>
+                </div>
+            </div>
+            <div class="field">
+                <label>Новый пароль</label>
+                <div class="input-wrap">
+                    <input type="password" id="newPasswordInput" placeholder="••••••••">
+                    <button class="toggle-password" type="button" onclick="togglePasswordVisibility('newPasswordInput', this)">
+                        <span class="material-icons">visibility</span>
+                    </button>
+                </div>
+                <div class="input-hint">
+                    <span class="material-icons">info</span> Минимум 6 символов
+                </div>
+            </div>
+            <div class="field">
+                <label>Повторите новый пароль</label>
+                <div class="input-wrap">
+                    <input type="password" id="confirmPasswordInput" placeholder="••••••••">
+                    <button class="toggle-password" type="button" onclick="togglePasswordVisibility('confirmPasswordInput', this)">
+                        <span class="material-icons">visibility</span>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="ripple-btn outline" onclick="this.closest('.modal-overlay').remove()">Отмена</button>
+                <button class="ripple-btn primary" id="savePasswordBtn">Сохранить</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    document.getElementById('savePasswordBtn').addEventListener('click', function() {
+        const oldPassword = document.getElementById('oldPasswordInput').value;
+        const newPassword = document.getElementById('newPasswordInput').value;
+        const confirmPassword = document.getElementById('confirmPasswordInput').value;
+        
+        if (!oldPassword || !newPassword || !confirmPassword) {
+            alert('Заполните все поля');
+            return;
+        }
+        
+        if (newPassword.length < 6) {
+            alert('Новый пароль должен быть минимум 6 символов');
+            return;
+        }
+        
+        if (newPassword !== confirmPassword) {
+            alert('Пароли не совпадают');
+            return;
+        }
+        
+        this.disabled = true;
+        this.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
+        
+        // Сначала переавторизуемся с текущим паролем
+        const credential = firebase.auth.EmailAuthProvider.credential(
+            currentUser.email,
+            oldPassword
+        );
+        
+        currentUser.reauthenticateWithCredential(credential)
+            .then(() => {
+                return currentUser.updatePassword(newPassword);
+            })
+            .then(() => {
+                alert('Пароль успешно изменён!');
+                modal.remove();
+            })
+            .catch(err => {
+                if (err.code === 'auth/wrong-password') {
+                    alert('Неверный текущий пароль');
+                } else {
+                    alert('Ошибка: ' + err.message);
+                }
+                this.disabled = false;
+                this.innerHTML = 'Сохранить';
+            });
+    });
 }
 
-function changeUsername() {
+// ============================================================
+// ИЗМЕНЕНИЕ ОТОБРАЖАЕМОГО ИМЕНИ
+// ============================================================
+function changeDisplayName() {
     if (!currentUser) { alert('Войдите в аккаунт'); return; }
-    const newName = prompt('Введите новое имя пользователя:', currentUser.displayName);
-    if (newName && newName !== currentUser.displayName) {
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>Изменить отображаемое имя</h2>
+                <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
+            </div>
+            <div class="field">
+                <label>Новое имя</label>
+                <div class="input-wrap">
+                    <input type="text" id="newDisplayNameInput" placeholder="Ваше имя" value="${currentUser.displayName || ''}">
+                </div>
+                <div class="input-hint">
+                    <span class="material-icons">info</span> Можно использовать любые символы
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="ripple-btn outline" onclick="this.closest('.modal-overlay').remove()">Отмена</button>
+                <button class="ripple-btn primary" id="saveDisplayNameBtn">Сохранить</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    document.getElementById('saveDisplayNameBtn').addEventListener('click', function() {
+        const newName = document.getElementById('newDisplayNameInput').value.trim();
+        if (!newName) {
+            alert('Введите имя');
+            return;
+        }
+        
+        this.disabled = true;
+        this.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
+        
         currentUser.updateProfile({ displayName: newName })
-            .then(() => db.collection('users').doc(currentUser.uid).update({ username: newName }))
-            .then(() => { alert('Имя обновлено'); loadUserData(); })
-            .catch(err => alert('Ошибка: ' + err.message));
-    }
+            .then(() => {
+                return db.collection('users').doc(currentUser.uid).update({ displayName: newName });
+            })
+            .then(() => {
+                alert('Имя обновлено!');
+                modal.remove();
+                loadUserData();
+            })
+            .catch(err => {
+                alert('Ошибка: ' + err.message);
+                this.disabled = false;
+                this.innerHTML = 'Сохранить';
+            });
+    });
 }
 
 function toggleStatus() {
@@ -930,9 +1268,23 @@ function deleteAccount() {
     if (!currentUser) return;
     if (confirm('Вы уверены, что хотите удалить аккаунт? Это действие необратимо!')) {
         if (confirm('Пожалуйста, подтвердите ещё раз: удалить аккаунт?')) {
-            currentUser.delete()
-                .then(() => { alert('Аккаунт удалён'); window.location.href = '/'; })
-                .catch(err => alert('Ошибка: ' + err.message));
+            // Сначала удаляем данные из Firestore
+            db.collection('users').doc(currentUser.uid).delete()
+                .then(() => {
+                    return currentUser.delete();
+                })
+                .then(() => {
+                    alert('Аккаунт удалён');
+                    window.location.href = '/';
+                })
+                .catch(err => {
+                    // Если пользователь недавно вошёл, нужна повторная авторизация
+                    if (err.code === 'auth/requires-recent-login') {
+                        alert('Для удаления аккаунта требуется повторный вход. Пожалуйста, выйдите и зайдите снова.');
+                    } else {
+                        alert('Ошибка: ' + err.message);
+                    }
+                });
         }
     }
 }
