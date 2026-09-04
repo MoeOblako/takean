@@ -30,6 +30,7 @@
             --radius: 4px;
             --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             --topbar-height: 60px;
+            --online-color: #4caf50;
         }
 
         [data-theme="light"] {
@@ -52,6 +53,7 @@
             color: var(--text-primary);
             transition: background 0.3s, color 0.3s;
             -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -152,6 +154,7 @@
             align-items: center;
             gap: 4px;
             white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .topbar-nav a:hover {
@@ -195,6 +198,7 @@
             transition: border-color 0.2s;
             overflow: hidden;
             flex-shrink: 0;
+            position: relative;
         }
 
         .topbar-actions .avatar-small:hover {
@@ -205,6 +209,23 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .topbar-actions .avatar-small .online-dot {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-card);
+            background: var(--online-color);
+            display: none;
+            z-index: 2;
+        }
+
+        .topbar-actions .avatar-small .online-dot.show {
+            display: block;
         }
 
         .search-bar {
@@ -264,6 +285,7 @@
             align-items: center;
             gap: 6px;
             -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
         }
 
         .ripple-btn .ripple-effect {
@@ -280,7 +302,7 @@
         }
 
         .ripple-btn:hover { background: var(--bg-hover); }
-        .ripple-btn:active { transform: scale(0.97); }
+        .ripple-btn:active { transform: scale(0.96); }
 
         .ripple-btn.primary {
             background: var(--accent);
@@ -641,6 +663,7 @@
             .community-card .join-btn .ripple-btn { width: 100%; justify-content: center; }
             .footer-inner { flex-direction: column; align-items: center; text-align: center; }
             .modal-box { padding: 20px; margin: 8px; }
+            .topbar-actions .avatar-small .online-dot { width: 8px; height: 8px; bottom: 1px; right: 1px; }
         }
 
         @media (max-width: 480px) {
@@ -659,6 +682,7 @@
             .modal-box { padding: 16px; }
             .modal-box .modal-header h2 { font-size: 18px; }
             .modal-box .field input { font-size: 13px; padding: 8px 10px; }
+            .topbar-actions .avatar-small .online-dot { width: 6px; height: 6px; bottom: 0px; right: 0px; }
         }
     </style>
 </head>
@@ -700,6 +724,7 @@
 
                 <div class="avatar-small" id="userAvatar">
                     <span>?</span>
+                    <span class="online-dot" id="userOnlineDot"></span>
                 </div>
             </div>
         </div>
@@ -749,7 +774,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
 <script>
 const firebaseConfig = {
@@ -765,13 +789,79 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
-const storage = firebase.storage();
 
 let currentUser = null;
 let communities = [];
+let onlineCheckInterval = null;
+let lastActivityTime = Date.now();
+let isUserOnline = false;
 
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
+
+// ============================================================
+// ОНЛАЙН СТАТУС
+// ============================================================
+function updateLastActivity() {
+    lastActivityTime = Date.now();
+    if (!isUserOnline && currentUser) {
+        isUserOnline = true;
+        updateOnlineStatus(true);
+    }
+}
+
+function updateOnlineStatus(status) {
+    if (!currentUser) return;
+    db.collection('users').doc(currentUser.uid).update({
+        lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+        isOnline: status
+    }).catch(() => {});
+}
+
+function checkOnlineStatus() {
+    if (!currentUser) return;
+    const now = Date.now();
+    const inactiveTime = (now - lastActivityTime) / 1000;
+    if (inactiveTime > 120 && isUserOnline) {
+        isUserOnline = false;
+        updateOnlineStatus(false);
+    }
+}
+
+function startOnlineTracking() {
+    if (onlineCheckInterval) clearInterval(onlineCheckInterval);
+    lastActivityTime = Date.now();
+    isUserOnline = true;
+    updateOnlineStatus(true);
+    onlineCheckInterval = setInterval(checkOnlineStatus, 30000);
+    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click', 'input', 'focus'];
+    events.forEach(event => {
+        document.addEventListener(event, updateLastActivity);
+    });
+    window.addEventListener('beforeunload', () => {
+        if (currentUser) {
+            db.collection('users').doc(currentUser.uid).update({
+                isOnline: false,
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(() => {});
+        }
+    });
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            if (currentUser) {
+                isUserOnline = false;
+                db.collection('users').doc(currentUser.uid).update({
+                    isOnline: false,
+                    lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(() => {});
+            }
+        } else {
+            lastActivityTime = Date.now();
+            isUserOnline = true;
+            updateOnlineStatus(true);
+        }
+    });
+}
 
 function createUserInFirestore(user) {
     return db.collection('users').doc(user.uid).get().then(doc => {
@@ -792,7 +882,9 @@ function createUserInFirestore(user) {
                 reputation: 0,
                 followers: [],
                 following: [],
-                theme: currentTheme
+                theme: currentTheme,
+                isOnline: true,
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
             });
         }
         return doc;
@@ -827,15 +919,25 @@ function loadUserData() {
     currentUser = user;
     
     const avatarEl = document.getElementById('userAvatar');
+    const dotEl = document.getElementById('userOnlineDot');
+    
     if (user) {
         avatarEl.innerHTML = user.photoURL 
             ? `<img src="${user.photoURL}" alt="avatar">` 
             : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
         avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
-        createUserInFirestore(user).catch(err => console.error('Error creating user:', err));
+        dotEl.classList.add('show');
+        createUserInFirestore(user).then(() => {
+            startOnlineTracking();
+        }).catch(err => console.error('Error creating user:', err));
     } else {
         avatarEl.innerHTML = '<span>?</span>';
         avatarEl.onclick = () => window.location.href = '/login.html';
+        dotEl.classList.remove('show');
+        if (onlineCheckInterval) {
+            clearInterval(onlineCheckInterval);
+            onlineCheckInterval = null;
+        }
     }
 }
 
@@ -1024,7 +1126,6 @@ function openCreateCommunityModal() {
         this.disabled = true;
         this.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Создание...';
         
-        // Проверяем уникальность
         db.collection('communities').where('handle', '==', handle).get()
             .then(snapshot => {
                 if (!snapshot.empty) {
