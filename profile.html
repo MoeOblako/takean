@@ -19,7 +19,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
-        /* ===== ВСЕ СТИЛИ КАК В ПРЕДЫДУЩЕЙ ВЕРСИИ ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -42,6 +41,7 @@
             --radius: 4px;
             --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             --topbar-height: 60px;
+            --online-color: #4caf50;
         }
 
         [data-theme="light"] {
@@ -64,6 +64,7 @@
             color: var(--text-primary);
             transition: background 0.3s, color 0.3s;
             -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -164,6 +165,7 @@
             align-items: center;
             gap: 4px;
             white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .topbar-nav a:hover {
@@ -207,6 +209,7 @@
             transition: border-color 0.2s;
             overflow: hidden;
             flex-shrink: 0;
+            position: relative;
         }
 
         .topbar-actions .avatar-small:hover {
@@ -217,6 +220,23 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .topbar-actions .avatar-small .online-dot {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-card);
+            background: var(--online-color);
+            display: none;
+            z-index: 2;
+        }
+
+        .topbar-actions .avatar-small .online-dot.show {
+            display: block;
         }
 
         .search-bar {
@@ -276,6 +296,7 @@
             align-items: center;
             gap: 6px;
             -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
         }
 
         .ripple-btn .ripple-effect {
@@ -292,7 +313,7 @@
         }
 
         .ripple-btn:hover { background: var(--bg-hover); }
-        .ripple-btn:active { transform: scale(0.97); }
+        .ripple-btn:active { transform: scale(0.96); }
 
         .ripple-btn.primary {
             background: var(--accent);
@@ -402,6 +423,23 @@
         .profile-avatar .avatar-overlay .material-icons {
             font-size: 28px;
             color: #fff;
+        }
+
+        .profile-avatar .online-dot {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-card);
+            background: var(--online-color);
+            display: none;
+            z-index: 2;
+        }
+
+        .profile-avatar .online-dot.show {
+            display: block;
         }
 
         .profile-display-name {
@@ -649,6 +687,7 @@
             font-family: var(--font);
             transition: all 0.2s;
             -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
         }
 
         .post-action-btn:hover { background: var(--bg-hover); }
@@ -793,7 +832,7 @@
         .comment-card .comment-actions button.liked { color: var(--green); }
         .comment-card .comment-actions button.disliked { color: var(--red); }
 
-        /* ===== MODAL EDIT ===== */
+        /* ===== MODAL ===== */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -844,6 +883,91 @@
 
         .modal-box .modal-header .close-btn:hover {
             color: var(--text-primary);
+        }
+
+        .modal-user-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .modal-user-item:hover {
+            background: var(--bg-hover);
+            margin: 0 -8px;
+            padding: 10px 8px;
+        }
+
+        .modal-user-item:last-child { border-bottom: none; }
+
+        .modal-user-item .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-hover);
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .modal-user-item .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .modal-user-item .name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .modal-user-item .username {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* ===== IMAGE UPLOAD ===== */
+        .upload-progress-wrap {
+            display: none;
+            margin: 8px 0 16px;
+            width: 100%;
+        }
+
+        .upload-progress-wrap .progress-bar {
+            height: 4px;
+            background: var(--bg-hover);
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .upload-progress-wrap .progress-bar .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .upload-progress-wrap .progress-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            text-align: center;
+        }
+
+        .upload-error {
+            display: none;
+            font-size: 12px;
+            color: var(--red);
+            text-align: center;
+            margin-top: 4px;
         }
 
         .edit-media-row {
@@ -1068,90 +1192,29 @@
             padding: 8px 24px;
         }
 
-        .upload-progress-wrap {
-            display: none;
-            margin: 8px 0 16px;
-            width: 100%;
+        /* ===== BBC STYLES ===== */
+        .bbc-bold { font-weight: 700; }
+        .bbc-italic { font-style: italic; }
+        .bbc-underline { text-decoration: underline; }
+        .bbc-strike { text-decoration: line-through; }
+        .bbc-code { font-family: monospace; background: var(--bg-input); padding: 2px 6px; border-radius: var(--radius); }
+        .bbc-quote { border-left: 3px solid var(--accent); padding-left: 12px; margin: 4px 0; color: var(--text-secondary); }
+        .bbc-spoiler { 
+            background: var(--bg-hover); 
+            color: var(--bg-hover); 
+            cursor: pointer; 
+            padding: 2px 6px; 
+            border-radius: var(--radius); 
+            transition: color 0.3s;
+            user-select: none;
         }
-
-        .upload-progress-wrap .progress-bar {
-            height: 4px;
-            background: var(--bg-hover);
-            border-radius: 2px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .upload-progress-wrap .progress-bar .progress-fill {
-            height: 100%;
-            background: var(--accent);
-            width: 0%;
-            transition: width 0.3s;
-        }
-
-        .upload-progress-wrap .progress-text {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 4px;
-            text-align: center;
-        }
-
-        .upload-error {
-            display: none;
-            font-size: 12px;
-            color: var(--red);
-            text-align: center;
-            margin-top: 4px;
-        }
-
-        /* ===== MODAL FOLLOWERS ===== */
-        .modal-user-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .modal-user-item:hover {
-            background: var(--bg-hover);
-            margin: 0 -8px;
-            padding: 10px 8px;
-        }
-
-        .modal-user-item:last-child { border-bottom: none; }
-
-        .modal-user-item .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--bg-hover);
-            overflow: hidden;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-
-        .modal-user-item .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .modal-user-item .name {
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .modal-user-item .username {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
+        .bbc-spoiler:hover { color: var(--text-primary); }
+        .bbc-size-small { font-size: 12px; }
+        .bbc-size-normal { font-size: 15px; }
+        .bbc-size-large { font-size: 20px; }
+        .bbc-size-huge { font-size: 26px; }
+        .bbc-color { transition: color 0.2s; }
+        .bbc-bg { transition: background 0.2s; }
 
         /* ===== FOOTER ===== */
         .footer {
@@ -1282,6 +1345,8 @@
             .comment-card .comment-text { margin-left: 0; }
             .comment-card .comment-actions { margin-left: 0; }
             .comment-card .comment-on { margin-left: 0; }
+            .topbar-actions .avatar-small .online-dot { width: 8px; height: 8px; bottom: 1px; right: 1px; }
+            .profile-avatar .online-dot { width: 8px; height: 8px; bottom: 1px; right: 1px; }
         }
 
         @media (max-width: 480px) {
@@ -1295,6 +1360,7 @@
             .topbar-actions .material-icons { font-size: 18px; }
             .profile-cover { height: 80px; }
             .profile-avatar { width: 56px; height: 56px; font-size: 20px; border-width: 3px; }
+            .profile-avatar .online-dot { width: 6px; height: 6px; bottom: 0px; right: 0px; }
             .profile-info { padding: 12px 14px 16px; }
             .profile-display-name { font-size: 16px; }
             .profile-bio { font-size: 13px; }
@@ -1307,6 +1373,7 @@
             .modal-box .modal-header h2 { font-size: 18px; }
             .comment-card { padding: 10px; }
             .comment-card .comment-text { font-size: 13px; }
+            .topbar-actions .avatar-small .online-dot { width: 6px; height: 6px; bottom: 0px; right: 0px; }
         }
     </style>
 </head>
@@ -1330,6 +1397,10 @@
                     <span class="material-icons">add_box</span>
                     <span>Создать</span>
                 </a>
+                <a href="/communities.html">
+                    <span class="material-icons">group</span>
+                    <span>Сообщества</span>
+                </a>
             </nav>
 
             <div class="topbar-actions">
@@ -1344,6 +1415,7 @@
 
                 <div class="avatar-small" id="userAvatar">
                     <span>?</span>
+                    <span class="online-dot" id="userOnlineDot"></span>
                 </div>
             </div>
         </div>
@@ -1383,7 +1455,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
 <script>
 const firebaseConfig = {
@@ -1399,16 +1470,101 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
-const storage = firebase.storage();
+
+const IMGBB_API_KEY = '82ba1ce293103084398ae828937d95d4';
 
 let currentUser = null;
 let profileUser = null;
 let profileUserId = null;
 let userPosts = [];
 let userComments = [];
+let onlineCheckInterval = null;
+let lastActivityTime = Date.now();
+let isUserOnline = false;
 
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
+
+// ============================================================
+// ОНЛАЙН СТАТУС
+// ============================================================
+function updateLastActivity() {
+    lastActivityTime = Date.now();
+    if (!isUserOnline && currentUser) {
+        isUserOnline = true;
+        updateOnlineStatus(true);
+    }
+}
+
+function updateOnlineStatus(status) {
+    if (!currentUser) return;
+    db.collection('users').doc(currentUser.uid).update({
+        lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+        isOnline: status
+    }).catch(() => {});
+}
+
+function checkOnlineStatus() {
+    if (!currentUser) return;
+    const now = Date.now();
+    const inactiveTime = (now - lastActivityTime) / 1000;
+    if (inactiveTime > 120 && isUserOnline) {
+        isUserOnline = false;
+        updateOnlineStatus(false);
+    }
+}
+
+function startOnlineTracking() {
+    if (onlineCheckInterval) clearInterval(onlineCheckInterval);
+    lastActivityTime = Date.now();
+    isUserOnline = true;
+    updateOnlineStatus(true);
+    onlineCheckInterval = setInterval(checkOnlineStatus, 30000);
+    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click', 'input', 'focus'];
+    events.forEach(event => {
+        document.addEventListener(event, updateLastActivity);
+    });
+    window.addEventListener('beforeunload', () => {
+        if (currentUser) {
+            db.collection('users').doc(currentUser.uid).update({
+                isOnline: false,
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(() => {});
+        }
+    });
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            if (currentUser) {
+                isUserOnline = false;
+                db.collection('users').doc(currentUser.uid).update({
+                    isOnline: false,
+                    lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(() => {});
+            }
+        } else {
+            lastActivityTime = Date.now();
+            isUserOnline = true;
+            updateOnlineStatus(true);
+        }
+    });
+}
+
+function checkUserOnline(uid) {
+    return db.collection('users').doc(uid).get()
+        .then(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                if (data.isOnline === true) return true;
+                if (data.lastSeen) {
+                    const lastSeen = data.lastSeen.seconds * 1000;
+                    const now = Date.now();
+                    return (now - lastSeen) < 120000;
+                }
+            }
+            return false;
+        })
+        .catch(() => false);
+}
 
 // ============================================================
 // СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ
@@ -1432,7 +1588,9 @@ function createUserInFirestore(user) {
                 reputation: 0,
                 followers: [],
                 following: [],
-                theme: currentTheme
+                theme: currentTheme,
+                isOnline: true,
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
             });
         }
         return doc;
@@ -1444,7 +1602,6 @@ function createUserInFirestore(user) {
 // ============================================================
 function calculateReputation(uid) {
     let totalRep = 0;
-    
     return db.collection('posts').where('authorId', '==', uid).get()
         .then(snapshot => {
             snapshot.forEach(doc => {
@@ -1483,7 +1640,6 @@ function updateOGTags(data) {
         'twitter:description': data.description,
         'twitter:image': data.image || 'https://takean.pages.dev/og-image.png'
     };
-    
     for (const [property, content] of Object.entries(metaMap)) {
         let meta = document.querySelector(`meta[property="${property}"]`);
         if (!meta) {
@@ -1553,15 +1709,25 @@ function loadUserData() {
     currentUser = user;
     
     const avatarEl = document.getElementById('userAvatar');
+    const dotEl = document.getElementById('userOnlineDot');
+    
     if (user) {
         avatarEl.innerHTML = user.photoURL 
             ? `<img src="${user.photoURL}" alt="avatar">` 
             : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
         avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
-        createUserInFirestore(user).catch(err => console.error('Error creating user:', err));
+        dotEl.classList.add('show');
+        createUserInFirestore(user).then(() => {
+            startOnlineTracking();
+        }).catch(err => console.error('Error creating user:', err));
     } else {
         avatarEl.innerHTML = '<span>?</span>';
         avatarEl.onclick = () => window.location.href = '/login.html';
+        dotEl.classList.remove('show');
+        if (onlineCheckInterval) {
+            clearInterval(onlineCheckInterval);
+            onlineCheckInterval = null;
+        }
     }
 }
 
@@ -1596,6 +1762,11 @@ function loadProfile(uid) {
                 return;
             }
             profileUser = { id: doc.id, ...doc.data() };
+            
+            // Проверяем онлайн статус
+            checkUserOnline(uid).then(isOnline => {
+                profileUser._isOnline = isOnline;
+            });
             
             calculateReputation(uid).then(rep => {
                 profileUser.reputation = rep;
@@ -1643,6 +1814,7 @@ function renderProfile(user) {
     const isFollowing = currentUser && user.followers && user.followers.includes(currentUser.uid);
     const rep = user.reputation || 0;
     const displayName = user.displayName || user.username || 'Аноним';
+    const isOnline = user._isOnline || false;
     
     container.innerHTML = `
         <div class="profile-header">
@@ -1659,6 +1831,7 @@ function renderProfile(user) {
                 <div class="profile-avatar-wrap">
                     <div class="profile-avatar" id="profileAvatar" ${isOwn ? `onclick="openEditModal()"` : ''}>
                         ${user.avatar ? `<img src="${user.avatar}" alt="avatar" id="avatarImage">` : `<span>${(displayName || '?')[0].toUpperCase()}</span>`}
+                        <span class="online-dot ${isOnline ? 'show' : ''}"></span>
                         ${isOwn ? `
                             <div class="avatar-overlay">
                                 <span class="material-icons">photo_camera</span>
@@ -1861,7 +2034,7 @@ function renderComments(comments) {
                 <span class="comment-time">${comment.createdAt ? new Date(comment.createdAt.seconds * 1000).toLocaleDateString('ru-RU') : 'недавно'}</span>
             </div>
             <div class="comment-text">
-                ${renderContent(comment.text || '')}
+                ${parseBBC(comment.text || '')}
                 ${comment.image ? `<br><img src="${comment.image}" class="comment-image" onclick="window.open('${comment.image}', '_blank')">` : ''}
             </div>
             <div class="comment-on">
@@ -1889,16 +2062,35 @@ function renderComments(comments) {
     `).join('');
 }
 
-function renderContent(text) {
+function parseBBC(text) {
     if (!text) return '';
     let html = escapeHtml(text);
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    html = html.replace(/__(.*?)__/g, '<u>$1</u>');
-    html = html.replace(/~~(.*?)~~/g, '<s>$1</s>');
-    html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" style="color:var(--accent);">$1</a>');
+    html = html.replace(/\[b\](.*?)\[\/b\]/g, '<span class="bbc-bold">$1</span>');
+    html = html.replace(/\[i\](.*?)\[\/i\]/g, '<span class="bbc-italic">$1</span>');
+    html = html.replace(/\[u\](.*?)\[\/u\]/g, '<span class="bbc-underline">$1</span>');
+    html = html.replace(/\[s\](.*?)\[\/s\]/g, '<span class="bbc-strike">$1</span>');
+    html = html.replace(/\[code\](.*?)\[\/code\]/g, '<span class="bbc-code">$1</span>');
+    html = html.replace(/\[quote\](.*?)\[\/quote\]/g, '<div class="bbc-quote">$1</div>');
+    html = html.replace(/\[spoiler\](.*?)\[\/spoiler\]/g, '<span class="bbc-spoiler" onclick="this.style.color=\'var(--text-primary)\';">$1</span>');
+    html = html.replace(/\[size=small\](.*?)\[\/size\]/g, '<span class="bbc-size-small">$1</span>');
+    html = html.replace(/\[size=normal\](.*?)\[\/size\]/g, '<span class="bbc-size-normal">$1</span>');
+    html = html.replace(/\[size=large\](.*?)\[\/size\]/g, '<span class="bbc-size-large">$1</span>');
+    html = html.replace(/\[size=huge\](.*?)\[\/size\]/g, '<span class="bbc-size-huge">$1</span>');
+    html = html.replace(/\[color=(#[0-9a-fA-F]{6})\](.*?)\[\/color\]/g, '<span class="bbc-color" style="color:$1;">$2</span>');
+    html = html.replace(/\[bg=(#[0-9a-fA-F]{6})\](.*?)\[\/bg\]/g, '<span class="bbc-bg" style="background:$1;padding:2px 4px;border-radius:var(--radius);">$2</span>');
+    html = html.replace(/\[url\](.*?)\[\/url\]/g, '<a href="$1" target="_blank" style="color:var(--accent);">$1</a>');
+    html = html.replace(/\[url=(.*?)\](.*?)\[\/url\]/g, '<a href="$1" target="_blank" style="color:var(--accent);">$2</a>');
+    html = html.replace(/\[img\](.*?)\[\/img\]/g, '<img src="$1" style="max-width:100%;max-height:300px;border-radius:var(--radius);margin:4px 0;" loading="lazy">');
     html = html.replace(/@([a-zA-Z0-9_.-]+)/g, '<span class="mention">@$1</span>');
+    html = html.replace(/\n/g, '<br>');
     return html;
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 function voteComment(commentId, direction) {
@@ -1909,6 +2101,33 @@ function voteComment(commentId, direction) {
     
     const commentRef = db.collection('comments').doc(commentId);
     
+    // Мгновенное обновление UI
+    for (const c of userComments) {
+        if (c.id === commentId) {
+            const uid = currentUser.uid;
+            const wasLiked = c.likes && c.likes.includes(uid);
+            const wasDisliked = c.dislikes && c.dislikes.includes(uid);
+            if (direction === 1) {
+                if (wasLiked) {
+                    c.likes = c.likes.filter(id => id !== uid);
+                } else {
+                    c.likes = [...(c.likes || []), uid];
+                    if (wasDisliked) c.dislikes = c.dislikes.filter(id => id !== uid);
+                }
+            } else {
+                if (wasDisliked) {
+                    c.dislikes = c.dislikes.filter(id => id !== uid);
+                } else {
+                    c.dislikes = [...(c.dislikes || []), uid];
+                    if (wasLiked) c.likes = c.likes.filter(id => id !== uid);
+                }
+            }
+            break;
+        }
+    }
+    renderComments(userComments);
+    
+    // Отправка в БД
     db.runTransaction(transaction => {
         return transaction.get(commentRef).then(doc => {
             if (!doc.exists) return;
@@ -1931,8 +2150,6 @@ function voteComment(commentId, direction) {
                 dislikes: newDislikes
             });
         });
-    }).then(() => {
-        loadUserComments(profileUserId);
     }).catch(err => console.error('Vote comment error:', err));
 }
 
@@ -2051,7 +2268,7 @@ function showReputation() {
 }
 
 // ============================================================
-// EDIT MODAL
+// EDIT MODAL (через ImageBB)
 // ============================================================
 function openEditModal() {
     if (!currentUser || !profileUser) return;
@@ -2164,7 +2381,6 @@ function handleAvatarUpload(event) {
     reader.readAsDataURL(file);
     
     window._avatarFile = file;
-    // Скрываем ошибку если была
     document.getElementById('uploadError').style.display = 'none';
 }
 
@@ -2234,43 +2450,39 @@ function saveProfileChanges() {
         console.error('Upload error:', message);
     }
     
-    // Загрузка аватара
+    // Загрузка аватара через ImageBB
     if (window._avatarFile) {
         totalUploads++;
         progressWrap.style.display = 'block';
         progressText.textContent = 'Загрузка аватара...';
         
-        const avatarRef = storage.ref(`avatars/${currentUser.uid}`);
-        const uploadTask = avatarRef.put(window._avatarFile);
+        const formData = new FormData();
+        formData.append('key', IMGBB_API_KEY);
+        formData.append('image', window._avatarFile);
         
-        const promise = new Promise((resolve, reject) => {
-            uploadTask.on('state_changed',
-                (snapshot) => {
-                    const percent = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    progressFill.style.width = percent + '%';
-                    progressText.textContent = `Загрузка аватара... ${Math.round(percent)}%`;
-                },
-                (err) => {
-                    console.error('Avatar upload error:', err);
-                    showError('Ошибка загрузки аватара: ' + err.message);
-                    reject(err);
-                },
-                () => {
-                    uploadTask.snapshot.ref.getDownloadURL().then(url => {
-                        updates.avatar = url;
-                        updateProgress();
-                        resolve(url);
-                    }).catch(err => {
-                        showError('Ошибка получения URL аватара: ' + err.message);
-                        reject(err);
-                    });
-                }
-            );
+        const promise = fetch('https://api.imgbb.com/1/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                updates.avatar = data.data.url;
+                updateProgress();
+                return data.data.url;
+            } else {
+                showError('Ошибка загрузки аватара: ' + (data.error?.message || 'Unknown'));
+                throw new Error(data.error?.message || 'Upload failed');
+            }
+        })
+        .catch(err => {
+            showError('Ошибка загрузки аватара: ' + err.message);
+            throw err;
         });
         uploadPromises.push(promise);
     }
     
-    // Загрузка шапки
+    // Загрузка шапки через ImageBB
     if (window._coverFile) {
         totalUploads++;
         if (!progressWrap.style.display || progressWrap.style.display === 'none') {
@@ -2278,32 +2490,28 @@ function saveProfileChanges() {
         }
         progressText.textContent = 'Загрузка шапки...';
         
-        const coverRef = storage.ref(`covers/${currentUser.uid}`);
-        const uploadTask = coverRef.put(window._coverFile);
+        const formData = new FormData();
+        formData.append('key', IMGBB_API_KEY);
+        formData.append('image', window._coverFile);
         
-        const promise = new Promise((resolve, reject) => {
-            uploadTask.on('state_changed',
-                (snapshot) => {
-                    const percent = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    progressFill.style.width = percent + '%';
-                    progressText.textContent = `Загрузка шапки... ${Math.round(percent)}%`;
-                },
-                (err) => {
-                    console.error('Cover upload error:', err);
-                    showError('Ошибка загрузки шапки: ' + err.message);
-                    reject(err);
-                },
-                () => {
-                    uploadTask.snapshot.ref.getDownloadURL().then(url => {
-                        updates.cover = url;
-                        updateProgress();
-                        resolve(url);
-                    }).catch(err => {
-                        showError('Ошибка получения URL шапки: ' + err.message);
-                        reject(err);
-                    });
-                }
-            );
+        const promise = fetch('https://api.imgbb.com/1/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                updates.cover = data.data.url;
+                updateProgress();
+                return data.data.url;
+            } else {
+                showError('Ошибка загрузки шапки: ' + (data.error?.message || 'Unknown'));
+                throw new Error(data.error?.message || 'Upload failed');
+            }
+        })
+        .catch(err => {
+            showError('Ошибка загрузки шапки: ' + err.message);
+            throw err;
         });
         uploadPromises.push(promise);
     }
@@ -2324,7 +2532,7 @@ function saveProfileChanges() {
             return currentUser.updateProfile({ displayName: displayName });
         })
         .then(() => {
-            progressText.textContent = '✅ Готово!';
+            progressText.textContent = 'Готово!';
             setTimeout(() => {
                 closeEditModal();
                 loadProfile(profileUserId);
@@ -2338,13 +2546,6 @@ function saveProfileChanges() {
             btn.disabled = false;
             btn.innerHTML = '<span class="material-icons">save</span> Сохранить';
         });
-}
-
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
 }
 
 console.log('👤 Profile page loaded');
