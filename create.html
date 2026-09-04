@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
-        /* ===== ВСЕ СТИЛИ ИЗ ПРЕДЫДУЩЕЙ ВЕРСИИ (сокращено для читаемости) ===== */
+        /* ===== ВСЕ СТИЛИ ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -71,6 +71,11 @@
         .hidden { display: none !important; }
         .text-muted { color: var(--text-muted); }
 
+        @keyframes ripple {
+            0% { transform: scale(0); opacity: 0.4; }
+            100% { transform: scale(4); opacity: 0; }
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
@@ -85,6 +90,9 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
+
+        .animate-fade { animation: fadeIn 0.25s ease-out; }
+        .animate-slide { animation: slideUp 0.3s ease-out; }
 
         /* ===== TOP BAR ===== */
         .topbar {
@@ -617,6 +625,7 @@
             transition: border-color 0.2s;
         }
         .create-select:focus { border-color: #4f8cff; }
+        .create-select option { background: var(--bg-secondary); }
 
         /* ===== BBC STYLES ===== */
         .bbc-bold { font-weight: 700; }
@@ -686,9 +695,7 @@
 
         .modal-box .modal-header .close-btn:hover { color: var(--text-primary); }
 
-        .modal-box .field {
-            margin-bottom: 16px;
-        }
+        .modal-box .field { margin-bottom: 16px; }
 
         .modal-box .field label {
             display: block;
@@ -698,7 +705,8 @@
             margin-bottom: 4px;
         }
 
-        .modal-box .field input[type="text"] {
+        .modal-box .field input[type="text"],
+        .modal-box .field input[type="password"] {
             width: 100%;
             padding: 10px 12px;
             background: var(--bg-input);
@@ -711,99 +719,36 @@
             transition: border-color 0.2s;
         }
 
-        .modal-box .field input[type="text"]:focus { border-color: #4f8cff; }
+        .modal-box .field input:focus { border-color: #4f8cff; }
 
-        .modal-box .upload-area {
-            border: 2px dashed var(--border-color);
-            border-radius: var(--radius);
-            padding: 20px;
-            text-align: center;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 12px;
-        }
-
-        .modal-box .upload-area:hover { border-color: #4f8cff; background: var(--bg-hover); }
-        .modal-box .upload-area .material-icons { font-size: 32px; display: block; margin-bottom: 4px; }
-        .modal-box .upload-area span { font-size: 13px; }
-
-        .modal-box .upload-preview {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: var(--bg-input);
-            border-radius: var(--radius);
-            padding: 8px 12px;
-            margin-bottom: 12px;
-            display: none;
-        }
-
-        .modal-box .upload-preview img {
-            width: 50px;
-            height: 50px;
-            object-fit: cover;
-            border-radius: var(--radius);
-        }
-
-        .modal-box .upload-preview .file-name {
-            flex: 1;
-            font-size: 13px;
-            color: var(--text-secondary);
-            word-break: break-all;
-        }
-
-        .modal-box .upload-preview .remove-file {
-            background: none;
-            border: none;
-            color: var(--red);
-            cursor: pointer;
-            padding: 4px;
-        }
-
-        .modal-box .divider {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin: 12px 0;
-            color: var(--text-muted);
+        .modal-box .field .input-hint {
             font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
         }
 
-        .modal-box .divider::before,
-        .modal-box .divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--border-color);
+        .modal-box .field .input-hint .material-icons {
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        .modal-box .field .input-error {
+            font-size: 12px;
+            color: var(--red);
+            margin-top: 4px;
+            display: none;
         }
 
         .modal-box .modal-actions {
             display: flex;
             gap: 10px;
             justify-content: flex-end;
-            margin-top: 16px;
+            margin-top: 20px;
             border-top: 1px solid var(--border-color);
             padding-top: 16px;
         }
 
         .modal-box .modal-actions .ripple-btn { padding: 8px 24px; }
-
-        .modal-box .upload-progress-small {
-            height: 3px;
-            background: var(--bg-hover);
-            border-radius: 2px;
-            margin-top: 8px;
-            overflow: hidden;
-            display: none;
-        }
-
-        .modal-box .upload-progress-small .bar {
-            height: 100%;
-            background: #4f8cff;
-            width: 0%;
-            transition: width 0.3s;
-        }
 
         /* ===== ЦВЕТА ДЛЯ ТЕГОВ ===== */
         .tag-communism { color: #c62828; }
@@ -1185,7 +1130,7 @@
             <option value="">Без сообщества (опубликовать на главной)</option>
         </select>
         <div id="communitySelectInfo" style="margin-top:6px;font-size:12px;color:var(--text-muted);display:none;">
-            <span class="material-icons" style="font-size:14px;vertical-align:middle;">info</span>
+            <span class="material-icons" style="font-size:14px;vertical-align:middle;">check_circle</span>
             Тейк будет опубликован в выбранном сообществе
         </div>
     </div>
@@ -1436,8 +1381,9 @@ function setupEventListeners() {
         const info = document.getElementById('communitySelectInfo');
         if (this.value) {
             info.style.display = 'block';
+            const name = this.options[this.selectedIndex]?.text || 'сообществе';
             info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">check_circle</span> 
-                Тейк будет опубликован в сообществе <strong>${this.options[this.selectedIndex].text}</strong>`;
+                Тейк будет опубликован в сообществе <strong>${name}</strong>`;
         } else {
             info.style.display = 'none';
         }
@@ -1498,18 +1444,29 @@ auth.onAuthStateChanged(user => {
     if (user) loadUserCommunities();
 });
 
+// ============================================================
+// ЗАГРУЗКА СООБЩЕСТВ (ОСНОВНАЯ ФУНКЦИЯ)
+// ============================================================
 function loadUserCommunities() {
-    if (!currentUser) return;
+    if (!currentUser) {
+        // Если пользователь не авторизован — показываем только "Без сообщества"
+        const select = document.getElementById('communitySelect');
+        select.innerHTML = '<option value="">Без сообщества (опубликовать на главной)</option>';
+        return;
+    }
     
     db.collection('communities')
         .where('members', 'array-contains', currentUser.uid)
         .get()
         .then(snapshot => {
             const select = document.getElementById('communitySelect');
+            // Сохраняем текущий выбранный ID (если есть)
+            const currentValue = select.value;
+            
+            // Очищаем селект, но оставляем первый пункт
             select.innerHTML = '<option value="">Без сообщества (опубликовать на главной)</option>';
             
-            let foundCommunity = false;
-            let selectedOption = null;
+            let foundSelected = false;
             
             snapshot.forEach(doc => {
                 const data = doc.data();
@@ -1521,20 +1478,27 @@ function loadUserCommunities() {
                 select.appendChild(option);
                 communityNameCache[doc.id] = displayName;
                 
+                // Проверяем, нужно ли выбрать это сообщество
                 if (communityToSelect && doc.id === communityToSelect) {
-                    foundCommunity = true;
-                    selectedOption = option;
+                    option.selected = true;
+                    foundSelected = true;
+                } else if (currentValue && doc.id === currentValue) {
+                    option.selected = true;
+                    foundSelected = true;
                 }
             });
             
-            if (foundCommunity && selectedOption) {
-                selectedOption.selected = true;
-                const info = document.getElementById('communitySelectInfo');
-                info.style.display = 'block';
-                info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">check_circle</span> 
-                    Тейк будет опубликован в сообществе <strong>${selectedOption.textContent}</strong>`;
+            // Обновляем информацию
+            const info = document.getElementById('communitySelectInfo');
+            if (foundSelected) {
+                const selectedOption = select.options[select.selectedIndex];
+                if (selectedOption && selectedOption.value) {
+                    info.style.display = 'block';
+                    info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">check_circle</span> 
+                        Тейк будет опубликован в сообществе <strong>${selectedOption.text}</strong>`;
+                }
             } else if (communityToSelect) {
-                const info = document.getElementById('communitySelectInfo');
+                // Сообщество из URL не найдено в списке участников
                 info.style.display = 'block';
                 info.style.color = 'var(--red)';
                 info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">warning</span> 
@@ -1544,11 +1508,20 @@ function loadUserCommunities() {
                     info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">info</span> 
                         Тейк будет опубликован в выбранном сообществе`;
                 }, 5000);
+            } else {
+                info.style.display = 'none';
             }
             
             updatePreview();
         })
-        .catch(err => console.error('Load communities error:', err));
+        .catch(err => {
+            console.error('Load communities error:', err);
+            // При ошибке показываем хотя бы базовый вариант
+            const select = document.getElementById('communitySelect');
+            if (!select.options.length) {
+                select.innerHTML = '<option value="">Без сообщества (опубликовать на главной)</option>';
+            }
+        });
 }
 
 // ============================================================
@@ -1791,23 +1764,29 @@ function openImageModal() {
             
             <div class="field">
                 <label>Загрузить файл</label>
-                <div class="upload-area" id="modalUploadArea">
-                    <span class="material-icons">cloud_upload</span>
+                <div class="upload-area" id="modalUploadArea" style="border:2px dashed var(--border-color);border-radius:var(--radius);padding:20px;text-align:center;color:var(--text-muted);cursor:pointer;transition:all 0.2s;">
+                    <span class="material-icons" style="font-size:32px;display:block;margin-bottom:4px;">cloud_upload</span>
                     <span>Нажмите или перетащите файл</span>
                     <span style="display:block;font-size:11px;margin-top:2px;">JPG, PNG, GIF • до 10MB</span>
                 </div>
                 <input type="file" id="modalImageInput" accept="image/*" style="display:none;">
-                <div class="upload-preview" id="modalUploadPreview">
-                    <img id="modalPreviewImg" src="" alt="preview">
-                    <span class="file-name" id="modalFileName">file.jpg</span>
-                    <button class="remove-file" onclick="clearModalFile()"><span class="material-icons" style="font-size:18px;">close</span></button>
+                <div class="upload-preview" id="modalUploadPreview" style="display:none;align-items:center;gap:12px;background:var(--bg-input);border-radius:var(--radius);padding:8px 12px;margin-bottom:12px;">
+                    <img id="modalPreviewImg" src="" alt="preview" style="width:50px;height:50px;object-fit:cover;border-radius:var(--radius);">
+                    <span class="file-name" id="modalFileName" style="flex:1;font-size:13px;color:var(--text-secondary);word-break:break-all;">file.jpg</span>
+                    <button class="remove-file" onclick="clearModalFile()" style="background:none;border:none;color:var(--red);cursor:pointer;padding:4px;">
+                        <span class="material-icons" style="font-size:18px;">close</span>
+                    </button>
                 </div>
-                <div class="upload-progress-small" id="modalUploadProgress">
-                    <div class="bar" id="modalUploadBar"></div>
+                <div class="upload-progress-small" id="modalUploadProgress" style="display:none;height:3px;background:var(--bg-hover);border-radius:2px;margin-top:8px;overflow:hidden;">
+                    <div class="bar" id="modalUploadBar" style="height:100%;background:#4f8cff;width:0%;transition:width 0.3s;"></div>
                 </div>
             </div>
             
-            <div class="divider">или</div>
+            <div style="display:flex;align-items:center;gap:12px;margin:12px 0;color:var(--text-muted);font-size:12px;">
+                <div style="flex:1;height:1px;background:var(--border-color);"></div>
+                или
+                <div style="flex:1;height:1px;background:var(--border-color);"></div>
+            </div>
             
             <div class="field">
                 <label>URL изображения</label>
@@ -1864,7 +1843,6 @@ function openImageModal() {
         const url = document.getElementById('imageUrlInput').value.trim();
         
         if (tempFile) {
-            // Загружаем файл через ImageBB
             const progress = document.getElementById('modalUploadProgress');
             const bar = document.getElementById('modalUploadBar');
             progress.style.display = 'block';
@@ -2244,7 +2222,7 @@ function generateShortId() {
     return result;
 }
 
-console.log('📝 Create page loaded with image modal and color picker');
+console.log('📝 Create page loaded with community list fix');
 </script>
 </body>
 </html>
