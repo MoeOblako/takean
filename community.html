@@ -205,6 +205,7 @@
             overflow: hidden;
             flex-shrink: 0;
             position: relative;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .topbar-actions .avatar-small:hover {
@@ -219,15 +220,14 @@
 
         .topbar-actions .avatar-small .online-dot {
             position: absolute;
-            bottom: 2px;
-            right: 2px;
+            bottom: -1px;
+            right: -1px;
             width: 10px;
             height: 10px;
             border-radius: 50%;
             border: 2px solid var(--bg-card);
             background: var(--online-color);
             display: none;
-            z-index: 2;
         }
 
         .topbar-actions .avatar-small .online-dot.show {
@@ -336,6 +336,134 @@
             color: var(--green);
         }
         .ripple-btn.success:hover { background: rgba(76, 175, 80, 0.1); }
+
+        /* ===== MODAL (ОБЩИЙ) ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            animation: fadeIn 0.2s ease-out;
+            padding: 16px;
+        }
+
+        .modal-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 24px 28px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp 0.25s ease-out;
+        }
+
+        .modal-box .close-modal {
+            float: right;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 24px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .modal-box h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .modal-box .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .modal-box .modal-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-box .modal-header .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 24px;
+            padding: 4px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .modal-box .modal-header .close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-box .field {
+            margin-bottom: 16px;
+        }
+
+        .modal-box .field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .modal-box .field input[type="text"],
+        .modal-box .field input[type="password"] {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .modal-box .field input:focus {
+            border-color: var(--accent);
+        }
+
+        .modal-box .field .input-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .modal-box .field .input-error {
+            font-size: 12px;
+            color: var(--red);
+            margin-top: 4px;
+            display: none;
+        }
+
+        .modal-box .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 16px;
+        }
+
+        .modal-box .modal-actions .ripple-btn {
+            padding: 8px 24px;
+        }
 
         /* ===== COMMUNITY ===== */
         .community-header {
@@ -480,6 +608,7 @@
             align-items: center;
             gap: 4px;
             margin-top: 12px;
+            flex-wrap: wrap;
         }
 
         .community-members .avatar-stack {
@@ -664,7 +793,6 @@
             cursor: pointer;
         }
 
-        /* BBC STYLES */
         .bbc-bold { font-weight: 700; }
         .bbc-italic { font-style: italic; }
         .bbc-underline { text-decoration: underline; }
@@ -759,49 +887,7 @@
         .post-action-btn.disliked .material-icons { color: var(--red); }
         .post-action-btn.disliked { color: var(--red); }
 
-        /* ===== MODAL ===== */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 999;
-            animation: fadeIn 0.2s ease-out;
-            padding: 16px;
-        }
-
-        .modal-box {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            padding: 24px 28px;
-            max-width: 520px;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-            animation: slideUp 0.25s ease-out;
-        }
-
-        .modal-box .close-modal {
-            float: right;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 24px;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .modal-box h3 {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 16px;
-        }
-
+        /* ===== MODAL USER ITEMS ===== */
         .modal-user-item {
             display: flex;
             align-items: center;
@@ -921,49 +1007,6 @@
             background: rgba(76, 175, 80, 0.1);
         }
 
-        /* ===== IMAGE VIEWER ===== */
-        .image-viewer-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            animation: fadeIn 0.2s ease-out;
-            padding: 20px;
-            cursor: pointer;
-        }
-
-        .image-viewer-overlay img {
-            max-width: 90vw;
-            max-height: 90vh;
-            object-fit: contain;
-            border-radius: var(--radius);
-        }
-
-        .image-viewer-overlay .close-viewer {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.5);
-            border: none;
-            color: #fff;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            font-size: 24px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
-        }
-
-        .image-viewer-overlay .close-viewer:hover {
-            background: rgba(0, 0, 0, 0.8);
-        }
-
         /* ===== EDIT MODAL ===== */
         .edit-field {
             margin-bottom: 16px;
@@ -1023,12 +1066,26 @@
             border: 2px solid var(--border-color);
             position: relative;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .edit-avatar-box .preview img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .edit-avatar-box .preview .empty-avatar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--text-muted);
         }
 
         .edit-avatar-box .preview .upload-overlay {
@@ -1038,6 +1095,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: var(--radius);
             opacity: 0;
             transition: opacity 0.3s;
         }
@@ -1072,12 +1130,25 @@
             border: 2px solid var(--border-color);
             position: relative;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .edit-cover-box .preview img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .edit-cover-box .preview .empty-cover {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            color: var(--text-muted);
+            font-size: 13px;
         }
 
         .edit-cover-box .preview .upload-overlay {
@@ -1087,6 +1158,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: var(--radius);
             opacity: 0;
             transition: opacity 0.3s;
         }
@@ -1132,6 +1204,49 @@
 
         .modal-actions .ripple-btn {
             padding: 8px 24px;
+        }
+
+        /* ===== IMAGE VIEWER ===== */
+        .image-viewer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.2s ease-out;
+            padding: 20px;
+            cursor: pointer;
+        }
+
+        .image-viewer-overlay img {
+            max-width: 90vw;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: var(--radius);
+        }
+
+        .image-viewer-overlay .close-viewer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: none;
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .image-viewer-overlay .close-viewer:hover {
+            background: rgba(0, 0, 0, 0.8);
         }
 
         /* ===== FOOTER ===== */
@@ -1425,7 +1540,7 @@ function generateShortId() {
 }
 
 // ============================================================
-// ПАРСИНГ BBC ДЛЯ ОТОБРАЖЕНИЯ В ПОСТАХ
+// ПАРСИНГ BBC
 // ============================================================
 function parseBBCForDisplay(text) {
     if (!text) return '';
@@ -1493,7 +1608,7 @@ function createUserInFirestore(user) {
 }
 
 // ============================================================
-// ОНЛАЙН СТАТУС (умная система)
+// ОНЛАЙН СТАТУС
 // ============================================================
 let onlineCheckInterval = null;
 let isUserActive = true;
@@ -1731,18 +1846,21 @@ function renderCommunity(community) {
     
     let membersStackHtml = '';
     const showMembers = displayMembers.slice(0, 5);
-    showMembers.forEach((member, i) => {
-        const letter = String.fromCharCode(65 + (i % 26));
+    showMembers.forEach((member) => {
+        const userData = allUsersCache[member] || {};
+        const avatar = userData.avatar || '';
+        const displayName = userData.displayName || userData.username || '?';
         const isOnline = userOnlineStatus[member] || false;
+        
         membersStackHtml += `
-            <div class="mini-avatar" data-uid="${member}" onclick="goToProfileWithContext('${member}')">
-                <span>${letter}</span>
+            <div class="mini-avatar" data-uid="${member}" onclick="goToProfileWithContext('${member}')" title="${escapeHtml(displayName)}">
+                ${avatar ? `<img src="${avatar}" alt="">` : `<span>${displayName[0].toUpperCase()}</span>`}
                 <span class="online-dot ${isOnline ? 'show' : ''}"></span>
             </div>
         `;
     });
     if (displayMembers.length > 5) {
-        membersStackHtml += `<div class="mini-avatar">+${displayMembers.length - 5}</div>`;
+        membersStackHtml += `<div class="mini-avatar" onclick="showMembers()">+${displayMembers.length - 5}</div>`;
     }
     
     container.innerHTML = `
@@ -1798,7 +1916,7 @@ function renderCommunity(community) {
                         <button class="ripple-btn outline" onclick="editCommunity()">
                             <span class="material-icons">edit</span> Редактировать
                         </button>
-                        <button class="ripple-btn danger" onclick="deleteCommunity()">
+                        <button class="ripple-btn danger" onclick="confirmDeleteCommunity()">
                             <span class="material-icons">delete</span> Удалить
                         </button>
                     `}
@@ -1898,7 +2016,7 @@ function loadCommunityPosts(id) {
 }
 
 // ============================================================
-// ОТОБРАЖЕНИЕ ПОСТОВ (С ПАРСИНГОМ BBC И ПРАВИЛЬНЫМИ ИЗОБРАЖЕНИЯМИ)
+// ОТОБРАЖЕНИЕ ПОСТОВ
 // ============================================================
 function renderPosts(posts) {
     const container = document.getElementById('communityPosts');
@@ -2009,7 +2127,7 @@ function openImageViewer(url) {
 }
 
 // ============================================================
-// ЛАЙКИ / ДИЗЛАЙКИ (МГНОВЕННОЕ ОБНОВЛЕНИЕ)
+// ЛАЙКИ / ДИЗЛАЙКИ
 // ============================================================
 function toggleLike(postId) {
     if (!currentUser) {
@@ -2024,7 +2142,6 @@ function toggleLike(postId) {
     
     const isLiked = btn.classList.contains('liked');
     
-    // Мгновенное обновление UI
     if (isLiked) {
         btn.classList.remove('liked');
         btn.querySelector('.material-icons').textContent = 'thumb_up_off_alt';
@@ -2033,7 +2150,6 @@ function toggleLike(postId) {
         btn.classList.add('liked');
         btn.querySelector('.material-icons').textContent = 'thumb_up';
         countEl.textContent = parseInt(countEl.textContent) + 1;
-        // Если был дизлайк, убираем его
         const dislikeBtn = document.getElementById(`dislikeBtn_${postId}`);
         if (dislikeBtn && dislikeBtn.classList.contains('disliked')) {
             dislikeBtn.classList.remove('disliked');
@@ -2043,7 +2159,6 @@ function toggleLike(postId) {
         }
     }
     
-    // Отправляем в Firestore
     db.runTransaction(transaction => {
         return transaction.get(postRef).then(doc => {
             if (!doc.exists) return;
@@ -2062,7 +2177,6 @@ function toggleLike(postId) {
         });
     }).catch(err => {
         console.error('Like error:', err);
-        // Откатываем UI при ошибке
         if (isLiked) {
             btn.classList.add('liked');
             btn.querySelector('.material-icons').textContent = 'thumb_up';
@@ -2088,7 +2202,6 @@ function toggleDislike(postId) {
     
     const isDisliked = btn.classList.contains('disliked');
     
-    // Мгновенное обновление UI
     if (isDisliked) {
         btn.classList.remove('disliked');
         btn.querySelector('.material-icons').textContent = 'thumb_down_off_alt';
@@ -2097,7 +2210,6 @@ function toggleDislike(postId) {
         btn.classList.add('disliked');
         btn.querySelector('.material-icons').textContent = 'thumb_down';
         countEl.textContent = parseInt(countEl.textContent) + 1;
-        // Если был лайк, убираем его
         const likeBtn = document.getElementById(`likeBtn_${postId}`);
         if (likeBtn && likeBtn.classList.contains('liked')) {
             likeBtn.classList.remove('liked');
@@ -2107,7 +2219,6 @@ function toggleDislike(postId) {
         }
     }
     
-    // Отправляем в Firestore
     db.runTransaction(transaction => {
         return transaction.get(postRef).then(doc => {
             if (!doc.exists) return;
@@ -2126,7 +2237,6 @@ function toggleDislike(postId) {
         });
     }).catch(err => {
         console.error('Dislike error:', err);
-        // Откатываем UI при ошибке
         if (isDisliked) {
             btn.classList.add('disliked');
             btn.querySelector('.material-icons').textContent = 'thumb_down';
@@ -2244,11 +2354,12 @@ function showMembers() {
             const isAdmin = communityAdmins.includes(r.id);
             const isSelf = currentUser && r.id === currentUser.uid;
             const showControls = canManage && !isOwner && !isSelf;
+            const avatar = r.data.avatar || '';
             
             return `
                 <div class="modal-user-item">
                     <div class="avatar" onclick="goToProfileWithContext('${r.id}')">
-                        ${r.data.avatar ? `<img src="${r.data.avatar}" alt="">` : `<span>${(r.data.username || '?')[0].toUpperCase()}</span>`}
+                        ${avatar ? `<img src="${avatar}" alt="">` : `<span>${(r.data.username || '?')[0].toUpperCase()}</span>`}
                         <span class="online-dot ${isOnline ? 'show' : ''}"></span>
                     </div>
                     <div class="info" onclick="goToProfileWithContext('${r.id}')">
@@ -2384,6 +2495,98 @@ function removeMember(uid) {
 }
 
 // ============================================================
+// МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ УДАЛЕНИЯ СООБЩЕСТВА
+// ============================================================
+function confirmDeleteCommunity() {
+    if (!currentUser || communityData.ownerId !== currentUser.uid) return;
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2><span class="material-icons" style="color:var(--red);">delete_forever</span> Удалить сообщество?</h2>
+                <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
+            </div>
+            
+            <div style="text-align:center;margin-bottom:16px;">
+                <div style="font-size:14px;color:var(--red);margin-bottom:8px;">
+                    <span class="material-icons" style="font-size:48px;display:block;margin:0 auto 8px;">warning</span>
+                    Это действие <strong>необратимо</strong>
+                </div>
+                <div style="font-size:13px;color:var(--text-secondary);">
+                    Все тейки и данные сообщества будут удалены.
+                    <br>Вы уверены, что хотите продолжить?
+                </div>
+            </div>
+            
+            <div class="field">
+                <label>Введите пароль для подтверждения</label>
+                <input type="password" id="deletePasswordInput" placeholder="Введите ваш пароль">
+                <div class="input-error" id="deletePasswordError">Неверный пароль</div>
+                <div class="input-hint">Для подтверждения удаления введите текущий пароль</div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="ripple-btn outline" onclick="this.closest('.modal-overlay').remove()">Отмена</button>
+                <button class="ripple-btn danger" id="confirmDeleteBtn">
+                    <span class="material-icons">delete</span> Да, удалить
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        const password = document.getElementById('deletePasswordInput').value;
+        const errorEl = document.getElementById('deletePasswordError');
+        
+        if (!password) {
+            errorEl.textContent = 'Введите пароль';
+            errorEl.style.display = 'block';
+            return;
+        }
+        
+        this.disabled = true;
+        this.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Проверка...';
+        errorEl.style.display = 'none';
+        
+        // Проверяем пароль через повторную авторизацию
+        const credential = firebase.auth.EmailAuthProvider.credential(
+            currentUser.email,
+            password
+        );
+        
+        currentUser.reauthenticateWithCredential(credential)
+            .then(() => {
+                // Пароль верный — удаляем сообщество
+                this.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Удаление...';
+                return db.collection('communities').doc(communityData.id).delete();
+            })
+            .then(() => {
+                alert('Сообщество удалено');
+                window.location.href = '/communities.html';
+            })
+            .catch(err => {
+                if (err.code === 'auth/wrong-password') {
+                    errorEl.textContent = 'Неверный пароль. Попробуйте снова.';
+                    errorEl.style.display = 'block';
+                } else {
+                    alert('Ошибка: ' + err.message);
+                }
+                this.disabled = false;
+                this.innerHTML = '<span class="material-icons">delete</span> Да, удалить';
+            });
+    });
+    
+    document.getElementById('deletePasswordInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            document.getElementById('confirmDeleteBtn').click();
+        }
+    });
+}
+
+// ============================================================
 // СОЗДАНИЕ ПОСТА В СООБЩЕСТВЕ
 // ============================================================
 function createPostInCommunity() {
@@ -2407,7 +2610,7 @@ function copyCommunityLink() {
 }
 
 // ============================================================
-// РЕДАКТИРОВАНИЕ СООБЩЕСТВА (ЧЕРЕЗ IMGBB)
+// РЕДАКТИРОВАНИЕ СООБЩЕСТВА
 // ============================================================
 function editCommunity() {
     if (!currentUser || communityData.ownerId !== currentUser.uid) return;
@@ -2421,19 +2624,21 @@ function editCommunity() {
             
             <div class="edit-media-row">
                 <div class="edit-avatar-box">
-                    <div class="preview" onclick="editCommunityMedia('avatar')">
-                        ${communityData.avatar ? `<img src="${communityData.avatar}" alt="avatar">` : `<span class="material-icons" style="font-size:36px;color:var(--text-muted);">group</span>`}
+                    <div class="preview" id="editAvatarPreview" onclick="document.getElementById('avatarInput').click()">
+                        ${communityData.avatar ? `<img src="${communityData.avatar}" alt="avatar">` : `<span class="empty-avatar"><span class="material-icons" style="font-size:36px;color:var(--text-muted);">group</span></span>`}
                         <div class="upload-overlay"><span class="material-icons">photo_camera</span></div>
                     </div>
                     <div class="label">Аватар</div>
+                    <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
                     <div class="edit-upload-progress" id="avatarProgress"><div class="bar" id="avatarBar"></div></div>
                 </div>
                 <div class="edit-cover-box">
-                    <div class="preview" onclick="editCommunityMedia('cover')">
-                        ${communityData.cover ? `<img src="${communityData.cover}" alt="cover">` : `<span class="material-icons" style="font-size:36px;color:var(--text-muted);">image</span>`}
+                    <div class="preview" id="editCoverPreview" onclick="document.getElementById('coverInput').click()">
+                        ${communityData.cover ? `<img src="${communityData.cover}" alt="cover">` : `<span class="empty-cover">Шапка сообщества</span>`}
                         <div class="upload-overlay"><span class="material-icons">photo_camera</span></div>
                     </div>
                     <div class="label">Шапка</div>
+                    <input type="file" id="coverInput" accept="image/*" style="display:none;" onchange="handleCoverUpload(event)">
                     <div class="edit-upload-progress" id="coverProgress"><div class="bar" id="coverBar"></div></div>
                 </div>
             </div>
@@ -2454,6 +2659,38 @@ function editCommunity() {
     `;
     document.body.appendChild(modal);
     
+    // Загрузка аватара
+    document.getElementById('avatarInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const preview = document.getElementById('editAvatarPreview');
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            preview.innerHTML = `
+                <img src="${ev.target.result}" alt="avatar">
+                <div class="upload-overlay"><span class="material-icons">photo_camera</span></div>
+            `;
+        };
+        reader.readAsDataURL(file);
+        window._avatarFile = file;
+    });
+    
+    // Загрузка шапки
+    document.getElementById('coverInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const preview = document.getElementById('editCoverPreview');
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            preview.innerHTML = `
+                <img src="${ev.target.result}" alt="cover">
+                <div class="upload-overlay"><span class="material-icons">photo_camera</span></div>
+            `;
+        };
+        reader.readAsDataURL(file);
+        window._coverFile = file;
+    });
+    
     document.getElementById('saveCommunityBtn').addEventListener('click', function() {
         const name = document.getElementById('editCommunityName').value.trim();
         const description = document.getElementById('editCommunityDesc').value.trim();
@@ -2466,99 +2703,68 @@ function editCommunity() {
         this.disabled = true;
         this.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
         
-        db.collection('communities').doc(communityData.id).update({
-            name: name,
-            description: description || 'Нет описания'
-        }).then(() => {
-            communityData.name = name;
-            communityData.description = description || 'Нет описания';
-            modal.remove();
-            renderCommunity(communityData);
-            alert('Обновлено!');
-        }).catch(err => {
-            alert('Ошибка: ' + err.message);
-            this.disabled = false;
-            this.innerHTML = 'Сохранить';
-        });
+        // Сначала загружаем файлы, если есть
+        const uploadPromises = [];
+        const updates = {};
+        
+        if (window._avatarFile) {
+            const formData = new FormData();
+            formData.append('key', IMGBB_API_KEY);
+            formData.append('image', window._avatarFile);
+            uploadPromises.push(
+                fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) updates.avatar = data.data.url;
+                    })
+            );
+        }
+        
+        if (window._coverFile) {
+            const formData = new FormData();
+            formData.append('key', IMGBB_API_KEY);
+            formData.append('image', window._coverFile);
+            uploadPromises.push(
+                fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) updates.cover = data.data.url;
+                    })
+            );
+        }
+        
+        Promise.all(uploadPromises)
+            .then(() => {
+                updates.name = name;
+                updates.description = description || 'Нет описания';
+                return db.collection('communities').doc(communityData.id).update(updates);
+            })
+            .then(() => {
+                communityData.name = name;
+                communityData.description = description || 'Нет описания';
+                if (updates.avatar) communityData.avatar = updates.avatar;
+                if (updates.cover) communityData.cover = updates.cover;
+                modal.remove();
+                renderCommunity(communityData);
+                alert('Обновлено!');
+            })
+            .catch(err => {
+                alert('Ошибка: ' + err.message);
+                this.disabled = false;
+                this.innerHTML = 'Сохранить';
+            });
     });
 }
 
 // ============================================================
-// РЕДАКТИРОВАНИЕ МЕДИА (ЧЕРЕЗ IMGBB)
-// ============================================================
-function editCommunityMedia(type) {
-    if (!currentUser || communityData.ownerId !== currentUser.uid) return;
-    
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        if (file.size > 10 * 1024 * 1024) {
-            alert('Файл слишком большой (>10MB)');
-            return;
-        }
-        
-        const progressId = type === 'avatar' ? 'avatarProgress' : 'coverProgress';
-        const barId = type === 'avatar' ? 'avatarBar' : 'coverBar';
-        const progressEl = document.getElementById(progressId);
-        const barEl = document.getElementById(barId);
-        if (progressEl) progressEl.style.display = 'block';
-        
-        try {
-            const formData = new FormData();
-            formData.append('key', IMGBB_API_KEY);
-            formData.append('image', file);
-            
-            const response = await fetch('https://api.imgbb.com/1/upload', {
-                method: 'POST',
-                body: formData
-            });
-            const data = await response.json();
-            
-            if (!data.success) {
-                throw new Error(data.error?.message || 'Ошибка загрузки');
-            }
-            
-            const url = data.data.url;
-            
-            const update = {};
-            update[type] = url;
-            await db.collection('communities').doc(communityData.id).update(update);
-            
-            communityData[type] = url;
-            renderCommunity(communityData);
-            alert('Обновлено!');
-            
-        } catch (err) {
-            alert('Ошибка: ' + err.message);
-        } finally {
-            if (progressEl) progressEl.style.display = 'none';
-            if (barEl) barEl.style.width = '0%';
-        }
-    };
-    input.click();
-}
-
-// ============================================================
-// УДАЛЕНИЕ СООБЩЕСТВА
+// УДАЛЕНИЕ СООБЩЕСТВА (СТАРАЯ ФУНКЦИЯ — ЗАМЕНЕНА НА confirmDeleteCommunity)
 // ============================================================
 function deleteCommunity() {
-    if (!currentUser || communityData.ownerId !== currentUser.uid) return;
-    if (!confirm('Вы уверены, что хотите удалить сообщество? Это действие необратимо!')) return;
-    if (!confirm('Подтвердите удаление сообщества ещё раз:')) return;
-    
-    db.collection('communities').doc(communityData.id).delete()
-        .then(() => {
-            alert('Сообщество удалено');
-            window.location.href = '/communities.html';
-        })
-        .catch(err => alert('Ошибка: ' + err.message));
+    // Заменено на confirmDeleteCommunity
+    confirmDeleteCommunity();
 }
 
-console.log('👥 Community page loaded with profile integration and BBC parsing');
+console.log('👥 Community page loaded with full fixes');
 </script>
 </body>
 </html>
