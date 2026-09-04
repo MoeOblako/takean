@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
+        /* ===== ВСЕ СТИЛИ КАК РАНЬШЕ ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -31,6 +32,9 @@
             --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             --topbar-height: 60px;
             --online-color: #4caf50;
+            --tag-anarchism-color: #ffffff;
+            --tag-fascism-color: #ffffff;
+            --tag-authoritarianism-color: #8b0000;
         }
 
         [data-theme="light"] {
@@ -45,6 +49,9 @@
             --border-color: #e0e0e0;
             --border-light: #d0d0d0;
             --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            --tag-anarchism-color: #000000;
+            --tag-fascism-color: #000000;
+            --tag-authoritarianism-color: #8b0000;
         }
 
         html {
@@ -262,14 +269,15 @@
 
         .topbar-actions .avatar-small .online-dot {
             position: absolute;
-            bottom: 0;
-            right: 0;
+            bottom: 2px;
+            right: 2px;
             width: 10px;
             height: 10px;
             border-radius: 50%;
             border: 2px solid var(--bg-card);
             background: var(--online-color);
             display: none;
+            z-index: 2;
         }
 
         .topbar-actions .avatar-small .online-dot.show {
@@ -361,14 +369,15 @@
 
         .post-avatar .online-dot {
             position: absolute;
-            bottom: 0;
-            right: 0;
+            bottom: 2px;
+            right: 2px;
             width: 10px;
             height: 10px;
             border-radius: 50%;
             border: 2px solid var(--bg-card);
             background: var(--online-color);
             display: none;
+            z-index: 2;
         }
 
         .post-avatar .online-dot.show {
@@ -629,17 +638,17 @@
             color: var(--accent);
         }
 
-        /* ===== ЦВЕТА ДЛЯ ТЕГОВ (английские названия) ===== */
+        /* ===== ЦВЕТА ДЛЯ ТЕГОВ ===== */
         .tag-communism { color: #c62828; }
         .tag-socialism { color: #d32f2f; }
         .tag-capitalism { color: #2e7d32; }
         .tag-liberalism { color: #1e88e5; }
         .tag-conservatism { color: #3949ab; }
-        .tag-anarchism { color: #6d4c41; }
+        .tag-anarchism { color: var(--tag-anarchism-color); }
         .tag-nationalism { color: #1565c0; }
-        .tag-fascism { color: #4e342e; }
+        .tag-fascism { color: var(--tag-fascism-color); }
         .tag-democracy { color: #1565c0; }
-        .tag-authoritarianism { color: #4e342e; }
+        .tag-authoritarianism { color: var(--tag-authoritarianism-color); }
         .tag-minecraft { color: #4caf50; }
         .tag-dota2 { color: #d32f2f; }
         .tag-csgo { color: #f9a825; }
@@ -972,6 +981,8 @@
             .post-images .img-wrap { aspect-ratio: auto; min-height: 200px; }
             .post-community-wrap .community-avatar { width: 16px; height: 16px; }
             .post-meta { gap: 4px 6px; }
+            .topbar-actions .avatar-small .online-dot { width: 8px; height: 8px; bottom: 1px; right: 1px; }
+            .post-avatar .online-dot { width: 8px; height: 8px; bottom: 1px; right: 1px; }
         }
 
         @media (max-width: 480px) {
@@ -994,6 +1005,8 @@
             .post-community-wrap { font-size: 10px; }
             .post-community-wrap .community-avatar { width: 14px; height: 14px; }
             .post-meta { gap: 3px 4px; }
+            .topbar-actions .avatar-small .online-dot { width: 6px; height: 6px; bottom: 0px; right: 0px; }
+            .post-avatar .online-dot { width: 6px; height: 6px; bottom: 0px; right: 0px; }
         }
     </style>
 </head>
@@ -1123,12 +1136,14 @@ let feedPosts = [];
 let currentFilter = 'all';
 let authModalCallback = null;
 let onlineCheckInterval = null;
+let lastActivityTime = Date.now();
+let isUserOnline = false;
 
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
 
 // ============================================================
-// ЦВЕТА ДЛЯ ТЕГОВ (английские названия)
+// ЦВЕТА ДЛЯ ТЕГОВ
 // ============================================================
 function getTagClass(tag) {
     const tagLower = tag.toLowerCase().trim().replace(/\s+/g, '_');
@@ -1198,9 +1213,7 @@ function getTagClass(tag) {
         'sport': 'tag-sport',
         'other': 'tag-other'
     };
-    // Пробуем найти по точному совпадению
     if (map[tagLower]) return map[tagLower];
-    // Пробуем найти по частичному совпадению
     for (const [key, value] of Object.entries(map)) {
         if (tagLower.includes(key) || key.includes(tagLower)) {
             return value;
@@ -1210,7 +1223,6 @@ function getTagClass(tag) {
 }
 
 function getTagDisplayName(tag) {
-    // Преобразуем английские названия в читаемый вид
     const map = {
         'communism': 'Коммунизм',
         'socialism': 'Социализм',
@@ -1272,7 +1284,6 @@ function getTagDisplayName(tag) {
     };
     const tagLower = tag.toLowerCase().trim().replace(/\s+/g, '_');
     if (map[tagLower]) return map[tagLower];
-    // Если не найдено, возвращаем оригинал с заглавной буквы
     return tag.charAt(0).toUpperCase() + tag.slice(1);
 }
 
@@ -1316,23 +1327,54 @@ function escapeHtml(text) {
 }
 
 // ============================================================
-// ОНЛАЙН СТАТУС
+// ОНЛАЙН СТАТУС (УМНАЯ СИСТЕМА)
 // ============================================================
-function updateOnlineStatus() {
+function updateLastActivity() {
+    lastActivityTime = Date.now();
+    if (!isUserOnline && currentUser) {
+        isUserOnline = true;
+        updateOnlineStatus(true);
+    }
+}
+
+function updateOnlineStatus(status) {
+    if (!currentUser) return;
+    db.collection('users').doc(currentUser.uid).update({
+        lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+        isOnline: status
+    }).catch(() => {});
+}
+
+function checkOnlineStatus() {
     if (!currentUser) return;
     
-    const userRef = db.collection('users').doc(currentUser.uid);
-    userRef.update({
-        lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
-        isOnline: true
-    }).catch(() => {});
+    const now = Date.now();
+    const inactiveTime = (now - lastActivityTime) / 1000; // в секундах
+    
+    // Если прошло больше 120 секунд (2 минуты) бездействия
+    if (inactiveTime > 120 && isUserOnline) {
+        isUserOnline = false;
+        updateOnlineStatus(false);
+    }
 }
 
 function startOnlineTracking() {
     if (onlineCheckInterval) clearInterval(onlineCheckInterval);
-    updateOnlineStatus();
-    onlineCheckInterval = setInterval(updateOnlineStatus, 30000);
     
+    lastActivityTime = Date.now();
+    isUserOnline = true;
+    updateOnlineStatus(true);
+    
+    // Проверяем бездействие каждые 30 секунд
+    onlineCheckInterval = setInterval(checkOnlineStatus, 30000);
+    
+    // Отслеживаем активность пользователя
+    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click', 'input', 'focus'];
+    events.forEach(event => {
+        document.addEventListener(event, updateLastActivity);
+    });
+    
+    // При закрытии вкладки
     window.addEventListener('beforeunload', () => {
         if (currentUser) {
             db.collection('users').doc(currentUser.uid).update({
@@ -1342,16 +1384,21 @@ function startOnlineTracking() {
         }
     });
     
+    // При скрытии вкладки
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
             if (currentUser) {
+                isUserOnline = false;
                 db.collection('users').doc(currentUser.uid).update({
                     isOnline: false,
                     lastSeen: firebase.firestore.FieldValue.serverTimestamp()
                 }).catch(() => {});
             }
         } else {
-            updateOnlineStatus();
+            // Вкладка снова активна — обновляем статус
+            lastActivityTime = Date.now();
+            isUserOnline = true;
+            updateOnlineStatus(true);
         }
     });
 }
@@ -1361,11 +1408,12 @@ function checkUserOnline(uid) {
         .then(doc => {
             if (doc.exists) {
                 const data = doc.data();
+                // Проверяем isOnline и lastSeen
                 if (data.isOnline === true) return true;
                 if (data.lastSeen) {
                     const lastSeen = data.lastSeen.seconds * 1000;
                     const now = Date.now();
-                    return (now - lastSeen) < 60000;
+                    return (now - lastSeen) < 120000; // 2 минуты
                 }
             }
             return false;
@@ -1453,15 +1501,12 @@ function loadUserData() {
             : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
         avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
         
-        dotEl.classList.add('show');
-        
         createUserInFirestore(user).then(() => {
             startOnlineTracking();
         }).catch(err => console.error('Error creating user:', err));
     } else {
         avatarEl.innerHTML = '<span>?</span>';
         avatarEl.onclick = () => openAuthModal();
-        dotEl.classList.remove('show');
         if (onlineCheckInterval) {
             clearInterval(onlineCheckInterval);
             onlineCheckInterval = null;
@@ -1811,20 +1856,18 @@ function createPostHTML(post, index) {
           })
         : 'недавно';
     
-    // Теги - показываем только если есть категория
+    // Теги
     let tagsHtml = '';
     if (post.category) {
-        // Разбиваем категории по запятой
         const categories = post.category.split(',').map(c => c.trim());
         categories.forEach(cat => {
-            // Получаем класс цвета и отображаемое имя
             const tagClass = getTagClass(cat);
             const displayName = getTagDisplayName(cat);
             tagsHtml += `<span class="post-tag ${tagClass}" onclick="applyFilter('${cat}')">#${displayName}</span>`;
         });
     }
     
-    // Сообщество - показываем только если есть
+    // Сообщество
     let communityHtml = '';
     if (post.communityId && post._communityData) {
         communityHtml = `
