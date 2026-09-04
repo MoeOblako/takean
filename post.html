@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- ===== OPEN GRAPH (обновляется динамически) ===== -->
+    <!-- ===== OPEN GRAPH ===== -->
     <meta property="og:title" id="ogTitle" content="Takean - Тейк">
     <meta property="og:description" id="ogDesc" content="Читайте тейк на платформе Takean">
     <meta property="og:image" id="ogImage" content="">
@@ -1783,7 +1783,6 @@ function loadPost(id) {
                     currentPost._communityData = communityData;
                     currentPost._authorOnline = authorOnline;
                     
-                    // ===== OPEN GRAPH =====
                     const title = currentPost.title || 'Тейк на Takean';
                     const description = (currentPost.content || '').substring(0, 200) + '...';
                     const image = currentPost.images && currentPost.images.length > 0 
@@ -1793,7 +1792,6 @@ function loadPost(id) {
                     
                     document.title = `${title} | Takean`;
                     
-                    // Обновляем OG мета-теги
                     const metaMap = {
                         'og:title': title,
                         'og:description': description,
@@ -2021,7 +2019,7 @@ function renderPost(post) {
 }
 
 // ============================================================
-// VOTE SYSTEM (мгновенное обновление)
+// VOTE SYSTEM
 // ============================================================
 function votePost(direction) {
     if (!currentUser) {
@@ -2112,55 +2110,88 @@ function deletePost() {
 }
 
 // ============================================================
-// COMMENTS
+// COMMENTS (с поддержкой ответов на ответы)
 // ============================================================
 function loadComments(postId) {
     const container = document.getElementById('commentsContainer');
     container.innerHTML = '<div class="loading-spinner"><span class="material-icons">refresh</span> Загрузка...</div>';
 
+    // Загружаем все комментарии к посту (включая ответы)
     db.collection('comments')
         .where('postId', '==', postId)
-        .where('parentId', '==', null)
         .orderBy('createdAt', 'asc')
         .get()
         .then(snapshot => {
-            comments = [];
+            const allComments = [];
             const promises = [];
+            
             snapshot.forEach(doc => {
-                comments.push({ id: doc.id, ...doc.data() });
+                const data = doc.data();
+                allComments.push({ id: doc.id, ...data });
             });
             
-            comments.forEach(c => {
+            // Строим дерево комментариев
+            const commentMap = {};
+            const rootComments = [];
+            
+            allComments.forEach(c => {
+                commentMap[c.id] = c;
+                c.replies = [];
+                c._authorOnline = false;
+            });
+            
+            allComments.forEach(c => {
+                if (c.parentId && commentMap[c.parentId]) {
+                    commentMap[c.parentId].replies.push(c);
+                } else if (!c.parentId) {
+                    rootComments.push(c);
+                }
+            });
+            
+            // Сортируем корневые комментарии по дате
+            rootComments.sort((a, b) => {
+                const aTime = a.createdAt?.seconds || 0;
+                const bTime = b.createdAt?.seconds || 0;
+                return aTime - bTime;
+            });
+            
+            // Сортируем ответы по дате
+            const sortReplies = (comments) => {
+                comments.sort((a, b) => {
+                    const aTime = a.createdAt?.seconds || 0;
+                    const bTime = b.createdAt?.seconds || 0;
+                    return aTime - bTime;
+                });
+                comments.forEach(c => {
+                    if (c.replies && c.replies.length) {
+                        sortReplies(c.replies);
+                    }
+                });
+            };
+            sortReplies(rootComments);
+            
+            // Проверяем онлайн статус для всех комментаторов
+            const userIds = new Set();
+            allComments.forEach(c => {
+                if (c.authorId) userIds.add(c.authorId);
+            });
+            
+            userIds.forEach(uid => {
                 promises.push(
-                    checkUserOnline(c.authorId).then(isOnline => {
-                        c._authorOnline = isOnline;
+                    checkUserOnline(uid).then(isOnline => {
+                        allComments.forEach(c => {
+                            if (c.authorId === uid) {
+                                c._authorOnline = isOnline;
+                            }
+                        });
                     })
                 );
-                promises.push(
-                    db.collection('comments')
-                        .where('postId', '==', postId)
-                        .where('parentId', '==', c.id)
-                        .orderBy('createdAt', 'asc')
-                        .get()
-                        .then(snap => {
-                            c.replies = [];
-                            snap.forEach(doc => {
-                                const reply = { id: doc.id, ...doc.data() };
-                                promises.push(
-                                    checkUserOnline(reply.authorId).then(isOnline => {
-                                        reply._authorOnline = isOnline;
-                                    })
-                                );
-                                c.replies.push(reply);
-                            });
-                        })
-                );
             });
             
-            return Promise.all(promises);
-        })
-        .then(() => {
-            renderComments();
+            return Promise.all(promises).then(() => {
+                comments = rootComments;
+                renderComments();
+            });
         })
         .catch(err => {
             console.error('Load comments error:', err);
@@ -2195,7 +2226,13 @@ function renderComments() {
     
     const countEl = document.getElementById('commentsCount');
     if (countEl) {
-        const total = comments.reduce((acc, c) => acc + 1 + (c.replies?.length || 0), 0);
+        const total = comments.reduce((acc, c) => {
+            let count = 1 + (c.replies?.length || 0);
+            c.replies?.forEach(r => {
+                count += r.replies?.length || 0;
+            });
+            return acc + count;
+        }, 0);
         countEl.textContent = total;
     }
 }
@@ -2226,10 +2263,45 @@ function createCommentHTML(comment, depth) {
         `;
     }
     
+    // Определяем имя автора родительского комментария для ответа
+    let parentAuthorName = null;
+    if (comment.parentId) {
+        const findParent = (list) => {
+            for (const c of list) {
+                if (c.id === comment.parentId) {
+                    parentAuthorName = c.authorName;
+                    return true;
+                }
+                if (c.replies) {
+                    for (const r of c.replies) {
+                        if (r.id === comment.parentId) {
+                            parentAuthorName = r.authorName;
+                            return true;
+                        }
+                        if (r.replies) {
+                            for (const rr of r.replies) {
+                                if (rr.id === comment.parentId) {
+                                    parentAuthorName = rr.authorName;
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        };
+        findParent(comments);
+    }
+    
     let repliesHtml = '';
     if (comment.replies && comment.replies.length) {
         repliesHtml = comment.replies.map(reply => createCommentHTML(reply, depth + 1)).join('');
     }
+    
+    // Показываем "Ответ для @username" только если это ответ на чей-то комментарий (глубина > 0)
+    // и если автор ответа не равен автору родительского комментария (чтобы не писать "Ответ для себя")
+    const showReplyBadge = depth > 0 && parentAuthorName && comment.authorName !== parentAuthorName;
     
     return `
         <div class="comment" id="comment-${comment.id}" style="${depth > 0 ? 'margin-left:12px;' : ''}">
@@ -2248,10 +2320,10 @@ function createCommentHTML(comment, depth) {
                 <span class="comment-time">${timeStr}</span>
             </div>
             
-            ${depth > 0 ? `
+            ${showReplyBadge ? `
                 <div class="comment-reply-badge">
                     <span class="material-icons">reply</span>
-                    Ответ для <span class="reply-to" onclick="scrollToComment('${comment.parentId}')">@${escapeHtml(comment.parentAuthorName || 'пользователь')}</span>
+                    Ответ для <span class="reply-to" onclick="scrollToComment('${comment.parentId}')">@${escapeHtml(parentAuthorName)}</span>
                 </div>
             ` : ''}
             
@@ -2270,7 +2342,7 @@ function createCommentHTML(comment, depth) {
                     <span class="vote-count">${comment.dislikes?.length || 0}</span>
                 </button>
                 <span class="comment-score ${scoreClass}">${score}</span>
-                <button onclick="showReplyForm('${comment.id}', '${escapeHtml(comment.authorName || 'пользователь')}')">
+                <button onclick="showReplyForm('${comment.id}')">
                     <span class="material-icons" style="font-size:16px;">reply</span> Ответить
                 </button>
                 ${comment.authorId === currentUser?.uid ? `
@@ -2301,16 +2373,13 @@ function scrollToComment(commentId) {
     }
 }
 
-function showReplyForm(commentId, authorName) {
+function showReplyForm(commentId) {
     const form = document.getElementById(`replyForm-${commentId}`);
     if (form) {
         form.classList.toggle('hidden');
         if (!form.classList.contains('hidden')) {
             const input = document.getElementById(`replyInput-${commentId}`);
-            if (input) {
-                input.placeholder = `Ответ @${authorName}`;
-                input.focus();
-            }
+            if (input) input.focus();
         }
     }
 }
@@ -2326,30 +2395,9 @@ function submitReply(parentId) {
     const text = input.value.trim();
     if (!text) return;
     
-    let parentAuthorName = null;
-    const findParent = (list) => {
-        for (const c of list) {
-            if (c.id === parentId) {
-                parentAuthorName = c.authorName;
-                return true;
-            }
-            if (c.replies) {
-                for (const r of c.replies) {
-                    if (r.id === parentId) {
-                        parentAuthorName = r.authorName;
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    };
-    findParent(comments);
-    
     const commentData = {
         postId: postId,
         parentId: parentId,
-        parentAuthorName: parentAuthorName || 'пользователь',
         authorId: currentUser.uid,
         authorName: currentUser.displayName || 'Аноним',
         authorAvatar: currentUser.photoURL || null,
@@ -2387,7 +2435,6 @@ function submitComment() {
     const commentData = {
         postId: postId,
         parentId: null,
-        parentAuthorName: null,
         authorId: currentUser.uid,
         authorName: currentUser.displayName || 'Аноним',
         authorAvatar: currentUser.photoURL || null,
@@ -2422,8 +2469,8 @@ function voteComment(commentId, direction) {
     
     const commentRef = db.collection('comments').doc(commentId);
     
-    // Мгновенное обновление
-    const updateCommentInList = (list) => {
+    // Мгновенное обновление UI
+    const findAndUpdate = (list) => {
         for (const c of list) {
             if (c.id === commentId) {
                 const uid = currentUser.uid;
@@ -2447,37 +2494,15 @@ function voteComment(commentId, direction) {
                 return true;
             }
             if (c.replies) {
-                for (const r of c.replies) {
-                    if (r.id === commentId) {
-                        const uid = currentUser.uid;
-                        const wasLiked = r.likes && r.likes.includes(uid);
-                        const wasDisliked = r.dislikes && r.dislikes.includes(uid);
-                        if (direction === 1) {
-                            if (wasLiked) {
-                                r.likes = r.likes.filter(id => id !== uid);
-                            } else {
-                                r.likes = [...(r.likes || []), uid];
-                                if (wasDisliked) r.dislikes = r.dislikes.filter(id => id !== uid);
-                            }
-                        } else {
-                            if (wasDisliked) {
-                                r.dislikes = r.dislikes.filter(id => id !== uid);
-                            } else {
-                                r.dislikes = [...(r.dislikes || []), uid];
-                                if (wasLiked) r.likes = r.likes.filter(id => id !== uid);
-                            }
-                        }
-                        return true;
-                    }
-                }
+                if (findAndUpdate(c.replies)) return true;
             }
         }
         return false;
     };
-    updateCommentInList(comments);
+    findAndUpdate(comments);
     renderComments();
     
-    // Отправка в БД
+    // Отправка в БД (фоном)
     db.runTransaction(transaction => {
         return transaction.get(commentRef).then(doc => {
             if (!doc.exists) return;
