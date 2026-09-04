@@ -641,7 +641,7 @@
         .bbc-size-large { font-size: 20px; }
         .bbc-size-huge { font-size: 26px; }
 
-        /* ===== МОДАЛЬНОЕ ОКНО ДЛЯ ИЗОБРАЖЕНИЙ ===== */
+        /* ===== МОДАЛЬНОЕ ОКНО ===== */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -725,11 +725,6 @@
             font-size: 12px;
             color: var(--text-muted);
             margin-top: 4px;
-        }
-
-        .modal-box .field .input-hint .material-icons {
-            font-size: 14px;
-            vertical-align: middle;
         }
 
         .modal-box .field .input-error {
@@ -1130,7 +1125,7 @@
             <option value="">Без сообщества (опубликовать на главной)</option>
         </select>
         <div id="communitySelectInfo" style="margin-top:6px;font-size:12px;color:var(--text-muted);display:none;">
-            <span class="material-icons" style="font-size:14px;vertical-align:middle;">check_circle</span>
+            <span class="material-icons" style="font-size:14px;vertical-align:middle;">info</span>
             Тейк будет опубликован в выбранном сообществе
         </div>
     </div>
@@ -1380,8 +1375,9 @@ function setupEventListeners() {
         updatePreview();
         const info = document.getElementById('communitySelectInfo');
         if (this.value) {
-            info.style.display = 'block';
             const name = this.options[this.selectedIndex]?.text || 'сообществе';
+            info.style.display = 'block';
+            info.style.color = 'var(--text-muted)';
             info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">check_circle</span> 
                 Тейк будет опубликован в сообществе <strong>${name}</strong>`;
         } else {
@@ -1445,11 +1441,10 @@ auth.onAuthStateChanged(user => {
 });
 
 // ============================================================
-// ЗАГРУЗКА СООБЩЕСТВ (ОСНОВНАЯ ФУНКЦИЯ)
+// ЗАГРУЗКА СООБЩЕСТВ (ИСПРАВЛЕННАЯ)
 // ============================================================
 function loadUserCommunities() {
     if (!currentUser) {
-        // Если пользователь не авторизован — показываем только "Без сообщества"
         const select = document.getElementById('communitySelect');
         select.innerHTML = '<option value="">Без сообщества (опубликовать на главной)</option>';
         return;
@@ -1460,7 +1455,7 @@ function loadUserCommunities() {
         .get()
         .then(snapshot => {
             const select = document.getElementById('communitySelect');
-            // Сохраняем текущий выбранный ID (если есть)
+            // Сохраняем текущее выбранное значение
             const currentValue = select.value;
             
             // Очищаем селект, но оставляем первый пункт
@@ -1468,6 +1463,7 @@ function loadUserCommunities() {
             
             let foundSelected = false;
             
+            // Добавляем ВСЕ сообщества, в которых состоит пользователь
             snapshot.forEach(doc => {
                 const data = doc.data();
                 const option = document.createElement('option');
@@ -1494,6 +1490,7 @@ function loadUserCommunities() {
                 const selectedOption = select.options[select.selectedIndex];
                 if (selectedOption && selectedOption.value) {
                     info.style.display = 'block';
+                    info.style.color = 'var(--text-muted)';
                     info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">check_circle</span> 
                         Тейк будет опубликован в сообществе <strong>${selectedOption.text}</strong>`;
                 }
@@ -1512,11 +1509,19 @@ function loadUserCommunities() {
                 info.style.display = 'none';
             }
             
+            // Проверяем, есть ли вообще сообщества
+            if (snapshot.size === 0) {
+                const info = document.getElementById('communitySelectInfo');
+                info.style.display = 'block';
+                info.style.color = 'var(--text-muted)';
+                info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">info</span> 
+                    Вы ещё не вступили ни в одно сообщество. <a href="/communities.html" style="color:var(--accent);">Найти сообщества</a>`;
+            }
+            
             updatePreview();
         })
         .catch(err => {
             console.error('Load communities error:', err);
-            // При ошибке показываем хотя бы базовый вариант
             const select = document.getElementById('communitySelect');
             if (!select.options.length) {
                 select.innerHTML = '<option value="">Без сообщества (опубликовать на главной)</option>';
@@ -1809,12 +1814,10 @@ function openImageModal() {
     tempFilePreview = null;
     document.getElementById('modalUploadPreview').style.display = 'none';
     
-    // Загрузка через клик
     document.getElementById('modalUploadArea').addEventListener('click', () => {
         document.getElementById('modalImageInput').click();
     });
     
-    // Drag & drop
     document.getElementById('modalUploadArea').addEventListener('dragover', (e) => {
         e.preventDefault();
         document.getElementById('modalUploadArea').style.borderColor = '#4f8cff';
@@ -1830,7 +1833,6 @@ function openImageModal() {
         }
     });
     
-    // Выбор файла
     document.getElementById('modalImageInput').addEventListener('change', (e) => {
         if (e.target.files.length) {
             handleModalFile(e.target.files[0]);
@@ -1838,7 +1840,6 @@ function openImageModal() {
         e.target.value = '';
     });
     
-    // Вставка
     document.getElementById('insertImageBtn').addEventListener('click', function() {
         const url = document.getElementById('imageUrlInput').value.trim();
         
