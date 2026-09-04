@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
+        /* ===== ВСЕ СТИЛИ ИЗ ПРЕДЫДУЩЕЙ ВЕРСИИ (сокращено для читаемости) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -26,7 +27,6 @@
             --accent-light: rgba(79, 140, 255, 0.15);
             --green: #4caf50;
             --red: #f44336;
-            --shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
             --radius: 4px;
             --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             --topbar-height: 60px;
@@ -43,7 +43,6 @@
             --text-muted: #888888;
             --border-color: #e0e0e0;
             --border-light: #d0d0d0;
-            --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
         }
 
         html {
@@ -70,21 +69,7 @@
 
         .container { max-width: 800px; margin: 0 auto; padding: 0 16px; width: 100%; }
         .hidden { display: none !important; }
-        .flex { display: flex; }
-        .flex-center { display: flex; align-items: center; justify-content: center; }
-        .flex-between { display: flex; align-items: center; justify-content: space-between; }
-        .flex-col { display: flex; flex-direction: column; }
-        .gap-8 { gap: 8px; }
-        .gap-12 { gap: 12px; }
-        .gap-16 { gap: 16px; }
-        .gap-24 { gap: 24px; }
-        .text-center { text-align: center; }
         .text-muted { color: var(--text-muted); }
-
-        @keyframes ripple {
-            0% { transform: scale(0); opacity: 0.4; }
-            100% { transform: scale(4); opacity: 0; }
-        }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(8px); }
@@ -101,8 +86,132 @@
             to { transform: rotate(360deg); }
         }
 
-        .animate-fade { animation: fadeIn 0.25s ease-out; }
-        .animate-slide { animation: slideUp 0.3s ease-out; }
+        /* ===== TOP BAR ===== */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 6px 0;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            min-height: var(--topbar-height);
+        }
+
+        .topbar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .topbar-logo {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+            text-decoration: none;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .topbar-logo span { color: #4f8cff; }
+
+        .topbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .topbar-nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .topbar-nav a:hover { background: var(--bg-hover); color: var(--text-primary); }
+        .topbar-nav a.active { color: #4f8cff; background: rgba(79, 140, 255, 0.15); }
+        .topbar-nav a .material-icons { font-size: 20px; }
+        .topbar-nav a span:not(.material-icons) { display: inline; }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .topbar-actions .material-icons { font-size: 22px; color: var(--text-secondary); }
+
+        .topbar-actions .avatar-small {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--bg-hover);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
+            overflow: hidden;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .topbar-actions .avatar-small:hover { border-color: #4f8cff; }
+        .topbar-actions .avatar-small img { width: 100%; height: 100%; object-fit: cover; }
+        .topbar-actions .avatar-small .online-dot {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-card);
+            background: #4caf50;
+            display: none;
+            z-index: 2;
+        }
+        .topbar-actions .avatar-small .online-dot.show { display: block; }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 0 8px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            max-width: 160px;
+        }
+
+        .search-bar:focus-within { border-color: #4f8cff; box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.15); }
+        .search-bar input {
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 13px;
+            padding: 6px 6px;
+            width: 100%;
+            min-width: 60px;
+        }
+        .search-bar input::placeholder { color: var(--text-muted); font-size: 12px; }
+        .search-bar .material-icons { color: var(--text-muted); font-size: 18px; }
 
         /* ===== RIPPLE BUTTON ===== */
         .ripple-btn {
@@ -135,183 +244,16 @@
             pointer-events: none;
         }
 
-        [data-theme="light"] .ripple-btn .ripple-effect {
-            background: rgba(0, 0, 0, 0.1);
-        }
+        [data-theme="light"] .ripple-btn .ripple-effect { background: rgba(0, 0, 0, 0.1); }
 
         .ripple-btn:hover { background: var(--bg-hover); }
         .ripple-btn:active { transform: scale(0.96); }
 
-        .ripple-btn.primary {
-            background: var(--accent);
-            color: #fff;
-        }
-        .ripple-btn.primary:hover { background: var(--accent-hover); }
+        .ripple-btn.primary { background: #4f8cff; color: #fff; }
+        .ripple-btn.primary:hover { background: #6b9fff; }
 
-        .ripple-btn.outline {
-            border: 1px solid var(--border-color);
-        }
+        .ripple-btn.outline { border: 1px solid var(--border-color); }
         .ripple-btn.outline:hover { background: var(--bg-hover); }
-
-        /* ===== TOP BAR ===== */
-        .topbar {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
-            padding: 6px 0;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            min-height: var(--topbar-height);
-        }
-
-        .topbar-inner {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-        }
-
-        .topbar-logo {
-            font-size: 20px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            color: var(--text-primary);
-            text-decoration: none;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-        .topbar-logo span { color: var(--accent); }
-
-        .topbar-nav {
-            display: flex;
-            align-items: center;
-            gap: 2px;
-        }
-
-        .topbar-nav a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            padding: 6px 10px;
-            border-radius: var(--radius);
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            white-space: nowrap;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .topbar-nav a:hover {
-            background: var(--bg-hover);
-            color: var(--text-primary);
-        }
-
-        .topbar-nav a.active {
-            color: var(--accent);
-            background: var(--accent-light);
-        }
-
-        .topbar-nav a .material-icons { font-size: 20px; }
-        .topbar-nav a span:not(.material-icons) { display: inline; }
-
-        .topbar-actions {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            flex-shrink: 0;
-        }
-
-        .topbar-actions .material-icons {
-            font-size: 22px;
-            color: var(--text-secondary);
-        }
-
-        .topbar-actions .avatar-small {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: var(--bg-hover);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 12px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: border-color 0.2s;
-            overflow: hidden;
-            flex-shrink: 0;
-            position: relative;
-        }
-
-        .topbar-actions .avatar-small:hover {
-            border-color: var(--accent);
-        }
-
-        .topbar-actions .avatar-small img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .topbar-actions .avatar-small .online-dot {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            border: 2px solid var(--bg-card);
-            background: #4caf50;
-            display: none;
-        }
-
-        .topbar-actions .avatar-small .online-dot.show {
-            display: block;
-        }
-
-        .search-bar {
-            display: flex;
-            align-items: center;
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            padding: 0 8px;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            max-width: 160px;
-        }
-
-        .search-bar:focus-within {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-light);
-        }
-
-        .search-bar input {
-            background: none;
-            border: none;
-            outline: none;
-            color: var(--text-primary);
-            font-family: var(--font);
-            font-size: 13px;
-            padding: 6px 6px;
-            width: 100%;
-            min-width: 60px;
-        }
-
-        .search-bar input::placeholder {
-            color: var(--text-muted);
-            font-size: 12px;
-        }
-
-        .search-bar .material-icons {
-            color: var(--text-muted);
-            font-size: 18px;
-        }
 
         /* ===== CREATE PAGE ===== */
         .create-page { padding: 16px 0 24px; }
@@ -334,11 +276,7 @@
             align-items: center;
             gap: 8px;
         }
-
-        .create-section .section-title .material-icons {
-            color: var(--accent);
-            font-size: 20px;
-        }
+        .create-section .section-title .material-icons { color: #4f8cff; font-size: 20px; }
 
         .create-input {
             width: 100%;
@@ -352,10 +290,7 @@
             outline: none;
             transition: border-color 0.2s;
         }
-
-        .create-input:focus {
-            border-color: var(--accent);
-        }
+        .create-input:focus { border-color: #4f8cff; }
 
         .create-textarea {
             width: 100%;
@@ -372,10 +307,7 @@
             outline: none;
             transition: border-color 0.2s;
         }
-
-        .create-textarea:focus {
-            border-color: var(--accent);
-        }
+        .create-textarea:focus { border-color: #4f8cff; }
 
         /* ===== BBC TOOLBAR ===== */
         .bbc-toolbar {
@@ -414,30 +346,13 @@
             gap: 2px;
         }
 
-        .bbc-toolbar button:hover {
-            background: var(--bg-hover);
-            color: var(--text-primary);
-        }
-
-        .bbc-toolbar button .material-icons {
-            font-size: 16px;
-        }
-
-        .bbc-toolbar .separator {
-            width: 1px;
-            background: var(--border-color);
-            margin: 0 4px;
-        }
+        .bbc-toolbar button:hover { background: var(--bg-hover); color: var(--text-primary); }
+        .bbc-toolbar button .material-icons { font-size: 16px; }
+        .bbc-toolbar .separator { width: 1px; background: var(--border-color); margin: 0 4px; }
 
         /* ===== CATEGORY TREE ===== */
-        .category-tree {
-            margin-top: 6px;
-        }
-
-        .category-tree .category-item {
-            margin-bottom: 4px;
-        }
-
+        .category-tree { margin-top: 6px; }
+        .category-tree .category-item { margin-bottom: 4px; }
         .category-tree .category-header {
             display: flex;
             align-items: center;
@@ -451,30 +366,11 @@
             font-weight: 500;
             font-size: 13px;
         }
-
-        .category-tree .category-header:hover {
-            border-color: var(--accent);
-        }
-
-        .category-tree .category-header .material-icons {
-            font-size: 20px;
-            transition: transform 0.3s;
-        }
-
-        .category-tree .category-header .material-icons.expanded {
-            transform: rotate(90deg);
-        }
-
-        .category-tree .subcategories {
-            padding-left: 16px;
-            margin-top: 4px;
-            display: none;
-        }
-
-        .category-tree .subcategories.open {
-            display: block;
-        }
-
+        .category-tree .category-header:hover { border-color: #4f8cff; }
+        .category-tree .category-header .material-icons { font-size: 20px; transition: transform 0.3s; }
+        .category-tree .category-header .material-icons.expanded { transform: rotate(90deg); }
+        .category-tree .subcategories { padding-left: 16px; margin-top: 4px; display: none; }
+        .category-tree .subcategories.open { display: block; }
         .category-tree .subcategory-item {
             display: inline-flex;
             align-items: center;
@@ -488,25 +384,8 @@
             transition: all 0.2s;
             font-size: 12px;
         }
-
-        .category-tree .subcategory-item:hover {
-            border-color: var(--accent);
-            background: var(--accent-light);
-        }
-
-        .category-tree .subcategory-item.active {
-            border-color: var(--accent);
-            background: var(--accent-light);
-            color: var(--accent);
-        }
-
-        .category-tree .subcategory-item .icon {
-            font-size: 16px;
-        }
-
-        .category-tree .category-header .icon {
-            font-size: 20px;
-        }
+        .category-tree .subcategory-item:hover { border-color: #4f8cff; background: rgba(79, 140, 255, 0.15); }
+        .category-tree .subcategory-item.active { border-color: #4f8cff; background: rgba(79, 140, 255, 0.15); color: #4f8cff; }
 
         /* ===== IMAGE UPLOAD ===== */
         .image-upload-area {
@@ -517,23 +396,10 @@
             color: var(--text-muted);
             cursor: pointer;
             transition: all 0.2s;
-            position: relative;
         }
-
-        .image-upload-area:hover {
-            border-color: var(--accent);
-            background: var(--bg-hover);
-        }
-
-        .image-upload-area .material-icons {
-            font-size: 36px;
-            display: block;
-            margin-bottom: 6px;
-        }
-
-        .image-upload-area span {
-            font-size: 13px;
-        }
+        .image-upload-area:hover { border-color: #4f8cff; background: var(--bg-hover); }
+        .image-upload-area .material-icons { font-size: 36px; display: block; margin-bottom: 6px; }
+        .image-upload-area span { font-size: 13px; }
 
         .image-preview-grid {
             display: grid;
@@ -576,10 +442,7 @@
             font-size: 14px;
             transition: background 0.2s;
         }
-
-        .image-preview-grid .img-wrap .remove-img:hover {
-            background: var(--red);
-        }
+        .image-preview-grid .img-wrap .remove-img:hover { background: #f44336; }
 
         .upload-progress {
             height: 3px;
@@ -589,15 +452,9 @@
             overflow: hidden;
             display: none;
         }
+        .upload-progress .bar { height: 100%; background: #4f8cff; width: 0%; transition: width 0.3s; }
 
-        .upload-progress .bar {
-            height: 100%;
-            background: var(--accent);
-            width: 0%;
-            transition: width 0.3s;
-        }
-
-        /* ===== PREVIEW (КАК РЕАЛЬНЫЙ ПОСТ) ===== */
+        /* ===== PREVIEW ===== */
         .preview-post {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -629,11 +486,7 @@
             flex-shrink: 0;
         }
 
-        .preview-post .preview-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .preview-post .preview-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
         .preview-post .preview-user {
             display: flex;
@@ -643,40 +496,316 @@
             min-width: 0;
         }
 
-        .preview-post .preview-username {
-            font-weight: 600;
-            font-size: 13px;
-            color: var(--text-primary);
-        }
+        .preview-post .preview-username { font-weight: 600; font-size: 13px; color: var(--text-primary); }
+        .preview-post .preview-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+        .preview-post .preview-time { font-size: 11px; color: var(--text-muted); }
 
-        .preview-post .preview-meta {
-            display: flex;
-            flex-wrap: wrap;
+        .preview-post .preview-tags { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+        .preview-post .preview-tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 500; background: rgba(255,255,255,0.05); }
+
+        .preview-post .preview-community-wrap {
+            display: inline-flex;
             align-items: center;
-            gap: 4px 8px;
-        }
-
-        .preview-post .preview-time {
+            gap: 4px;
             font-size: 11px;
             color: var(--text-muted);
         }
 
-        .preview-post .preview-tags {
+        .preview-post .preview-community-wrap .community-avatar {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--bg-hover);
+            overflow: hidden;
             display: flex;
-            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .preview-post .preview-community-wrap .community-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .preview-post .preview-community-wrap .community-name { color: var(--text-primary); font-weight: 500; }
+
+        .preview-post .preview-title { font-size: 16px; font-weight: 700; margin: 6px 0 8px; line-height: 1.4; color: var(--text-primary); }
+        .preview-post .preview-content {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            word-wrap: break-word;
+            padding: 6px 8px;
+            border-radius: var(--radius);
+        }
+        .preview-post .preview-content .mention { color: #4f8cff; font-weight: 500; cursor: pointer; }
+
+        .preview-post .preview-images {
+            display: grid;
             gap: 4px;
+            margin: 8px 0;
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .preview-post .preview-images .img-wrap {
+            position: relative;
+            background: var(--bg-hover);
+            overflow: hidden;
+            border-radius: var(--radius);
+        }
+
+        .preview-post .preview-images .img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+
+        .preview-post .preview-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+
+        .preview-post .preview-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: var(--radius);
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+            cursor: default;
+            font-family: var(--font);
+        }
+        .preview-post .preview-action-btn .material-icons { font-size: 18px; }
+
+        .create-color-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
             align-items: center;
         }
 
-        .preview-post .preview-tag {
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-weight: 500;
-            background: rgba(255,255,255,0.05);
+        .create-color-row input[type="color"] {
+            width: 36px;
+            height: 36px;
+            padding: 2px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius);
+            background: none;
+            cursor: pointer;
         }
 
-        /* Цвета для тегов в превью */
+        .create-color-row input[type="color"]:focus { border-color: #4f8cff; }
+        .create-color-row .label { font-size: 13px; color: var(--text-muted); }
+
+        .create-select {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .create-select:focus { border-color: #4f8cff; }
+
+        /* ===== BBC STYLES ===== */
+        .bbc-bold { font-weight: 700; }
+        .bbc-italic { font-style: italic; }
+        .bbc-underline { text-decoration: underline; }
+        .bbc-strike { text-decoration: line-through; }
+        .bbc-code { font-family: monospace; background: var(--bg-input); padding: 2px 6px; border-radius: var(--radius); }
+        .bbc-quote { border-left: 3px solid #4f8cff; padding-left: 12px; margin: 4px 0; color: var(--text-secondary); }
+        .bbc-spoiler { background: var(--bg-hover); color: var(--bg-hover); cursor: pointer; padding: 2px 6px; border-radius: var(--radius); transition: color 0.3s; }
+        .bbc-spoiler:hover { color: var(--text-primary); }
+        .bbc-size-small { font-size: 12px; }
+        .bbc-size-normal { font-size: 15px; }
+        .bbc-size-large { font-size: 20px; }
+        .bbc-size-huge { font-size: 26px; }
+
+        /* ===== МОДАЛЬНОЕ ОКНО ДЛЯ ИЗОБРАЖЕНИЙ ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            animation: fadeIn 0.2s ease-out;
+            padding: 16px;
+        }
+
+        .modal-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 28px 32px;
+            max-width: 460px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.25s ease-out;
+        }
+
+        .modal-box .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .modal-box .modal-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-box .modal-header .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 24px;
+            padding: 4px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .modal-box .modal-header .close-btn:hover { color: var(--text-primary); }
+
+        .modal-box .field {
+            margin-bottom: 16px;
+        }
+
+        .modal-box .field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .modal-box .field input[type="text"] {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .modal-box .field input[type="text"]:focus { border-color: #4f8cff; }
+
+        .modal-box .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius);
+            padding: 20px;
+            text-align: center;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 12px;
+        }
+
+        .modal-box .upload-area:hover { border-color: #4f8cff; background: var(--bg-hover); }
+        .modal-box .upload-area .material-icons { font-size: 32px; display: block; margin-bottom: 4px; }
+        .modal-box .upload-area span { font-size: 13px; }
+
+        .modal-box .upload-preview {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--bg-input);
+            border-radius: var(--radius);
+            padding: 8px 12px;
+            margin-bottom: 12px;
+            display: none;
+        }
+
+        .modal-box .upload-preview img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: var(--radius);
+        }
+
+        .modal-box .upload-preview .file-name {
+            flex: 1;
+            font-size: 13px;
+            color: var(--text-secondary);
+            word-break: break-all;
+        }
+
+        .modal-box .upload-preview .remove-file {
+            background: none;
+            border: none;
+            color: var(--red);
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .modal-box .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 12px 0;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .modal-box .divider::before,
+        .modal-box .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .modal-box .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 16px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 16px;
+        }
+
+        .modal-box .modal-actions .ripple-btn { padding: 8px 24px; }
+
+        .modal-box .upload-progress-small {
+            height: 3px;
+            background: var(--bg-hover);
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .modal-box .upload-progress-small .bar {
+            height: 100%;
+            background: #4f8cff;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        /* ===== ЦВЕТА ДЛЯ ТЕГОВ ===== */
         .tag-communism { color: #c62828; }
         .tag-socialism { color: #d32f2f; }
         .tag-capitalism { color: #2e7d32; }
@@ -742,173 +871,6 @@
         .tag-sport { color: #f9a825; }
         .tag-other { color: #78909c; }
 
-        .preview-post .preview-community-wrap {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-
-        .preview-post .preview-community-wrap .community-avatar {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: var(--bg-hover);
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 8px;
-            color: var(--text-muted);
-            flex-shrink: 0;
-        }
-
-        .preview-post .preview-community-wrap .community-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .preview-post .preview-community-wrap .community-name {
-            color: var(--text-primary);
-            font-weight: 500;
-        }
-
-        .preview-post .preview-title {
-            font-size: 16px;
-            font-weight: 700;
-            margin: 6px 0 8px;
-            line-height: 1.4;
-            color: var(--text-primary);
-        }
-
-        .preview-post .preview-content {
-            font-size: 14px;
-            line-height: 1.6;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-            word-wrap: break-word;
-            padding: 6px 8px;
-            border-radius: var(--radius);
-        }
-
-        .preview-post .preview-content .mention {
-            color: var(--accent);
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        .preview-post .preview-images {
-            display: grid;
-            gap: 4px;
-            margin: 8px 0;
-            border-radius: var(--radius);
-            overflow: hidden;
-        }
-
-        .preview-post .preview-images .img-wrap {
-            position: relative;
-            background: var(--bg-hover);
-            overflow: hidden;
-            border-radius: var(--radius);
-        }
-
-        .preview-post .preview-images .img-wrap img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .preview-post .preview-actions {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px solid var(--border-color);
-            flex-wrap: wrap;
-        }
-
-        .preview-post .preview-action-btn {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4px 10px;
-            border-radius: var(--radius);
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            background: none;
-            border: none;
-            cursor: default;
-            font-family: var(--font);
-        }
-
-        .preview-post .preview-action-btn .material-icons {
-            font-size: 18px;
-        }
-
-        .create-color-row {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 8px;
-            align-items: center;
-        }
-
-        .create-color-row input[type="color"] {
-            width: 36px;
-            height: 36px;
-            padding: 2px;
-            border: 2px solid var(--border-color);
-            border-radius: var(--radius);
-            background: none;
-            cursor: pointer;
-        }
-
-        .create-color-row input[type="color"]:focus {
-            border-color: var(--accent);
-        }
-
-        .create-color-row .label {
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-
-        .create-select {
-            width: 100%;
-            padding: 10px 12px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            color: var(--text-primary);
-            font-family: var(--font);
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .create-select:focus {
-            border-color: var(--accent);
-        }
-
-        /* ===== BBC STYLES ===== */
-        .bbc-bold { font-weight: 700; }
-        .bbc-italic { font-style: italic; }
-        .bbc-underline { text-decoration: underline; }
-        .bbc-strike { text-decoration: line-through; }
-        .bbc-code { font-family: monospace; background: var(--bg-input); padding: 2px 6px; border-radius: var(--radius); }
-        .bbc-quote { border-left: 3px solid var(--accent); padding-left: 12px; margin: 4px 0; color: var(--text-secondary); }
-        .bbc-spoiler { background: var(--bg-hover); color: var(--bg-hover); cursor: pointer; padding: 2px 6px; border-radius: var(--radius); transition: color 0.3s; }
-        .bbc-spoiler:hover { color: var(--text-primary); }
-        .bbc-size-small { font-size: 12px; }
-        .bbc-size-normal { font-size: 15px; }
-        .bbc-size-large { font-size: 20px; }
-        .bbc-size-huge { font-size: 26px; }
-        .bbc-color { transition: color 0.2s; }
-        .bbc-bg { transition: background 0.2s; }
-
         /* ===== FOOTER ===== */
         .footer {
             margin-top: auto;
@@ -924,27 +886,12 @@
             gap: 16px;
         }
 
-        .footer-brand {
-            font-size: 18px;
-            font-weight: 800;
-            color: var(--text-primary);
-        }
-        .footer-brand span { color: var(--accent); }
+        .footer-brand { font-size: 18px; font-weight: 800; color: var(--text-primary); }
+        .footer-brand span { color: #4f8cff; }
 
-        .footer-links {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .footer-links a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 13px;
-            transition: color 0.2s;
-        }
-
-        .footer-links a:hover { color: var(--accent); }
+        .footer-links { display: flex; gap: 16px; flex-wrap: wrap; }
+        .footer-links a { color: var(--text-secondary); text-decoration: none; font-size: 13px; transition: color 0.2s; }
+        .footer-links a:hover { color: #4f8cff; }
 
         .footer-copy {
             color: var(--text-muted);
@@ -955,13 +902,6 @@
         }
 
         /* ===== RESPONSIVE ===== */
-        @media (max-width: 992px) {
-            .search-bar { max-width: 120px; }
-            .search-bar input { min-width: 50px; font-size: 12px; }
-            .topbar-nav a { padding: 4px 8px; font-size: 12px; }
-            .topbar-nav a .material-icons { font-size: 18px; }
-        }
-
         @media (max-width: 768px) {
             .container { padding: 0 10px; }
             .topbar-logo { font-size: 17px; }
@@ -981,6 +921,7 @@
             .footer-inner { flex-direction: column; align-items: center; text-align: center; }
             .preview-post .preview-images { grid-template-columns: 1fr; }
             .preview-post .preview-images .img-wrap { min-height: 200px; }
+            .modal-box { padding: 20px; margin: 8px; }
         }
 
         @media (max-width: 480px) {
@@ -1008,33 +949,24 @@
             .preview-post .preview-content { font-size: 13px; }
             .preview-post .preview-images .img-wrap { min-height: 150px; }
             .preview-post .preview-tag { font-size: 10px; padding: 1px 6px; }
+            .modal-box { padding: 16px; }
+            .modal-box .modal-header h2 { font-size: 18px; }
         }
     </style>
 </head>
 <body>
 
+<!-- ===== TOP BAR ===== -->
 <header class="topbar">
     <div class="container">
         <div class="topbar-inner">
             <a href="/" class="topbar-logo">Take<span>an</span></a>
             
             <nav class="topbar-nav">
-                <a href="/">
-                    <span class="material-icons">home</span>
-                    <span>Главная</span>
-                </a>
-                <a href="/search.html">
-                    <span class="material-icons">search</span>
-                    <span>Поиск</span>
-                </a>
-                <a href="/create.html" class="active">
-                    <span class="material-icons">add_box</span>
-                    <span>Создать</span>
-                </a>
-                <a href="/communities.html">
-                    <span class="material-icons">group</span>
-                    <span>Сообщества</span>
-                </a>
+                <a href="/"><span class="material-icons">home</span><span>Главная</span></a>
+                <a href="/search.html"><span class="material-icons">search</span><span>Поиск</span></a>
+                <a href="/create.html" class="active"><span class="material-icons">add_box</span><span>Создать</span></a>
+                <a href="/communities.html"><span class="material-icons">group</span><span>Сообщества</span></a>
             </nav>
 
             <div class="topbar-actions">
@@ -1056,23 +988,20 @@
     </div>
 </header>
 
+<!-- ===== MAIN ===== -->
 <main class="container create-page" style="flex:1;">
     <h1>Создать тейк</h1>
     <p class="subtitle">Оформите свой тейк с максимальной кастомизацией</p>
 
     <!-- Заголовок -->
     <div class="create-section">
-        <div class="section-title">
-            <span class="material-icons">title</span> Заголовок
-        </div>
+        <div class="section-title"><span class="material-icons">title</span> Заголовок</div>
         <input class="create-input" id="postTitle" placeholder="Введите заголовок тейка..." maxlength="200">
     </div>
 
     <!-- Текст с BBC-тулбаром -->
     <div class="create-section">
-        <div class="section-title">
-            <span class="material-icons">text_fields</span> Текст
-        </div>
+        <div class="section-title"><span class="material-icons">text_fields</span> Текст</div>
         <textarea class="create-textarea" id="postContent" placeholder="Опишите свой тейк... Используйте BBC-теги"></textarea>
         
         <div class="bbc-toolbar">
@@ -1083,7 +1012,6 @@
             <button onclick="insertBBC('s')"><span class="material-icons">strikethrough_s</span></button>
             
             <div class="separator"></div>
-            
             <span class="group-label">Размер:</span>
             <button onclick="insertBBC('size=small')">S</button>
             <button onclick="insertBBC('size=normal')">M</button>
@@ -1091,36 +1019,32 @@
             <button onclick="insertBBC('size=huge')">XL</button>
             
             <div class="separator"></div>
-            
             <span class="group-label">Цвет:</span>
-            <button onclick="insertColorBBC()"><span class="material-icons">palette</span></button>
-            <button onclick="insertBgBBC()"><span class="material-icons">format_color_fill</span></button>
+            <button onclick="openColorPicker()"><span class="material-icons">palette</span></button>
+            <button onclick="openBgColorPicker()"><span class="material-icons">format_color_fill</span></button>
             
             <div class="separator"></div>
-            
             <button onclick="insertBBC('code')"><span class="material-icons">code</span></button>
             <button onclick="insertBBC('quote')"><span class="material-icons">format_quote</span></button>
             <button onclick="insertBBC('spoiler')"><span class="material-icons">visibility_off</span></button>
-            <button onclick="insertLinkBBC()"><span class="material-icons">link</span></button>
-            <button onclick="insertImageBBC()"><span class="material-icons">image</span></button>
+            <button onclick="openLinkModal()"><span class="material-icons">link</span></button>
+            <button onclick="openImageModal()"><span class="material-icons">image</span></button>
         </div>
 
         <div class="create-color-row">
             <span class="label">Цвет текста:</span>
-            <input type="color" id="textColor" value="#e8e8e8">
+            <input type="color" id="textColor" value="#e8e8e8" onchange="updatePreview()">
             <span class="label">Фон:</span>
-            <input type="color" id="bgColor" value="#1c1c1c">
+            <input type="color" id="bgColor" value="#1c1c1c" onchange="updatePreview()">
             <button class="ripple-btn outline" onclick="resetColors()" style="padding:4px 10px;font-size:12px;">
                 <span class="material-icons" style="font-size:16px;">refresh</span> Сброс
             </button>
         </div>
     </div>
 
-    <!-- Категории с ветками -->
+    <!-- Категории -->
     <div class="create-section">
-        <div class="section-title">
-            <span class="material-icons">label</span> Категория / Идеология
-        </div>
+        <div class="section-title"><span class="material-icons">label</span> Категория / Идеология</div>
         <div class="category-tree" id="categoryTree">
             <!-- Политика -->
             <div class="category-item">
@@ -1142,7 +1066,6 @@
                     <span class="subcategory-item" data-value="authoritarianism" onclick="selectSubcategory(this)">Авторитаризм</span>
                 </div>
             </div>
-
             <!-- Игры -->
             <div class="category-item">
                 <div class="category-header" onclick="toggleCategory(this)">
@@ -1163,7 +1086,6 @@
                     <span class="subcategory-item" data-value="indie" onclick="selectSubcategory(this)">Инди-игры</span>
                 </div>
             </div>
-
             <!-- Технологии -->
             <div class="category-item">
                 <div class="category-header" onclick="toggleCategory(this)">
@@ -1182,7 +1104,6 @@
                     <span class="subcategory-item" data-value="nano" onclick="selectSubcategory(this)">Нанотехнологии</span>
                 </div>
             </div>
-
             <!-- Наука -->
             <div class="category-item">
                 <div class="category-header" onclick="toggleCategory(this)">
@@ -1201,7 +1122,6 @@
                     <span class="subcategory-item" data-value="philosophy" onclick="selectSubcategory(this)">Философия</span>
                 </div>
             </div>
-
             <!-- Искусство -->
             <div class="category-item">
                 <div class="category-header" onclick="toggleCategory(this)">
@@ -1219,7 +1139,6 @@
                     <span class="subcategory-item" data-value="design" onclick="selectSubcategory(this)">Дизайн</span>
                 </div>
             </div>
-
             <!-- Спорт -->
             <div class="category-item">
                 <div class="category-header" onclick="toggleCategory(this)">
@@ -1237,7 +1156,6 @@
                     <span class="subcategory-item" data-value="fitness" onclick="selectSubcategory(this)">Фитнес</span>
                 </div>
             </div>
-
             <!-- Другое -->
             <div class="category-item">
                 <div class="category-header" onclick="toggleCategory(this)">
@@ -1262,18 +1180,21 @@
 
     <!-- Сообщество -->
     <div class="create-section">
-        <div class="section-title">
-            <span class="material-icons">group</span> Сообщество
-        </div>
+        <div class="section-title"><span class="material-icons">group</span> Сообщество</div>
         <select class="create-select" id="communitySelect">
             <option value="">Без сообщества (опубликовать на главной)</option>
         </select>
+        <div id="communitySelectInfo" style="margin-top:6px;font-size:12px;color:var(--text-muted);display:none;">
+            <span class="material-icons" style="font-size:14px;vertical-align:middle;">info</span>
+            Тейк будет опубликован в выбранном сообществе
+        </div>
     </div>
 
     <!-- Изображения -->
     <div class="create-section">
         <div class="section-title">
-            <span class="material-icons">image</span> Изображения <span style="font-weight:400;font-size:12px;color:var(--text-muted);">(до 20)</span>
+            <span class="material-icons">image</span> Изображения
+            <span style="font-weight:400;font-size:12px;color:var(--text-muted);">(до 20)</span>
         </div>
         <div class="image-upload-area" id="imageUploadArea">
             <span class="material-icons">cloud_upload</span>
@@ -1287,11 +1208,9 @@
         <div class="image-preview-grid" id="imagePreviewGrid"></div>
     </div>
 
-    <!-- Предпросмотр (как реальный пост) -->
+    <!-- Предпросмотр -->
     <div class="create-section">
-        <div class="section-title">
-            <span class="material-icons">preview</span> Предпросмотр
-        </div>
+        <div class="section-title"><span class="material-icons">preview</span> Предпросмотр</div>
         <div class="preview-post" id="previewContainer">
             <div class="preview-header">
                 <div class="preview-avatar" id="previewAvatar">?</div>
@@ -1308,13 +1227,9 @@
                     <div class="preview-tags" id="previewTags"></div>
                 </div>
             </div>
-            
             <div class="preview-title" id="previewTitle">Заголовок тейка</div>
-            
             <div class="preview-content" id="previewContent">Текст тейка будет здесь...</div>
-            
             <div class="preview-images" id="previewImages"></div>
-            
             <div class="preview-actions">
                 <span class="preview-action-btn"><span class="material-icons">thumb_up</span> 0</span>
                 <span class="preview-action-btn"><span class="material-icons">thumb_down</span> 0</span>
@@ -1329,14 +1244,13 @@
     </button>
 </main>
 
+<!-- ===== FOOTER ===== -->
 <footer class="footer">
     <div class="container">
         <div class="footer-inner">
             <div>
                 <div class="footer-brand">Take<span>an</span></div>
-                <div style="color: var(--text-muted); font-size: 13px; margin-top: 2px;">
-                    Платформа для тейков
-                </div>
+                <div style="color: var(--text-muted); font-size: 13px; margin-top: 2px;">Платформа для тейков</div>
             </div>
             <div class="footer-links">
                 <a href="/settings.html">Настройки</a>
@@ -1345,9 +1259,7 @@
                 <a href="/404.html">404</a>
             </div>
         </div>
-        <div class="footer-copy">
-            &copy; 2026 Takean. Все права защищены.
-        </div>
+        <div class="footer-copy">&copy; 2026 Takean. Все права защищены.</div>
     </div>
 </footer>
 
@@ -1379,6 +1291,9 @@ let isUploading = false;
 let previewTimeout = null;
 let onlineCheckInterval = null;
 let communityToSelect = null;
+let communityNameCache = {};
+let tempFile = null;
+let tempFilePreview = null;
 
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
@@ -1394,18 +1309,40 @@ function getCommunityFromURL() {
 // ============================================================
 // ОНЛАЙН СТАТУС
 // ============================================================
+let isUserActive = true;
+let inactivityTimer = null;
+
 function updateOnlineStatus() {
     if (!currentUser) return;
     db.collection('users').doc(currentUser.uid).update({
         lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
-        isOnline: true
+        isOnline: isUserActive
     }).catch(() => {});
 }
 
 function startOnlineTracking() {
     if (onlineCheckInterval) clearInterval(onlineCheckInterval);
+    isUserActive = true;
     updateOnlineStatus();
-    onlineCheckInterval = setInterval(updateOnlineStatus, 30000);
+    
+    function resetInactivity() {
+        isUserActive = true;
+        updateOnlineStatus();
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+            isUserActive = false;
+            updateOnlineStatus();
+        }, 120000);
+    }
+    
+    const events = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    events.forEach(event => document.addEventListener(event, resetInactivity));
+    resetInactivity();
+    
+    onlineCheckInterval = setInterval(() => {
+        if (currentUser) updateOnlineStatus();
+    }, 30000);
+    
     window.addEventListener('beforeunload', () => {
         if (currentUser) {
             db.collection('users').doc(currentUser.uid).update({
@@ -1414,8 +1351,10 @@ function startOnlineTracking() {
             }).catch(() => {});
         }
     });
+    
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
+            isUserActive = false;
             if (currentUser) {
                 db.collection('users').doc(currentUser.uid).update({
                     isOnline: false,
@@ -1423,7 +1362,9 @@ function startOnlineTracking() {
                 }).catch(() => {});
             }
         } else {
+            isUserActive = true;
             updateOnlineStatus();
+            resetInactivity();
         }
     });
 }
@@ -1433,9 +1374,7 @@ function createUserInFirestore(user) {
         if (!doc.exists) {
             let username = user.displayName || 'user_' + Date.now().toString(36);
             username = username.toLowerCase().replace(/[^a-z0-9_.-]/g, '');
-            if (!username || username.length < 2) {
-                username = 'user_' + Date.now().toString(36);
-            }
+            if (!username || username.length < 2) username = 'user_' + Date.now().toString(36);
             return db.collection('users').doc(user.uid).set({
                 username: username,
                 displayName: user.displayName || username,
@@ -1456,6 +1395,9 @@ function createUserInFirestore(user) {
     });
 }
 
+// ============================================================
+// DOM CONTENT LOADED
+// ============================================================
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('themeToggle').addEventListener('click', () => {
         currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -1489,34 +1431,35 @@ function setupEventListeners() {
             updatePreview();
         }
     });
-    document.getElementById('communitySelect').addEventListener('change', updatePreview);
-
-    document.getElementById('imageUploadArea').addEventListener('click', () => {
-        document.getElementById('imageInput').click();
+    document.getElementById('communitySelect').addEventListener('change', function() {
+        updatePreview();
+        const info = document.getElementById('communitySelectInfo');
+        if (this.value) {
+            info.style.display = 'block';
+            info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">check_circle</span> 
+                Тейк будет опубликован в сообществе <strong>${this.options[this.selectedIndex].text}</strong>`;
+        } else {
+            info.style.display = 'none';
+        }
     });
 
+    document.getElementById('imageUploadArea').addEventListener('click', () => document.getElementById('imageInput').click());
     document.getElementById('imageUploadArea').addEventListener('dragover', (e) => {
         e.preventDefault();
-        document.getElementById('imageUploadArea').style.borderColor = 'var(--accent)';
+        document.getElementById('imageUploadArea').style.borderColor = '#4f8cff';
     });
-
     document.getElementById('imageUploadArea').addEventListener('dragleave', () => {
         document.getElementById('imageUploadArea').style.borderColor = 'var(--border-color)';
     });
-
     document.getElementById('imageUploadArea').addEventListener('drop', (e) => {
         e.preventDefault();
         document.getElementById('imageUploadArea').style.borderColor = 'var(--border-color)';
         if (e.dataTransfer.files.length) handleImageUpload(e.dataTransfer.files);
     });
-
     document.getElementById('imageInput').addEventListener('change', (e) => {
-        if (e.target.files.length) {
-            handleImageUpload(e.target.files);
-        }
+        if (e.target.files.length) handleImageUpload(e.target.files);
         e.target.value = '';
     });
-
     document.getElementById('publishBtn').addEventListener('click', publishPost);
 }
 
@@ -1539,17 +1482,13 @@ function loadUserData() {
             ? `<img src="${user.photoURL}" style="width:100%;height:100%;object-fit:cover;">` 
             : (user.displayName || '?')[0].toUpperCase();
         
-        createUserInFirestore(user).then(() => {
-            startOnlineTracking();
-        }).catch(err => console.error('Error creating user:', err));
+        createUserInFirestore(user).then(() => startOnlineTracking())
+            .catch(err => console.error('Error creating user:', err));
     } else {
         avatarEl.innerHTML = '<span>?</span>';
         avatarEl.onclick = () => window.location.href = '/login.html';
         dotEl.classList.remove('show');
-        if (onlineCheckInterval) {
-            clearInterval(onlineCheckInterval);
-            onlineCheckInterval = null;
-        }
+        if (onlineCheckInterval) { clearInterval(onlineCheckInterval); onlineCheckInterval = null; }
         document.getElementById('previewName').textContent = 'Аноним';
     }
 }
@@ -1567,27 +1506,44 @@ function loadUserCommunities() {
         .get()
         .then(snapshot => {
             const select = document.getElementById('communitySelect');
-            const communities = [];
             select.innerHTML = '<option value="">Без сообщества (опубликовать на главной)</option>';
+            
+            let foundCommunity = false;
+            let selectedOption = null;
             
             snapshot.forEach(doc => {
                 const data = doc.data();
                 const option = document.createElement('option');
                 option.value = doc.id;
-                option.textContent = data.name || data.handle || doc.id;
+                const displayName = data.name || data.handle || doc.id;
+                option.textContent = displayName;
                 option.dataset.avatar = data.avatar || '';
                 select.appendChild(option);
-                communities.push({ id: doc.id, name: data.name || doc.id, avatar: data.avatar || '' });
+                communityNameCache[doc.id] = displayName;
+                
+                if (communityToSelect && doc.id === communityToSelect) {
+                    foundCommunity = true;
+                    selectedOption = option;
+                }
             });
             
-            // Если есть community в URL, выбираем его
-            if (communityToSelect) {
-                for (let i = 0; i < select.options.length; i++) {
-                    if (select.options[i].value === communityToSelect) {
-                        select.selectedIndex = i;
-                        break;
-                    }
-                }
+            if (foundCommunity && selectedOption) {
+                selectedOption.selected = true;
+                const info = document.getElementById('communitySelectInfo');
+                info.style.display = 'block';
+                info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">check_circle</span> 
+                    Тейк будет опубликован в сообществе <strong>${selectedOption.textContent}</strong>`;
+            } else if (communityToSelect) {
+                const info = document.getElementById('communitySelectInfo');
+                info.style.display = 'block';
+                info.style.color = 'var(--red)';
+                info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">warning</span> 
+                    Вы не являетесь участником этого сообщества. Тейк будет опубликован на главной.`;
+                setTimeout(() => {
+                    info.style.color = 'var(--text-muted)';
+                    info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">info</span> 
+                        Тейк будет опубликован в выбранном сообществе`;
+                }, 5000);
             }
             
             updatePreview();
@@ -1648,76 +1604,28 @@ function removeCategory(value) {
 function getTagClass(tag) {
     const tagLower = tag.toLowerCase().trim().replace(/\s+/g, '_');
     const map = {
-        'communism': 'tag-communism',
-        'socialism': 'tag-socialism',
-        'capitalism': 'tag-capitalism',
-        'liberalism': 'tag-liberalism',
-        'conservatism': 'tag-conservatism',
-        'anarchism': 'tag-anarchism',
-        'nationalism': 'tag-nationalism',
-        'fascism': 'tag-fascism',
-        'democracy': 'tag-democracy',
-        'authoritarianism': 'tag-authoritarianism',
-        'minecraft': 'tag-minecraft',
-        'dota2': 'tag-dota2',
-        'csgo': 'tag-csgo',
-        'valorant': 'tag-valorant',
-        'league_of_legends': 'tag-league_of_legends',
-        'heartstone': 'tag-heartstone',
-        'wow': 'tag-wow',
-        'gta': 'tag-gta',
-        'cyberpunk': 'tag-cyberpunk',
-        'indie': 'tag-indie',
-        'ai': 'tag-ai',
-        'programming': 'tag-programming',
-        'cybersecurity': 'tag-cybersecurity',
-        'web3': 'tag-web3',
-        'space': 'tag-space',
-        'robotics': 'tag-robotics',
-        'biotech': 'tag-biotech',
-        'nano': 'tag-nano',
-        'physics': 'tag-physics',
-        'chemistry': 'tag-chemistry',
-        'biology': 'tag-biology',
-        'astronomy': 'tag-astronomy',
-        'math': 'tag-math',
-        'psychology': 'tag-psychology',
-        'sociology': 'tag-sociology',
-        'philosophy': 'tag-philosophy',
-        'painting': 'tag-painting',
-        'music': 'tag-music',
-        'cinema': 'tag-cinema',
-        'literature': 'tag-literature',
-        'photography': 'tag-photography',
-        'architecture': 'tag-architecture',
-        'design': 'tag-design',
-        'football': 'tag-football',
-        'basketball': 'tag-basketball',
-        'tennis': 'tag-tennis',
-        'hockey': 'tag-hockey',
-        'boxing': 'tag-boxing',
-        'esports': 'tag-esports',
-        'fitness': 'tag-fitness',
-        'life': 'tag-life',
-        'travel': 'tag-travel',
-        'food': 'tag-food',
-        'fashion': 'tag-fashion',
-        'education': 'tag-education',
-        'business': 'tag-business',
-        'health': 'tag-health',
-        'politics': 'tag-politics',
-        'games': 'tag-games',
-        'tech': 'tag-tech',
-        'science': 'tag-science',
-        'art': 'tag-art',
-        'sport': 'tag-sport',
-        'other': 'tag-other'
+        'communism': 'tag-communism', 'socialism': 'tag-socialism', 'capitalism': 'tag-capitalism',
+        'liberalism': 'tag-liberalism', 'conservatism': 'tag-conservatism', 'anarchism': 'tag-anarchism',
+        'nationalism': 'tag-nationalism', 'fascism': 'tag-fascism', 'democracy': 'tag-democracy',
+        'authoritarianism': 'tag-authoritarianism', 'minecraft': 'tag-minecraft', 'dota2': 'tag-dota2',
+        'csgo': 'tag-csgo', 'valorant': 'tag-valorant', 'league_of_legends': 'tag-league_of_legends',
+        'heartstone': 'tag-heartstone', 'wow': 'tag-wow', 'gta': 'tag-gta', 'cyberpunk': 'tag-cyberpunk',
+        'indie': 'tag-indie', 'ai': 'tag-ai', 'programming': 'tag-programming', 'cybersecurity': 'tag-cybersecurity',
+        'web3': 'tag-web3', 'space': 'tag-space', 'robotics': 'tag-robotics', 'biotech': 'tag-biotech',
+        'nano': 'tag-nano', 'physics': 'tag-physics', 'chemistry': 'tag-chemistry', 'biology': 'tag-biology',
+        'astronomy': 'tag-astronomy', 'math': 'tag-math', 'psychology': 'tag-psychology', 'sociology': 'tag-sociology',
+        'philosophy': 'tag-philosophy', 'painting': 'tag-painting', 'music': 'tag-music', 'cinema': 'tag-cinema',
+        'literature': 'tag-literature', 'photography': 'tag-photography', 'architecture': 'tag-architecture',
+        'design': 'tag-design', 'football': 'tag-football', 'basketball': 'tag-basketball', 'tennis': 'tag-tennis',
+        'hockey': 'tag-hockey', 'boxing': 'tag-boxing', 'esports': 'tag-esports', 'fitness': 'tag-fitness',
+        'life': 'tag-life', 'travel': 'tag-travel', 'food': 'tag-food', 'fashion': 'tag-fashion',
+        'education': 'tag-education', 'business': 'tag-business', 'health': 'tag-health', 'politics': 'tag-politics',
+        'games': 'tag-games', 'tech': 'tag-tech', 'science': 'tag-science', 'art': 'tag-art',
+        'sport': 'tag-sport', 'other': 'tag-other'
     };
     if (map[tagLower]) return map[tagLower];
     for (const [key, value] of Object.entries(map)) {
-        if (tagLower.includes(key) || key.includes(tagLower)) {
-            return value;
-        }
+        if (tagLower.includes(key) || key.includes(tagLower)) return value;
     }
     return 'tag-other';
 }
@@ -1749,30 +1657,11 @@ function insertBBC(tag) {
     updatePreview();
 }
 
-function insertColorBBC() {
-    const color = prompt('Введите цвет в HEX формате (например, #ff0000):');
-    if (color && /^#[0-9a-fA-F]{6}$/.test(color)) {
-        insertCustomBBC(`color=${color}`);
-    } else if (color) {
-        alert('Неверный формат. Используйте HEX: #RRGGBB');
-    }
-}
-
-function insertBgBBC() {
-    const color = prompt('Введите цвет фона в HEX формате (например, #ff0000):');
-    if (color && /^#[0-9a-fA-F]{6}$/.test(color)) {
-        insertCustomBBC(`bg=${color}`);
-    } else if (color) {
-        alert('Неверный формат. Используйте HEX: #RRGGBB');
-    }
-}
-
 function insertCustomBBC(tag) {
     const textarea = document.getElementById('postContent');
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const selected = textarea.value.substring(start, end);
-    
     const wrapped = `[${tag}]${selected}[/${tag.split('=')[0]}]`;
     textarea.value = textarea.value.substring(0, start) + wrapped + textarea.value.substring(end);
     textarea.focus();
@@ -1781,45 +1670,301 @@ function insertCustomBBC(tag) {
     updatePreview();
 }
 
-function insertLinkBBC() {
-    const url = prompt('Введите URL:');
-    if (url) {
+// ============================================================
+// ЦВЕТА (ЧЕРЕЗ БРАУЗЕРНУЮ ПАЛИТРУ)
+// ============================================================
+function openColorPicker() {
+    const input = document.createElement('input');
+    input.type = 'color';
+    input.value = '#4f8cff';
+    input.oninput = function() {
+        const color = this.value;
         const textarea = document.getElementById('postContent');
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
-        const selected = textarea.value.substring(start, end) || 'ссылка';
+        const selected = textarea.value.substring(start, end);
+        const tag = `color=${color}`;
+        const wrapped = selected ? `[${tag}]${selected}[/color]` : `[${tag}]текст[/color]`;
+        textarea.value = textarea.value.substring(0, start) + wrapped + textarea.value.substring(end);
+        textarea.focus();
+        textarea.selectionStart = start;
+        textarea.selectionEnd = start + wrapped.length;
+        updatePreview();
+    };
+    input.click();
+}
+
+function openBgColorPicker() {
+    const input = document.createElement('input');
+    input.type = 'color';
+    input.value = '#1c1c1c';
+    input.oninput = function() {
+        const color = this.value;
+        const textarea = document.getElementById('postContent');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selected = textarea.value.substring(start, end);
+        const tag = `bg=${color}`;
+        const wrapped = selected ? `[${tag}]${selected}[/bg]` : `[${tag}]текст[/bg]`;
+        textarea.value = textarea.value.substring(0, start) + wrapped + textarea.value.substring(end);
+        textarea.focus();
+        textarea.selectionStart = start;
+        textarea.selectionEnd = start + wrapped.length;
+        updatePreview();
+    };
+    input.click();
+}
+
+// ============================================================
+// МОДАЛЬНОЕ ОКНО ДЛЯ ССЫЛКИ
+// ============================================================
+function openLinkModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2><span class="material-icons" style="font-size:24px;">link</span> Вставить ссылку</h2>
+                <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
+            </div>
+            <div class="field">
+                <label>URL</label>
+                <input type="text" id="linkUrlInput" placeholder="https://example.com">
+            </div>
+            <div class="field">
+                <label>Текст ссылки</label>
+                <input type="text" id="linkTextInput" placeholder="Текст ссылки">
+            </div>
+            <div class="modal-actions">
+                <button class="ripple-btn outline" onclick="this.closest('.modal-overlay').remove()">Отмена</button>
+                <button class="ripple-btn primary" id="insertLinkBtn">Вставить</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    document.getElementById('insertLinkBtn').addEventListener('click', function() {
+        const url = document.getElementById('linkUrlInput').value.trim();
+        const text = document.getElementById('linkTextInput').value.trim() || 'ссылка';
+        if (!url) {
+            alert('Введите URL');
+            return;
+        }
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            alert('Введите корректный URL (начинается с http:// или https://)');
+            return;
+        }
+        
+        const textarea = document.getElementById('postContent');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selected = textarea.value.substring(start, end) || text;
         const wrapped = `[url=${url}]${selected}[/url]`;
         textarea.value = textarea.value.substring(0, start) + wrapped + textarea.value.substring(end);
         textarea.focus();
         textarea.selectionStart = start;
         textarea.selectionEnd = start + wrapped.length;
         updatePreview();
-    }
+        modal.remove();
+    });
+    
+    document.getElementById('linkUrlInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') document.getElementById('insertLinkBtn').click();
+    });
+    document.getElementById('linkTextInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') document.getElementById('insertLinkBtn').click();
+    });
 }
 
-function insertImageBBC() {
-    const url = prompt('Введите URL изображения:');
-    if (url) {
-        const textarea = document.getElementById('postContent');
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const wrapped = `[img]${url}[/img]`;
-        textarea.value = textarea.value.substring(0, start) + wrapped + textarea.value.substring(end);
-        textarea.focus();
-        textarea.selectionStart = start;
-        textarea.selectionEnd = start + wrapped.length;
-        updatePreview();
-    }
+// ============================================================
+// МОДАЛЬНОЕ ОКНО ДЛЯ ИЗОБРАЖЕНИЙ
+// ============================================================
+function openImageModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2><span class="material-icons" style="font-size:24px;">image</span> Вставить изображение</h2>
+                <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
+            </div>
+            
+            <div class="field">
+                <label>Загрузить файл</label>
+                <div class="upload-area" id="modalUploadArea">
+                    <span class="material-icons">cloud_upload</span>
+                    <span>Нажмите или перетащите файл</span>
+                    <span style="display:block;font-size:11px;margin-top:2px;">JPG, PNG, GIF • до 10MB</span>
+                </div>
+                <input type="file" id="modalImageInput" accept="image/*" style="display:none;">
+                <div class="upload-preview" id="modalUploadPreview">
+                    <img id="modalPreviewImg" src="" alt="preview">
+                    <span class="file-name" id="modalFileName">file.jpg</span>
+                    <button class="remove-file" onclick="clearModalFile()"><span class="material-icons" style="font-size:18px;">close</span></button>
+                </div>
+                <div class="upload-progress-small" id="modalUploadProgress">
+                    <div class="bar" id="modalUploadBar"></div>
+                </div>
+            </div>
+            
+            <div class="divider">или</div>
+            
+            <div class="field">
+                <label>URL изображения</label>
+                <input type="text" id="imageUrlInput" placeholder="https://example.com/image.jpg">
+            </div>
+            
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+                Поддерживаются прямые ссылки на изображения и загрузка через ImageBB
+            </div>
+            
+            <div class="modal-actions">
+                <button class="ripple-btn outline" onclick="this.closest('.modal-overlay').remove()">Отмена</button>
+                <button class="ripple-btn primary" id="insertImageBtn">Вставить</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    tempFile = null;
+    tempFilePreview = null;
+    document.getElementById('modalUploadPreview').style.display = 'none';
+    
+    // Загрузка через клик
+    document.getElementById('modalUploadArea').addEventListener('click', () => {
+        document.getElementById('modalImageInput').click();
+    });
+    
+    // Drag & drop
+    document.getElementById('modalUploadArea').addEventListener('dragover', (e) => {
+        e.preventDefault();
+        document.getElementById('modalUploadArea').style.borderColor = '#4f8cff';
+    });
+    document.getElementById('modalUploadArea').addEventListener('dragleave', () => {
+        document.getElementById('modalUploadArea').style.borderColor = 'var(--border-color)';
+    });
+    document.getElementById('modalUploadArea').addEventListener('drop', (e) => {
+        e.preventDefault();
+        document.getElementById('modalUploadArea').style.borderColor = 'var(--border-color)';
+        if (e.dataTransfer.files.length) {
+            handleModalFile(e.dataTransfer.files[0]);
+        }
+    });
+    
+    // Выбор файла
+    document.getElementById('modalImageInput').addEventListener('change', (e) => {
+        if (e.target.files.length) {
+            handleModalFile(e.target.files[0]);
+        }
+        e.target.value = '';
+    });
+    
+    // Вставка
+    document.getElementById('insertImageBtn').addEventListener('click', function() {
+        const url = document.getElementById('imageUrlInput').value.trim();
+        
+        if (tempFile) {
+            // Загружаем файл через ImageBB
+            const progress = document.getElementById('modalUploadProgress');
+            const bar = document.getElementById('modalUploadBar');
+            progress.style.display = 'block';
+            bar.style.width = '0%';
+            
+            this.disabled = true;
+            this.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;font-size:16px;">refresh</span> Загрузка...';
+            
+            const formData = new FormData();
+            formData.append('key', IMGBB_API_KEY);
+            formData.append('image', tempFile);
+            
+            fetch('https://api.imgbb.com/1/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    bar.style.width = '100%';
+                    setTimeout(() => {
+                        insertImageToContent(data.data.url);
+                        modal.remove();
+                    }, 300);
+                } else {
+                    alert('Ошибка загрузки: ' + (data.error?.message || 'Unknown'));
+                    progress.style.display = 'none';
+                    bar.style.width = '0%';
+                    this.disabled = false;
+                    this.innerHTML = 'Вставить';
+                }
+            })
+            .catch(err => {
+                alert('Ошибка: ' + err.message);
+                progress.style.display = 'none';
+                bar.style.width = '0%';
+                this.disabled = false;
+                this.innerHTML = 'Вставить';
+            });
+        } else if (url) {
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                alert('Введите корректный URL (начинается с http:// или https://)');
+                return;
+            }
+            insertImageToContent(url);
+            modal.remove();
+        } else {
+            alert('Загрузите изображение или введите URL');
+        }
+    });
+    
+    document.getElementById('imageUrlInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') document.getElementById('insertImageBtn').click();
+    });
 }
 
-function resetColors() {
-    document.getElementById('textColor').value = '#e8e8e8';
-    document.getElementById('bgColor').value = '#1c1c1c';
+function handleModalFile(file) {
+    if (file.size > 10 * 1024 * 1024) {
+        alert('Файл слишком большой (>10MB)');
+        return;
+    }
+    if (!file.type.startsWith('image/')) {
+        alert('Пожалуйста, выберите изображение');
+        return;
+    }
+    
+    tempFile = file;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        tempFilePreview = e.target.result;
+        document.getElementById('modalPreviewImg').src = tempFilePreview;
+        document.getElementById('modalFileName').textContent = file.name;
+        document.getElementById('modalUploadPreview').style.display = 'flex';
+        document.getElementById('imageUrlInput').value = '';
+    };
+    reader.readAsDataURL(file);
+}
+
+function clearModalFile() {
+    tempFile = null;
+    tempFilePreview = null;
+    document.getElementById('modalUploadPreview').style.display = 'none';
+    document.getElementById('modalImageInput').value = '';
+}
+
+function insertImageToContent(url) {
+    const textarea = document.getElementById('postContent');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = textarea.value.substring(start, end);
+    const wrapped = `[img]${url}[/img]`;
+    textarea.value = textarea.value.substring(0, start) + wrapped + textarea.value.substring(end);
+    textarea.focus();
+    textarea.selectionStart = start;
+    textarea.selectionEnd = start + wrapped.length;
     updatePreview();
 }
 
 // ============================================================
-// IMAGE UPLOAD
+// IMAGE UPLOAD (для основных изображений поста)
 // ============================================================
 function handleImageUpload(files) {
     if (isUploading) return;
@@ -1861,9 +2006,7 @@ function handleImageUpload(files) {
                 alert('Ошибка загрузки: ' + (data.error?.message || 'Unknown'));
             }
         })
-        .catch(err => {
-            alert('Ошибка: ' + err.message);
-        })
+        .catch(err => alert('Ошибка: ' + err.message))
         .finally(() => {
             completed++;
             bar.style.width = (completed / total * 100) + '%';
@@ -1900,7 +2043,7 @@ function removeImage(index) {
 }
 
 // ============================================================
-// PREVIEW (как реальный пост)
+// PREVIEW
 // ============================================================
 function updatePreview() {
     clearTimeout(previewTimeout);
@@ -1913,17 +2056,13 @@ function updatePreview() {
         const communitySelect = document.getElementById('communitySelect');
         const selectedCommunity = communitySelect.options[communitySelect.selectedIndex];
         
-        // Заголовок
         document.getElementById('previewTitle').textContent = title;
-        
-        // Контент с BBC
         document.getElementById('previewContent').innerHTML = parseBBCPreview(content);
         document.getElementById('previewContent').style.color = textColor;
         document.getElementById('previewContent').style.background = bgColor;
         document.getElementById('previewContent').style.padding = '8px';
         document.getElementById('previewContent').style.borderRadius = 'var(--radius)';
         
-        // Аватар и имя
         if (user) {
             document.getElementById('previewName').textContent = user.displayName || 'Аноним';
             document.getElementById('previewAvatar').innerHTML = user.photoURL 
@@ -1931,30 +2070,27 @@ function updatePreview() {
                 : (user.displayName || '?')[0].toUpperCase();
         }
         
-        // Теги (категории)
         const tagsContainer = document.getElementById('previewTags');
         let tagsHtml = '';
         if (selectedCategories.length) {
             selectedCategories.forEach(cat => {
-                const tagClass = getTagClass(cat.value);
-                tagsHtml += `<span class="preview-tag ${tagClass}">#${cat.label}</span>`;
+                tagsHtml += `<span class="preview-tag ${getTagClass(cat.value)}">#${cat.label}</span>`;
             });
         }
         const customCat = document.getElementById('customCategory').value.trim();
         if (customCat) {
-            const tagClass = getTagClass(customCat);
-            tagsHtml += `<span class="preview-tag ${tagClass}">#${customCat}</span>`;
+            tagsHtml += `<span class="preview-tag ${getTagClass(customCat)}">#${customCat}</span>`;
         }
         tagsContainer.innerHTML = tagsHtml;
         
-        // Сообщество
         const communityWrap = document.getElementById('previewCommunityWrap');
         const communityName = document.getElementById('previewCommunityName');
         const communityAvatar = document.getElementById('previewCommunityAvatar');
         
         if (selectedCommunity && selectedCommunity.value) {
             communityWrap.style.display = 'inline-flex';
-            communityName.textContent = selectedCommunity.text;
+            const displayName = communityNameCache[selectedCommunity.value] || selectedCommunity.text || 'Сообщество';
+            communityName.textContent = displayName;
             const avatar = selectedCommunity.dataset.avatar || '';
             communityAvatar.innerHTML = avatar 
                 ? `<img src="${avatar}" alt="">` 
@@ -1963,16 +2099,9 @@ function updatePreview() {
             communityWrap.style.display = 'none';
         }
         
-        // Изображения
         const previewImages = document.getElementById('previewImages');
         if (uploadedImages.length) {
             const count = uploadedImages.length;
-            let gridStyle = '';
-            if (count === 1) gridStyle = 'grid-template-columns:1fr;';
-            else if (count === 2) gridStyle = 'grid-template-columns:1fr 1fr;';
-            else if (count === 3) gridStyle = 'grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;';
-            else gridStyle = 'grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;';
-            
             previewImages.style.display = 'grid';
             previewImages.style.gridTemplateColumns = count === 1 ? '1fr' : '1fr 1fr';
             previewImages.style.gridTemplateRows = count <= 2 ? '1fr' : '1fr 1fr';
@@ -2027,6 +2156,12 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+function resetColors() {
+    document.getElementById('textColor').value = '#e8e8e8';
+    document.getElementById('bgColor').value = '#1c1c1c';
+    updatePreview();
+}
+
 // ============================================================
 // PUBLISH
 // ============================================================
@@ -2066,6 +2201,7 @@ function publishPost() {
         category: category,
         community: community || null,
         communityId: community || null,
+        communityName: community ? (communityNameCache[community] || null) : null,
         images: uploadedImages,
         likes: [],
         dislikes: [],
@@ -2108,8 +2244,7 @@ function generateShortId() {
     return result;
 }
 
-console.log('📝 Create page loaded');
+console.log('📝 Create page loaded with image modal and color picker');
 </script>
-
 </body>
 </html>
