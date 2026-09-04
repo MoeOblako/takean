@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
+        /* ===== БАЗОВЫЕ СТИЛИ (без изменений) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -80,6 +81,7 @@
         .text-center { text-align: center; }
         .text-muted { color: var(--text-muted); }
 
+        /* ===== АНИМАЦИИ ===== */
         @keyframes ripple {
             0% { transform: scale(0); opacity: 0.4; }
             100% { transform: scale(4); opacity: 0; }
@@ -100,8 +102,77 @@
             to { transform: rotate(360deg); }
         }
 
+        @keyframes likePop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
         .animate-fade { animation: fadeIn 0.25s ease-out; }
         .animate-slide { animation: slideUp 0.3s ease-out; }
+
+        /* ===== КНОПКА С RIPPLE ЭФФЕКТОМ ===== */
+        .ripple-btn {
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: var(--font);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            /* Убираем стандартный WebKit highlight */
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+        }
+
+        /* Убираем стандартный фокус и выделение */
+        .ripple-btn:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .ripple-btn .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(0);
+            animation: ripple 0.6s ease-out;
+            pointer-events: none;
+        }
+
+        [data-theme="light"] .ripple-btn .ripple-effect {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .ripple-btn:hover { background: var(--bg-hover); }
+        .ripple-btn:active { transform: scale(0.96); }
+
+        .ripple-btn.primary {
+            background: var(--accent);
+            color: #fff;
+        }
+        .ripple-btn.primary:hover { background: var(--accent-hover); }
+
+        .ripple-btn.outline {
+            border: 1px solid var(--border-color);
+        }
+        .ripple-btn.outline:hover { background: var(--bg-hover); }
+
+        .ripple-btn.danger {
+            color: var(--red);
+        }
+        .ripple-btn.danger:hover { background: rgba(244, 67, 54, 0.1); }
 
         /* ===== TOP BAR ===== */
         .topbar {
@@ -152,6 +223,7 @@
             align-items: center;
             gap: 4px;
             white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .topbar-nav a:hover {
@@ -195,6 +267,8 @@
             transition: border-color 0.2s;
             overflow: hidden;
             flex-shrink: 0;
+            position: relative;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .topbar-actions .avatar-small:hover {
@@ -205,6 +279,22 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .topbar-actions .avatar-small .online-dot {
+            position: absolute;
+            bottom: -1px;
+            right: -1px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-card);
+            background: #4caf50;
+            display: none;
+        }
+
+        .topbar-actions .avatar-small .online-dot.show {
+            display: block;
         }
 
         .search-bar {
@@ -244,54 +334,6 @@
             color: var(--text-muted);
             font-size: 18px;
         }
-
-        /* ===== RIPPLE BUTTON ===== */
-        .ripple-btn {
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
-            border: none;
-            background: none;
-            font-family: var(--font);
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-primary);
-            padding: 8px 16px;
-            border-radius: var(--radius);
-            transition: background 0.2s, transform 0.1s;
-            user-select: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .ripple-btn .ripple-effect {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.15);
-            transform: scale(0);
-            animation: ripple 0.5s ease-out;
-            pointer-events: none;
-        }
-
-        [data-theme="light"] .ripple-btn .ripple-effect {
-            background: rgba(0, 0, 0, 0.1);
-        }
-
-        .ripple-btn:hover { background: var(--bg-hover); }
-        .ripple-btn:active { transform: scale(0.97); }
-
-        .ripple-btn.primary {
-            background: var(--accent);
-            color: #fff;
-        }
-        .ripple-btn.primary:hover { background: var(--accent-hover); }
-
-        .ripple-btn.outline {
-            border: 1px solid var(--border-color);
-        }
-        .ripple-btn.outline:hover { background: var(--bg-hover); }
 
         /* ===== COMMUNITY ===== */
         .community-header {
@@ -512,12 +554,29 @@
             cursor: pointer;
             flex-shrink: 0;
             overflow: hidden;
+            position: relative;
         }
 
         .post-avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .post-avatar .online-dot {
+            position: absolute;
+            bottom: -1px;
+            right: -1px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-card);
+            background: #4caf50;
+            display: none;
+        }
+
+        .post-avatar .online-dot.show {
+            display: block;
         }
 
         .post-user {
@@ -567,9 +626,31 @@
             cursor: pointer;
         }
 
+        /* Стили для BBC в посте */
+        .post-content .bbc-bold { font-weight: 700; }
+        .post-content .bbc-italic { font-style: italic; }
+        .post-content .bbc-underline { text-decoration: underline; }
+        .post-content .bbc-strike { text-decoration: line-through; }
+        .post-content .bbc-code { font-family: monospace; background: var(--bg-input); padding: 2px 6px; border-radius: var(--radius); }
+        .post-content .bbc-quote { border-left: 3px solid var(--accent); padding-left: 12px; margin: 4px 0; color: var(--text-secondary); }
+        .post-content .bbc-spoiler {
+            background: var(--bg-hover);
+            color: var(--bg-hover);
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: var(--radius);
+            transition: color 0.3s, background 0.3s;
+            user-select: none;
+        }
+        .post-content .bbc-spoiler:hover { color: var(--text-primary); background: var(--bg-input); }
+        .post-content .bbc-spoiler.revealed { color: var(--text-primary); background: var(--bg-input); }
+        .post-content .bbc-size-small { font-size: 12px; }
+        .post-content .bbc-size-normal { font-size: 15px; }
+        .post-content .bbc-size-large { font-size: 20px; }
+        .post-content .bbc-size-huge { font-size: 26px; }
+
         .post-images {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 4px;
             margin: 8px 0;
             border-radius: var(--radius);
@@ -578,19 +659,28 @@
 
         .post-images .img-wrap {
             position: relative;
-            padding-bottom: 100%;
             background: var(--bg-hover);
             overflow: hidden;
             cursor: pointer;
         }
 
         .post-images .img-wrap img {
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
+            display: block;
+        }
+
+        .post-images .img-wrap .image-count {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: var(--radius);
+            font-size: 12px;
+            font-weight: 600;
         }
 
         .post-actions {
@@ -621,7 +711,13 @@
         }
 
         .post-action-btn:hover { background: var(--bg-hover); }
-        .post-action-btn .material-icons { font-size: 18px; }
+        .post-action-btn:active { transform: scale(0.92); }
+        .post-action-btn .material-icons { font-size: 18px; transition: transform 0.2s; }
+        .post-action-btn.liked .material-icons {
+            color: var(--accent);
+            animation: likePop 0.3s ease-out;
+        }
+        .post-action-btn.liked { color: var(--accent); }
 
         /* ===== MODAL ===== */
         .modal-overlay {
@@ -696,12 +792,29 @@
             justify-content: center;
             font-weight: 600;
             color: var(--text-secondary);
+            position: relative;
         }
 
         .modal-user-item .avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .modal-user-item .avatar .online-dot {
+            position: absolute;
+            bottom: -1px;
+            right: -1px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-card);
+            background: #4caf50;
+            display: none;
+        }
+
+        .modal-user-item .avatar .online-dot.show {
+            display: block;
         }
 
         .modal-user-item .name {
@@ -853,6 +966,22 @@
         .edit-cover-box .label {
             font-size: 13px;
             color: var(--text-muted);
+        }
+
+        .edit-upload-progress {
+            height: 3px;
+            background: var(--bg-hover);
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .edit-upload-progress .bar {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.3s;
         }
 
         .modal-actions {
@@ -1049,6 +1178,7 @@
 
                 <div class="avatar-small" id="userAvatar">
                     <span>?</span>
+                    <span class="online-dot" id="userOnlineDot"></span>
                 </div>
             </div>
         </div>
@@ -1088,9 +1218,11 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
 <script>
+// ============================================================
+// FIREBASE + IMGBB
+// ============================================================
 const firebaseConfig = {
     apiKey: "AIzaSyBDzDIwiObevnlfqfm6p9fzAvsHHpT2QZU",
     authDomain: "takean.firebaseapp.com",
@@ -1104,18 +1236,67 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
-const storage = firebase.storage();
 
-const IMGBB_API_KEY = '82ba1ce293103084398ae828937d95d4';
+const IMGBB_API_KEY = '82ba1ce293103084398ae828937d95d4'; // Твой ключ
 
 let currentUser = null;
 let communityData = null;
 let communityId = null;
 let communityPosts = [];
+let userOnlineStatus = {};
 
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
 
+// ============================================================
+// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// ============================================================
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function generateShortId() {
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 8; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
+
+// ============================================================
+// ПАРСИНГ BBC ДЛЯ ОТОБРАЖЕНИЯ В ПОСТАХ
+// ============================================================
+function parseBBCForDisplay(text) {
+    if (!text) return '';
+    let html = escapeHtml(text);
+    html = html.replace(/\[b\](.*?)\[\/b\]/g, '<span class="bbc-bold">$1</span>');
+    html = html.replace(/\[i\](.*?)\[\/i\]/g, '<span class="bbc-italic">$1</span>');
+    html = html.replace(/\[u\](.*?)\[\/u\]/g, '<span class="bbc-underline">$1</span>');
+    html = html.replace(/\[s\](.*?)\[\/s\]/g, '<span class="bbc-strike">$1</span>');
+    html = html.replace(/\[code\](.*?)\[\/code\]/g, '<span class="bbc-code">$1</span>');
+    html = html.replace(/\[quote\](.*?)\[\/quote\]/g, '<div class="bbc-quote">$1</div>');
+    html = html.replace(/\[spoiler\](.*?)\[\/spoiler\]/g, '<span class="bbc-spoiler" onclick="this.classList.toggle(\'revealed\')">$1</span>');
+    html = html.replace(/\[size=small\](.*?)\[\/size\]/g, '<span class="bbc-size-small">$1</span>');
+    html = html.replace(/\[size=normal\](.*?)\[\/size\]/g, '<span class="bbc-size-normal">$1</span>');
+    html = html.replace(/\[size=large\](.*?)\[\/size\]/g, '<span class="bbc-size-large">$1</span>');
+    html = html.replace(/\[size=huge\](.*?)\[\/size\]/g, '<span class="bbc-size-huge">$1</span>');
+    html = html.replace(/\[color=(#[0-9a-fA-F]{6})\](.*?)\[\/color\]/g, '<span style="color:$1;">$2</span>');
+    html = html.replace(/\[bg=(#[0-9a-fA-F]{6})\](.*?)\[\/bg\]/g, '<span style="background:$1;padding:2px 4px;border-radius:var(--radius);">$2</span>');
+    html = html.replace(/\[url\](.*?)\[\/url\]/g, '<a href="$1" target="_blank" style="color:var(--accent);">$1</a>');
+    html = html.replace(/\[url=(.*?)\](.*?)\[\/url\]/g, '<a href="$1" target="_blank" style="color:var(--accent);">$2</a>');
+    html = html.replace(/\[img\](.*?)\[\/img\]/g, '<img src="$1" style="max-width:100%;max-height:300px;border-radius:var(--radius);margin:4px 0;" loading="lazy">');
+    html = html.replace(/@([a-zA-Z0-9_.-]+)/g, '<span class="mention">@$1</span>');
+    html = html.replace(/\n/g, '<br>');
+    return html;
+}
+
+// ============================================================
+// СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ В FIRESTORE
+// ============================================================
 function createUserInFirestore(user) {
     return db.collection('users').doc(user.uid).get().then(doc => {
         if (!doc.exists) {
@@ -1135,13 +1316,127 @@ function createUserInFirestore(user) {
                 reputation: 0,
                 followers: [],
                 following: [],
-                theme: currentTheme
+                theme: currentTheme,
+                isOnline: true,
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
             });
         }
         return doc;
     });
 }
 
+// ============================================================
+// ОНЛАЙН СТАТУС (умная система)
+// ============================================================
+let onlineCheckInterval = null;
+let isUserActive = true;
+let inactivityTimer = null;
+
+function updateOnlineStatus() {
+    if (!currentUser) return;
+    db.collection('users').doc(currentUser.uid).update({
+        lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+        isOnline: isUserActive
+    }).catch(() => {});
+}
+
+function startOnlineTracking() {
+    if (onlineCheckInterval) clearInterval(onlineCheckInterval);
+    
+    isUserActive = true;
+    updateOnlineStatus();
+    
+    // Сбрасываем таймер бездействия при активности
+    function resetInactivity() {
+        isUserActive = true;
+        updateOnlineStatus();
+        clearTimeout(inactivityTimer);
+        // Через 2 минуты бездействия считаем пользователя офлайн
+        inactivityTimer = setTimeout(() => {
+            isUserActive = false;
+            updateOnlineStatus();
+        }, 120000); // 2 минуты
+    }
+    
+    // События активности
+    const events = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    events.forEach(event => {
+        document.addEventListener(event, resetInactivity);
+    });
+    
+    resetInactivity();
+    
+    // Обновляем статус каждые 30 секунд
+    onlineCheckInterval = setInterval(() => {
+        if (currentUser) {
+            updateOnlineStatus();
+        }
+    }, 30000);
+    
+    // При закрытии страницы
+    window.addEventListener('beforeunload', () => {
+        if (currentUser) {
+            db.collection('users').doc(currentUser.uid).update({
+                isOnline: false,
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(() => {});
+        }
+    });
+    
+    // При скрытии вкладки
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            isUserActive = false;
+            if (currentUser) {
+                db.collection('users').doc(currentUser.uid).update({
+                    isOnline: false,
+                    lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(() => {});
+            }
+        } else {
+            isUserActive = true;
+            updateOnlineStatus();
+            resetInactivity();
+        }
+    });
+}
+
+// ============================================================
+// ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ
+// ============================================================
+function loadUserData() {
+    const user = auth.currentUser;
+    currentUser = user;
+    
+    const avatarEl = document.getElementById('userAvatar');
+    const dotEl = document.getElementById('userOnlineDot');
+    
+    if (user) {
+        avatarEl.innerHTML = user.photoURL 
+            ? `<img src="${user.photoURL}" alt="avatar">` 
+            : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
+        avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+        dotEl.classList.add('show');
+        
+        createUserInFirestore(user).then(() => {
+            startOnlineTracking();
+        }).catch(err => console.error('Error creating user:', err));
+    } else {
+        avatarEl.innerHTML = '<span>?</span>';
+        avatarEl.onclick = () => window.location.href = '/login.html';
+        dotEl.classList.remove('show');
+        if (onlineCheckInterval) {
+            clearInterval(onlineCheckInterval);
+            onlineCheckInterval = null;
+        }
+    }
+}
+
+auth.onAuthStateChanged(user => { loadUserData(); });
+
+// ============================================================
+// ЗАГРУЗКА СООБЩЕСТВА
+// ============================================================
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('themeToggle').addEventListener('click', () => {
         currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -1181,25 +1476,9 @@ function setupEventListeners() {
     });
 }
 
-function loadUserData() {
-    const user = auth.currentUser;
-    currentUser = user;
-    
-    const avatarEl = document.getElementById('userAvatar');
-    if (user) {
-        avatarEl.innerHTML = user.photoURL 
-            ? `<img src="${user.photoURL}" alt="avatar">` 
-            : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
-        avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
-        createUserInFirestore(user).catch(err => console.error('Error creating user:', err));
-    } else {
-        avatarEl.innerHTML = '<span>?</span>';
-        avatarEl.onclick = () => window.location.href = '/login.html';
-    }
-}
-
-auth.onAuthStateChanged(user => { loadUserData(); });
-
+// ============================================================
+// ЗАГРУЗКА ДАННЫХ СООБЩЕСТВА
+// ============================================================
 function loadCommunity(id) {
     const container = document.getElementById('communityContainer');
     container.innerHTML = '<div class="loading-spinner"><span class="material-icons">refresh</span> Загрузка...</div>';
@@ -1222,6 +1501,7 @@ function loadCommunity(id) {
             document.title = `${communityData.name || 'Сообщество'} | Takean`;
             renderCommunity(communityData);
             loadCommunityPosts(id);
+            loadMembersStatus(communityData.members || []);
         })
         .catch(err => {
             console.error('Load community error:', err);
@@ -1238,12 +1518,59 @@ function loadCommunity(id) {
         });
 }
 
+// ============================================================
+// ЗАГРУЗКА СТАТУСА УЧАСТНИКОВ
+// ============================================================
+function loadMembersStatus(memberIds) {
+    if (!memberIds.length) return;
+    memberIds.forEach(uid => {
+        db.collection('users').doc(uid).get().then(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                userOnlineStatus[uid] = data.isOnline || false;
+                updateMemberOnlineStatus(uid, data.isOnline || false);
+            }
+        }).catch(() => {});
+    });
+}
+
+function updateMemberOnlineStatus(uid, isOnline) {
+    // Обновляем статус в стеке аватаров
+    const dots = document.querySelectorAll(`.mini-avatar[data-uid="${uid}"] .online-dot`);
+    dots.forEach(dot => {
+        if (isOnline) {
+            dot.classList.add('show');
+        } else {
+            dot.classList.remove('show');
+        }
+    });
+}
+
+// ============================================================
+// ОТОБРАЖЕНИЕ СООБЩЕСТВА
+// ============================================================
 function renderCommunity(community) {
     const container = document.getElementById('communityContainer');
     const isMember = currentUser && community.members && community.members.includes(currentUser.uid);
     const isOwner = currentUser && community.ownerId === currentUser.uid;
     const displayMembers = community.members || [];
     const memberCount = community.memberCount || displayMembers.length;
+    
+    // Создаем HTML для стека аватаров с онлайн-статусом
+    let membersStackHtml = '';
+    const showMembers = displayMembers.slice(0, 5);
+    showMembers.forEach((member, i) => {
+        const letter = String.fromCharCode(65 + (i % 26));
+        membersStackHtml += `
+            <div class="mini-avatar" data-uid="${member}">
+                <span>${letter}</span>
+                <span class="online-dot"></span>
+            </div>
+        `;
+    });
+    if (displayMembers.length > 5) {
+        membersStackHtml += `<div class="mini-avatar">+${displayMembers.length - 5}</div>`;
+    }
     
     container.innerHTML = `
         <div class="community-header">
@@ -1282,14 +1609,7 @@ function renderCommunity(community) {
                 
                 <div class="community-members">
                     <div class="avatar-stack">
-                        ${displayMembers.slice(0, 5).map((member, i) => `
-                            <div class="mini-avatar">
-                                <span>${String.fromCharCode(65 + (i % 26))}</span>
-                            </div>
-                        `).join('')}
-                        ${displayMembers.length > 5 ? `
-                            <div class="mini-avatar">+${displayMembers.length - 5}</div>
-                        ` : ''}
+                        ${membersStackHtml}
                     </div>
                     <span class="members-count" onclick="showMembers()">
                         ${displayMembers.length} участников
@@ -1305,7 +1625,7 @@ function renderCommunity(community) {
                         <button class="ripple-btn outline" onclick="editCommunity()">
                             <span class="material-icons">edit</span> Редактировать
                         </button>
-                        <button class="ripple-btn danger" onclick="deleteCommunity()" style="color:var(--red);">
+                        <button class="ripple-btn danger" onclick="deleteCommunity()">
                             <span class="material-icons">delete</span> Удалить
                         </button>
                     `}
@@ -1323,8 +1643,20 @@ function renderCommunity(community) {
             <div class="loading-spinner"><span class="material-icons">refresh</span> Загрузка тейков...</div>
         </div>
     `;
+    
+    // Обновляем онлайн-статусы участников
+    if (displayMembers.length) {
+        displayMembers.forEach(uid => {
+            if (userOnlineStatus[uid] !== undefined) {
+                updateMemberOnlineStatus(uid, userOnlineStatus[uid]);
+            }
+        });
+    }
 }
 
+// ============================================================
+// ЗАГРУЗКА ПОСТОВ СООБЩЕСТВА
+// ============================================================
 function loadCommunityPosts(id) {
     const container = document.getElementById('communityPosts');
     
@@ -1335,10 +1667,29 @@ function loadCommunityPosts(id) {
         .get()
         .then(snapshot => {
             communityPosts = [];
+            const promises = [];
             snapshot.forEach(doc => {
-                communityPosts.push({ id: doc.id, ...doc.data() });
+                const data = doc.data();
+                communityPosts.push({ id: doc.id, ...data });
+                // Проверяем, есть ли данные об авторе
+                if (data.authorId && !data.authorName) {
+                    promises.push(
+                        db.collection('users').doc(data.authorId).get().then(userDoc => {
+                            if (userDoc.exists) {
+                                const userData = userDoc.data();
+                                data.authorName = userData.displayName || userData.username || 'Аноним';
+                                data.authorAvatar = userData.avatar || null;
+                            }
+                        }).catch(() => {})
+                    );
+                }
             });
-            renderPosts(communityPosts);
+            
+            Promise.all(promises).then(() => {
+                renderPosts(communityPosts);
+            }).catch(() => {
+                renderPosts(communityPosts);
+            });
         })
         .catch(err => {
             console.error('Load posts error:', err);
@@ -1355,6 +1706,9 @@ function loadCommunityPosts(id) {
         });
 }
 
+// ============================================================
+// ОТОБРАЖЕНИЕ ПОСТОВ (С ПАРСИНГОМ BBC И ПРАВИЛЬНЫМИ ИЗОБРАЖЕНИЯМИ)
+// ============================================================
 function renderPosts(posts) {
     const container = document.getElementById('communityPosts');
     if (!posts || !posts.length) {
@@ -1370,36 +1724,252 @@ function renderPosts(posts) {
         return;
     }
 
-    container.innerHTML = posts.map(post => `
-        <div class="post-card" onclick="window.location.href='/post.html?id=${post.id}'" style="cursor:pointer;">
-            <div class="post-header">
-                <div class="post-avatar" onclick="event.stopPropagation(); window.location.href='/profile.html?uid=${post.authorId}'">
-                    ${post.authorAvatar ? `<img src="${post.authorAvatar}" alt="">` : `<span>${(post.authorName || '?')[0].toUpperCase()}</span>`}
-                </div>
-                <div class="post-user">
-                    <div class="post-username" onclick="event.stopPropagation(); window.location.href='/profile.html?uid=${post.authorId}'">
-                        ${post.authorName || 'Аноним'}
+    container.innerHTML = posts.map(post => {
+        // Определяем количество изображений и сетку
+        const images = post.images || [];
+        const imageCount = images.length;
+        let gridStyle = '';
+        if (imageCount === 1) gridStyle = 'grid-template-columns:1fr;';
+        else if (imageCount === 2) gridStyle = 'grid-template-columns:1fr 1fr;';
+        else if (imageCount === 3) gridStyle = 'grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;';
+        else if (imageCount >= 4) gridStyle = 'grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;';
+        
+        let imagesHtml = '';
+        if (imageCount > 0) {
+            const showCount = Math.min(imageCount, 4);
+            for (let i = 0; i < showCount; i++) {
+                const extra = (i === 3 && imageCount > 4) ? `<span class="image-count">+${imageCount - 4}</span>` : '';
+                imagesHtml += `
+                    <div class="img-wrap" onclick="event.stopPropagation(); openImageModal('${images[i]}')">
+                        <img src="${images[i]}" alt="post image" loading="lazy">
+                        ${extra}
                     </div>
-                    <div class="post-time">${post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleDateString('ru-RU') : 'недавно'}</div>
+                `;
+            }
+        }
+        
+        // Форматируем дату
+        let timeText = 'недавно';
+        if (post.createdAt) {
+            const date = post.createdAt.toDate ? post.createdAt.toDate() : new Date(post.createdAt);
+            timeText = date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+        
+        // Парсим BBC для контента
+        const parsedContent = parseBBCForDisplay(post.content || '');
+        
+        // Определяем название сообщества для отображения
+        const communityName = post.communityName || post.community || 'Сообщество';
+        
+        return `
+            <div class="post-card" onclick="window.location.href='/post.html?id=${post.id}'" style="cursor:pointer;">
+                <div class="post-header">
+                    <div class="post-avatar" onclick="event.stopPropagation(); window.location.href='/profile.html?uid=${post.authorId}'">
+                        ${post.authorAvatar ? `<img src="${post.authorAvatar}" alt="">` : `<span>${(post.authorName || '?')[0].toUpperCase()}</span>`}
+                    </div>
+                    <div class="post-user">
+                        <div class="post-username" onclick="event.stopPropagation(); window.location.href='/profile.html?uid=${post.authorId}'">
+                            ${post.authorName || 'Аноним'}
+                        </div>
+                        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;">
+                            <span class="post-time">${timeText}</span>
+                            ${post.communityId ? `
+                                <span style="color:var(--text-muted);font-size:11px;">→</span>
+                                <span style="font-size:11px;color:var(--text-secondary);">${escapeHtml(communityName)}</span>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+                <div class="post-title">${escapeHtml(post.title || 'Без заголовка')}</div>
+                <div class="post-content">${parsedContent}</div>
+                ${imagesHtml ? `<div class="post-images" style="${gridStyle}">${imagesHtml}</div>` : ''}
+                <div class="post-actions">
+                    <button class="post-action-btn" onclick="event.stopPropagation(); toggleLike('${post.id}')" id="likeBtn_${post.id}">
+                        <span class="material-icons">${(post.likes || []).includes(currentUser?.uid) ? 'thumb_up' : 'thumb_up_off_alt'}</span>
+                        <span id="likeCount_${post.id}">${(post.likes || []).length}</span>
+                    </button>
+                    <button class="post-action-btn" onclick="event.stopPropagation(); toggleDislike('${post.id}')" id="dislikeBtn_${post.id}">
+                        <span class="material-icons">${(post.dislikes || []).includes(currentUser?.uid) ? 'thumb_down' : 'thumb_down_off_alt'}</span>
+                        <span id="dislikeCount_${post.id}">${(post.dislikes || []).length}</span>
+                    </button>
+                    <span class="post-action-btn"><span class="material-icons">comment</span> ${post.commentsCount || 0}</span>
+                    <button class="post-action-btn" onclick="event.stopPropagation(); sharePost('${post.id}')">
+                        <span class="material-icons">share</span>
+                    </button>
                 </div>
             </div>
-            <div class="post-title">${escapeHtml(post.title || 'Без заголовка')}</div>
-            <div class="post-content">${escapeHtml((post.content || '').substring(0, 200))}${(post.content || '').length > 200 ? '...' : ''}</div>
-            ${post.images && post.images.length ? `
-                <div class="post-images">
-                    ${post.images.slice(0, 3).map(img => `
-                        <div class="img-wrap"><img src="${img}" alt=""></div>
-                    `).join('')}
-                </div>
-            ` : ''}
-            <div class="post-actions">
-                <span class="post-action-btn"><span class="material-icons">thumb_up</span> ${post.likes?.length || 0}</span>
-                <span class="post-action-btn"><span class="material-icons">comment</span> ${post.commentsCount || 0}</span>
-            </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
+// ============================================================
+// ЛАЙКИ / ДИЗЛАЙКИ (МГНОВЕННОЕ ОБНОВЛЕНИЕ)
+// ============================================================
+function toggleLike(postId) {
+    if (!currentUser) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    const postRef = db.collection('posts').doc(postId);
+    const btn = document.getElementById(`likeBtn_${postId}`);
+    const countEl = document.getElementById(`likeCount_${postId}`);
+    const isLiked = btn.classList.contains('liked');
+    
+    // Мгновенное обновление UI
+    if (isLiked) {
+        btn.classList.remove('liked');
+        btn.querySelector('.material-icons').textContent = 'thumb_up_off_alt';
+        countEl.textContent = parseInt(countEl.textContent) - 1;
+    } else {
+        btn.classList.add('liked');
+        btn.querySelector('.material-icons').textContent = 'thumb_up';
+        countEl.textContent = parseInt(countEl.textContent) + 1;
+        // Если был дизлайк, убираем его
+        const dislikeBtn = document.getElementById(`dislikeBtn_${postId}`);
+        if (dislikeBtn && dislikeBtn.classList.contains('disliked')) {
+            dislikeBtn.classList.remove('disliked');
+            dislikeBtn.querySelector('.material-icons').textContent = 'thumb_down_off_alt';
+            const dislikeCount = document.getElementById(`dislikeCount_${postId}`);
+            if (dislikeCount) dislikeCount.textContent = parseInt(dislikeCount.textContent) - 1;
+        }
+    }
+    
+    // Отправляем в Firestore
+    db.runTransaction(transaction => {
+        return transaction.get(postRef).then(doc => {
+            if (!doc.exists) return;
+            const data = doc.data();
+            let likes = data.likes || [];
+            let dislikes = data.dislikes || [];
+            
+            if (isLiked) {
+                likes = likes.filter(id => id !== currentUser.uid);
+            } else {
+                likes.push(currentUser.uid);
+                dislikes = dislikes.filter(id => id !== currentUser.uid);
+            }
+            
+            transaction.update(postRef, { likes, dislikes });
+        });
+    }).catch(err => {
+        console.error('Like error:', err);
+        // Откатываем UI при ошибке
+        if (isLiked) {
+            btn.classList.add('liked');
+            btn.querySelector('.material-icons').textContent = 'thumb_up';
+            countEl.textContent = parseInt(countEl.textContent) + 1;
+        } else {
+            btn.classList.remove('liked');
+            btn.querySelector('.material-icons').textContent = 'thumb_up_off_alt';
+            countEl.textContent = parseInt(countEl.textContent) - 1;
+        }
+    });
+}
+
+function toggleDislike(postId) {
+    if (!currentUser) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    const postRef = db.collection('posts').doc(postId);
+    const btn = document.getElementById(`dislikeBtn_${postId}`);
+    const countEl = document.getElementById(`dislikeCount_${postId}`);
+    const isDisliked = btn.classList.contains('disliked');
+    
+    // Мгновенное обновление UI
+    if (isDisliked) {
+        btn.classList.remove('disliked');
+        btn.querySelector('.material-icons').textContent = 'thumb_down_off_alt';
+        countEl.textContent = parseInt(countEl.textContent) - 1;
+    } else {
+        btn.classList.add('disliked');
+        btn.querySelector('.material-icons').textContent = 'thumb_down';
+        countEl.textContent = parseInt(countEl.textContent) + 1;
+        // Если был лайк, убираем его
+        const likeBtn = document.getElementById(`likeBtn_${postId}`);
+        if (likeBtn && likeBtn.classList.contains('liked')) {
+            likeBtn.classList.remove('liked');
+            likeBtn.querySelector('.material-icons').textContent = 'thumb_up_off_alt';
+            const likeCount = document.getElementById(`likeCount_${postId}`);
+            if (likeCount) likeCount.textContent = parseInt(likeCount.textContent) - 1;
+        }
+    }
+    
+    // Отправляем в Firestore
+    db.runTransaction(transaction => {
+        return transaction.get(postRef).then(doc => {
+            if (!doc.exists) return;
+            const data = doc.data();
+            let likes = data.likes || [];
+            let dislikes = data.dislikes || [];
+            
+            if (isDisliked) {
+                dislikes = dislikes.filter(id => id !== currentUser.uid);
+            } else {
+                dislikes.push(currentUser.uid);
+                likes = likes.filter(id => id !== currentUser.uid);
+            }
+            
+            transaction.update(postRef, { likes, dislikes });
+        });
+    }).catch(err => {
+        console.error('Dislike error:', err);
+        // Откатываем UI при ошибке
+        if (isDisliked) {
+            btn.classList.add('disliked');
+            btn.querySelector('.material-icons').textContent = 'thumb_down';
+            countEl.textContent = parseInt(countEl.textContent) + 1;
+        } else {
+            btn.classList.remove('disliked');
+            btn.querySelector('.material-icons').textContent = 'thumb_down_off_alt';
+            countEl.textContent = parseInt(countEl.textContent) - 1;
+        }
+    });
+}
+
+// ============================================================
+// ОТКРЫТИЕ ИЗОБРАЖЕНИЯ В МОДАЛЬНОМ ОКНЕ
+// ============================================================
+function openImageModal(url) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.background = 'rgba(0,0,0,0.9)';
+    modal.innerHTML = `
+        <div style="max-width:90vw;max-height:90vh;display:flex;align-items:center;justify-content:center;position:relative;">
+            <button onclick="this.closest('.modal-overlay').remove()" style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.5);border:none;color:#fff;font-size:28px;cursor:pointer;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10;">×</button>
+            <img src="${url}" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:4px;">
+        </div>
+    `;
+    modal.onclick = (e) => {
+        if (e.target === modal) modal.remove();
+    };
+    document.body.appendChild(modal);
+}
+
+// ============================================================
+// ШЕРИНГ ПОСТА
+// ============================================================
+function sharePost(postId) {
+    const url = `${window.location.origin}/post.html?id=${postId}`;
+    if (navigator.share) {
+        navigator.share({
+            title: 'Тейк на Takean',
+            url: url
+        }).catch(() => {});
+    } else {
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Ссылка на тейк скопирована!');
+        }).catch(() => {
+            prompt('Скопируйте ссылку:', url);
+        });
+    }
+}
+
+// ============================================================
+// ВСТУПЛЕНИЕ / ВЫХОД ИЗ СООБЩЕСТВА
+// ============================================================
 function toggleJoinCommunity() {
     if (!currentUser) {
         window.location.href = '/login.html';
@@ -1435,9 +2005,13 @@ function toggleJoinCommunity() {
         }
         communityData.memberCount = communityData.members.length;
         renderCommunity(communityData);
+        loadMembersStatus(communityData.members || []);
     }).catch(err => alert('Ошибка: ' + err.message));
 }
 
+// ============================================================
+// ПОКАЗ УЧАСТНИКОВ
+// ============================================================
 function showMembers() {
     if (!communityData || !communityData.members || !communityData.members.length) {
         alert('Нет участников');
@@ -1459,22 +2033,29 @@ function showMembers() {
 
     const list = modal.querySelector('#membersList');
     Promise.all(communityData.members.map(id => 
-        db.collection('users').doc(id).get().then(doc => ({ id, data: doc.data() }))
+        db.collection('users').doc(id).get().then(doc => ({ id, data: doc.exists ? doc.data() : null }))
     )).then(results => {
-        list.innerHTML = results.filter(r => r.data).map(r => `
-            <div class="modal-user-item" onclick="window.location.href='/profile.html?uid=${r.id}'">
-                <div class="avatar">
-                    ${r.data.avatar ? `<img src="${r.data.avatar}" alt="">` : `<span>${(r.data.username || '?')[0].toUpperCase()}</span>`}
+        list.innerHTML = results.filter(r => r.data).map(r => {
+            const isOnline = r.data.isOnline || false;
+            return `
+                <div class="modal-user-item" onclick="window.location.href='/profile.html?uid=${r.id}'">
+                    <div class="avatar">
+                        ${r.data.avatar ? `<img src="${r.data.avatar}" alt="">` : `<span>${(r.data.username || '?')[0].toUpperCase()}</span>`}
+                        <span class="online-dot ${isOnline ? 'show' : ''}"></span>
+                    </div>
+                    <div>
+                        <div class="name">${r.data.displayName || r.data.username || 'Аноним'}</div>
+                        <div class="username">@${r.data.username || 'anonymous'}</div>
+                    </div>
                 </div>
-                <div>
-                    <div class="name">${r.data.username || 'Аноним'}</div>
-                    <div class="username">@${r.data.username || 'anonymous'}</div>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     });
 }
 
+// ============================================================
+// СОЗДАНИЕ ПОСТА В СООБЩЕСТВЕ
+// ============================================================
 function createPostInCommunity() {
     if (!currentUser) {
         window.location.href = '/login.html';
@@ -1483,6 +2064,9 @@ function createPostInCommunity() {
     window.location.href = `/create.html?community=${communityData.id}`;
 }
 
+// ============================================================
+// КОПИРОВАНИЕ ССЫЛКИ НА СООБЩЕСТВО
+// ============================================================
 function copyCommunityLink() {
     const url = window.location.href;
     navigator.clipboard.writeText(url).then(() => {
@@ -1492,6 +2076,9 @@ function copyCommunityLink() {
     });
 }
 
+// ============================================================
+// РЕДАКТИРОВАНИЕ СООБЩЕСТВА (ЧЕРЕЗ IMGBB)
+// ============================================================
 function editCommunity() {
     if (!currentUser || communityData.ownerId !== currentUser.uid) return;
     
@@ -1501,6 +2088,26 @@ function editCommunity() {
         <div class="modal-box">
             <button class="close-modal" onclick="this.closest('.modal-overlay').remove()">×</button>
             <h3>Редактировать сообщество</h3>
+            
+            <div class="edit-media-row">
+                <div class="edit-avatar-box">
+                    <div class="preview" onclick="editCommunityMedia('avatar')">
+                        ${communityData.avatar ? `<img src="${communityData.avatar}" alt="avatar">` : `<span class="material-icons" style="font-size:36px;color:var(--text-muted);">group</span>`}
+                        <div class="upload-overlay"><span class="material-icons">photo_camera</span></div>
+                    </div>
+                    <div class="label">Аватар</div>
+                    <div class="edit-upload-progress" id="avatarProgress"><div class="bar" id="avatarBar"></div></div>
+                </div>
+                <div class="edit-cover-box">
+                    <div class="preview" onclick="editCommunityMedia('cover')">
+                        ${communityData.cover ? `<img src="${communityData.cover}" alt="cover">` : `<span class="material-icons" style="font-size:36px;color:var(--text-muted);">image</span>`}
+                        <div class="upload-overlay"><span class="material-icons">photo_camera</span></div>
+                    </div>
+                    <div class="label">Шапка</div>
+                    <div class="edit-upload-progress" id="coverProgress"><div class="bar" id="coverBar"></div></div>
+                </div>
+            </div>
+            
             <div class="edit-field">
                 <label>Название</label>
                 <input type="text" id="editCommunityName" value="${escapeHtml(communityData.name || '')}">
@@ -1546,39 +2153,71 @@ function editCommunity() {
     });
 }
 
+// ============================================================
+// РЕДАКТИРОВАНИЕ МЕДИА СООБЩЕСТВА (ЧЕРЕЗ IMGBB)
+// ============================================================
 function editCommunityMedia(type) {
     if (!currentUser || communityData.ownerId !== currentUser.uid) return;
     
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
         
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            const dataUrl = ev.target.result;
-            const ref = storage.ref(`communities/${communityData.id}/${type}`);
-            ref.putString(dataUrl, 'data_url')
-                .then(snapshot => snapshot.ref.getDownloadURL())
-                .then(url => {
-                    const update = {};
-                    update[type] = url;
-                    return db.collection('communities').doc(communityData.id).update(update);
-                })
-                .then(() => {
-                    communityData[type] = url;
-                    renderCommunity(communityData);
-                    alert('Обновлено!');
-                })
-                .catch(err => alert('Ошибка: ' + err.message));
-        };
-        reader.readAsDataURL(file);
+        if (file.size > 10 * 1024 * 1024) {
+            alert('Файл слишком большой (>10MB)');
+            return;
+        }
+        
+        // Показываем прогресс
+        const progressId = type === 'avatar' ? 'avatarProgress' : 'coverProgress';
+        const barId = type === 'avatar' ? 'avatarBar' : 'coverBar';
+        const progressEl = document.getElementById(progressId);
+        const barEl = document.getElementById(barId);
+        if (progressEl) progressEl.style.display = 'block';
+        
+        try {
+            const formData = new FormData();
+            formData.append('key', IMGBB_API_KEY);
+            formData.append('image', file);
+            
+            const response = await fetch('https://api.imgbb.com/1/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.error?.message || 'Ошибка загрузки');
+            }
+            
+            const url = data.data.url;
+            
+            // Обновляем в Firestore
+            const update = {};
+            update[type] = url;
+            await db.collection('communities').doc(communityData.id).update(update);
+            
+            // Обновляем локальные данные
+            communityData[type] = url;
+            renderCommunity(communityData);
+            alert('Обновлено!');
+            
+        } catch (err) {
+            alert('Ошибка: ' + err.message);
+        } finally {
+            if (progressEl) progressEl.style.display = 'none';
+            if (barEl) barEl.style.width = '0%';
+        }
     };
     input.click();
 }
 
+// ============================================================
+// УДАЛЕНИЕ СООБЩЕСТВА
+// ============================================================
 function deleteCommunity() {
     if (!currentUser || communityData.ownerId !== currentUser.uid) return;
     if (!confirm('Вы уверены, что хотите удалить сообщество? Это действие необратимо!')) return;
@@ -1592,14 +2231,7 @@ function deleteCommunity() {
         .catch(err => alert('Ошибка: ' + err.message));
 }
 
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-console.log('👥 Community page loaded');
+console.log('👥 Community page loaded with all fixes');
 </script>
 </body>
 </html>
