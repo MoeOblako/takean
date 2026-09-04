@@ -52,6 +52,7 @@
             color: var(--text-primary);
             transition: background 0.3s, color 0.3s;
             -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -103,6 +104,55 @@
         .animate-fade { animation: fadeIn 0.25s ease-out; }
         .animate-slide { animation: slideUp 0.3s ease-out; }
 
+        /* ===== RIPPLE BUTTON ===== */
+        .ripple-btn {
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: var(--font);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            transition: background 0.2s, transform 0.1s;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+
+        .ripple-btn .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(0);
+            animation: ripple 0.5s ease-out;
+            pointer-events: none;
+        }
+
+        [data-theme="light"] .ripple-btn .ripple-effect {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .ripple-btn:hover { background: var(--bg-hover); }
+        .ripple-btn:active { transform: scale(0.96); }
+
+        .ripple-btn.primary {
+            background: var(--accent);
+            color: #fff;
+        }
+        .ripple-btn.primary:hover { background: var(--accent-hover); }
+
+        .ripple-btn.outline {
+            border: 1px solid var(--border-color);
+        }
+        .ripple-btn.outline:hover { background: var(--bg-hover); }
+
         /* ===== TOP BAR ===== */
         .topbar {
             position: sticky;
@@ -152,6 +202,7 @@
             align-items: center;
             gap: 4px;
             white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .topbar-nav a:hover {
@@ -195,6 +246,7 @@
             transition: border-color 0.2s;
             overflow: hidden;
             flex-shrink: 0;
+            position: relative;
         }
 
         .topbar-actions .avatar-small:hover {
@@ -205,6 +257,22 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .topbar-actions .avatar-small .online-dot {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-card);
+            background: #4caf50;
+            display: none;
+        }
+
+        .topbar-actions .avatar-small .online-dot.show {
+            display: block;
         }
 
         .search-bar {
@@ -244,54 +312,6 @@
             color: var(--text-muted);
             font-size: 18px;
         }
-
-        /* ===== RIPPLE BUTTON ===== */
-        .ripple-btn {
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
-            border: none;
-            background: none;
-            font-family: var(--font);
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-primary);
-            padding: 8px 16px;
-            border-radius: var(--radius);
-            transition: background 0.2s, transform 0.1s;
-            user-select: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .ripple-btn .ripple-effect {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.15);
-            transform: scale(0);
-            animation: ripple 0.5s ease-out;
-            pointer-events: none;
-        }
-
-        [data-theme="light"] .ripple-btn .ripple-effect {
-            background: rgba(0, 0, 0, 0.1);
-        }
-
-        .ripple-btn:hover { background: var(--bg-hover); }
-        .ripple-btn:active { transform: scale(0.97); }
-
-        .ripple-btn.primary {
-            background: var(--accent);
-            color: #fff;
-        }
-        .ripple-btn.primary:hover { background: var(--accent-hover); }
-
-        .ripple-btn.outline {
-            border: 1px solid var(--border-color);
-        }
-        .ripple-btn.outline:hover { background: var(--bg-hover); }
 
         /* ===== CREATE PAGE ===== */
         .create-page { padding: 16px 0 24px; }
@@ -481,12 +501,7 @@
         }
 
         .category-tree .subcategory-item .icon {
-            font-size: 18px;
-        }
-
-        .category-tree .subcategory-item .icon svg {
-            width: 18px;
-            height: 18px;
+            font-size: 16px;
         }
 
         .category-tree .category-header .icon {
@@ -582,97 +597,256 @@
             transition: width 0.3s;
         }
 
-        /* ===== PREVIEW ===== */
-        .create-preview {
-            background: var(--bg-secondary);
+        /* ===== PREVIEW (КАК РЕАЛЬНЫЙ ПОСТ) ===== */
+        .preview-post {
+            background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: var(--radius);
-            padding: 14px 16px;
+            padding: 16px;
             margin-top: 8px;
+            animation: fadeIn 0.3s ease-out;
         }
 
-        .create-preview .preview-header {
+        .preview-post .preview-header {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
 
-        .create-preview .preview-avatar {
-            width: 32px;
-            height: 32px;
+        .preview-post .preview-avatar {
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             background: var(--bg-hover);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            font-size: 12px;
+            font-size: 14px;
             color: var(--text-secondary);
             overflow: hidden;
             flex-shrink: 0;
         }
 
-        .create-preview .preview-avatar img {
+        .preview-post .preview-avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .create-preview .preview-name {
+        .preview-post .preview-user {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .preview-post .preview-username {
             font-weight: 600;
             font-size: 13px;
+            color: var(--text-primary);
         }
 
-        .create-preview .preview-time {
+        .preview-post .preview-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px 8px;
+        }
+
+        .preview-post .preview-time {
             font-size: 11px;
             color: var(--text-muted);
-            margin-left: auto;
         }
 
-        .create-preview .preview-title {
-            font-size: 17px;
+        .preview-post .preview-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .preview-post .preview-tag {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 500;
+            background: rgba(255,255,255,0.05);
+        }
+
+        /* Цвета для тегов в превью */
+        .tag-communism { color: #c62828; }
+        .tag-socialism { color: #d32f2f; }
+        .tag-capitalism { color: #2e7d32; }
+        .tag-liberalism { color: #1e88e5; }
+        .tag-conservatism { color: #3949ab; }
+        .tag-anarchism { color: #6d4c41; }
+        .tag-nationalism { color: #1565c0; }
+        .tag-fascism { color: #4e342e; }
+        .tag-democracy { color: #1565c0; }
+        .tag-authoritarianism { color: #4e342e; }
+        .tag-minecraft { color: #4caf50; }
+        .tag-dota2 { color: #d32f2f; }
+        .tag-csgo { color: #f9a825; }
+        .tag-valorant { color: #d32f2f; }
+        .tag-league_of_legends { color: #1a237e; }
+        .tag-heartstone { color: #ff6f00; }
+        .tag-wow { color: #1565c0; }
+        .tag-gta { color: #4e342e; }
+        .tag-cyberpunk { color: #7b1fa2; }
+        .tag-indie { color: #ef6c00; }
+        .tag-ai { color: #7b1fa2; }
+        .tag-programming { color: #2e7d32; }
+        .tag-cybersecurity { color: #c62828; }
+        .tag-web3 { color: #6a1b9a; }
+        .tag-space { color: #1a237e; }
+        .tag-robotics { color: #4e342e; }
+        .tag-biotech { color: #2e7d32; }
+        .tag-nano { color: #546e7a; }
+        .tag-physics { color: #1565c0; }
+        .tag-chemistry { color: #2e7d32; }
+        .tag-biology { color: #43a047; }
+        .tag-astronomy { color: #1a237e; }
+        .tag-math { color: #4e342e; }
+        .tag-psychology { color: #7b1fa2; }
+        .tag-sociology { color: #3949ab; }
+        .tag-philosophy { color: #4e342e; }
+        .tag-painting { color: #d32f2f; }
+        .tag-music { color: #7b1fa2; }
+        .tag-cinema { color: #1565c0; }
+        .tag-literature { color: #4e342e; }
+        .tag-photography { color: #546e7a; }
+        .tag-architecture { color: #795548; }
+        .tag-design { color: #7b1fa2; }
+        .tag-football { color: #43a047; }
+        .tag-basketball { color: #e65100; }
+        .tag-tennis { color: #2e7d32; }
+        .tag-hockey { color: #1565c0; }
+        .tag-boxing { color: #d32f2f; }
+        .tag-esports { color: #7b1fa2; }
+        .tag-fitness { color: #ef6c00; }
+        .tag-life { color: #43a047; }
+        .tag-travel { color: #1565c0; }
+        .tag-food { color: #e65100; }
+        .tag-fashion { color: #7b1fa2; }
+        .tag-education { color: #2e7d32; }
+        .tag-business { color: #43a047; }
+        .tag-health { color: #d32f2f; }
+        .tag-politics { color: #d32f2f; }
+        .tag-games { color: #7cb342; }
+        .tag-tech { color: #1e88e5; }
+        .tag-science { color: #00897b; }
+        .tag-art { color: #d32f2f; }
+        .tag-sport { color: #f9a825; }
+        .tag-other { color: #78909c; }
+
+        .preview-post .preview-community-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .preview-post .preview-community-wrap .community-avatar {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--bg-hover);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .preview-post .preview-community-wrap .community-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preview-post .preview-community-wrap .community-name {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .preview-post .preview-title {
+            font-size: 16px;
             font-weight: 700;
-            margin: 4px 0 6px;
+            margin: 6px 0 8px;
+            line-height: 1.4;
+            color: var(--text-primary);
         }
 
-        .create-preview .preview-content {
+        .preview-post .preview-content {
             font-size: 14px;
             line-height: 1.6;
             color: var(--text-secondary);
+            margin-bottom: 8px;
+            word-wrap: break-word;
             padding: 6px 8px;
             border-radius: var(--radius);
-            min-height: 40px;
         }
 
-        .create-preview .preview-content .mention {
+        .preview-post .preview-content .mention {
             color: var(--accent);
             font-weight: 500;
             cursor: pointer;
         }
 
-        .create-preview .preview-images {
+        .preview-post .preview-images {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
             gap: 4px;
-            margin-top: 8px;
-        }
-
-        .create-preview .preview-images .img-wrap {
-            position: relative;
-            padding-bottom: 100%;
-            background: var(--bg-hover);
+            margin: 8px 0;
             border-radius: var(--radius);
             overflow: hidden;
         }
 
-        .create-preview .preview-images .img-wrap img {
-            position: absolute;
-            top: 0;
-            left: 0;
+        .preview-post .preview-images .img-wrap {
+            position: relative;
+            background: var(--bg-hover);
+            overflow: hidden;
+            border-radius: var(--radius);
+        }
+
+        .preview-post .preview-images .img-wrap img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .preview-post .preview-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+
+        .preview-post .preview-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: var(--radius);
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+            cursor: default;
+            font-family: var(--font);
+        }
+
+        .preview-post .preview-action-btn .material-icons {
+            font-size: 18px;
         }
 
         .create-color-row {
@@ -719,6 +893,22 @@
             border-color: var(--accent);
         }
 
+        /* ===== BBC STYLES ===== */
+        .bbc-bold { font-weight: 700; }
+        .bbc-italic { font-style: italic; }
+        .bbc-underline { text-decoration: underline; }
+        .bbc-strike { text-decoration: line-through; }
+        .bbc-code { font-family: monospace; background: var(--bg-input); padding: 2px 6px; border-radius: var(--radius); }
+        .bbc-quote { border-left: 3px solid var(--accent); padding-left: 12px; margin: 4px 0; color: var(--text-secondary); }
+        .bbc-spoiler { background: var(--bg-hover); color: var(--bg-hover); cursor: pointer; padding: 2px 6px; border-radius: var(--radius); transition: color 0.3s; }
+        .bbc-spoiler:hover { color: var(--text-primary); }
+        .bbc-size-small { font-size: 12px; }
+        .bbc-size-normal { font-size: 15px; }
+        .bbc-size-large { font-size: 20px; }
+        .bbc-size-huge { font-size: 26px; }
+        .bbc-color { transition: color 0.2s; }
+        .bbc-bg { transition: background 0.2s; }
+
         /* ===== FOOTER ===== */
         .footer {
             margin-top: auto;
@@ -764,22 +954,6 @@
             width: 100%;
         }
 
-        /* ===== BBC STYLES ===== */
-        .bbc-bold { font-weight: 700; }
-        .bbc-italic { font-style: italic; }
-        .bbc-underline { text-decoration: underline; }
-        .bbc-strike { text-decoration: line-through; }
-        .bbc-code { font-family: monospace; background: var(--bg-input); padding: 2px 6px; border-radius: var(--radius); }
-        .bbc-quote { border-left: 3px solid var(--accent); padding-left: 12px; margin: 4px 0; color: var(--text-secondary); }
-        .bbc-spoiler { background: var(--bg-hover); color: var(--bg-hover); cursor: pointer; padding: 2px 6px; border-radius: var(--radius); transition: color 0.3s; }
-        .bbc-spoiler:hover { color: var(--text-primary); }
-        .bbc-size-small { font-size: 12px; }
-        .bbc-size-normal { font-size: 15px; }
-        .bbc-size-large { font-size: 20px; }
-        .bbc-size-huge { font-size: 26px; }
-        .bbc-color { transition: color 0.2s; }
-        .bbc-bg { transition: background 0.2s; }
-
         /* ===== RESPONSIVE ===== */
         @media (max-width: 992px) {
             .search-bar { max-width: 120px; }
@@ -805,6 +979,8 @@
             .category-tree .subcategory-item { font-size: 11px; padding: 4px 8px; }
             .image-preview-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
             .footer-inner { flex-direction: column; align-items: center; text-align: center; }
+            .preview-post .preview-images { grid-template-columns: 1fr; }
+            .preview-post .preview-images .img-wrap { min-height: 200px; }
         }
 
         @media (max-width: 480px) {
@@ -827,8 +1003,11 @@
             .category-tree .category-header { font-size: 12px; padding: 6px 10px; }
             .category-tree .subcategory-item { font-size: 10px; padding: 3px 6px; }
             .image-preview-grid { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
-            .create-preview .preview-title { font-size: 15px; }
-            .create-preview .preview-content { font-size: 13px; }
+            .preview-post { padding: 12px; }
+            .preview-post .preview-title { font-size: 15px; }
+            .preview-post .preview-content { font-size: 13px; }
+            .preview-post .preview-images .img-wrap { min-height: 150px; }
+            .preview-post .preview-tag { font-size: 10px; padding: 1px 6px; }
         }
     </style>
 </head>
@@ -870,6 +1049,7 @@
 
                 <div class="avatar-small" id="userAvatar">
                     <span>?</span>
+                    <span class="online-dot" id="userOnlineDot"></span>
                 </div>
             </div>
         </div>
@@ -927,9 +1107,9 @@
 
         <div class="create-color-row">
             <span class="label">Цвет текста:</span>
-            <input type="color" id="textColor" value="#e8e8e8" onchange="document.getElementById('previewContent').style.color=this.value">
+            <input type="color" id="textColor" value="#e8e8e8">
             <span class="label">Фон:</span>
-            <input type="color" id="bgColor" value="#1c1c1c" onchange="document.getElementById('previewContent').style.background=this.value">
+            <input type="color" id="bgColor" value="#1c1c1c">
             <button class="ripple-btn outline" onclick="resetColors()" style="padding:4px 10px;font-size:12px;">
                 <span class="material-icons" style="font-size:16px;">refresh</span> Сброс
             </button>
@@ -950,36 +1130,16 @@
                     <span class="material-icons" style="margin-left:auto;font-size:18px;">chevron_right</span>
                 </div>
                 <div class="subcategories">
-                    <span class="subcategory-item" data-value="communism" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#d32f2f;">flag</span></span> Коммунизм
-                    </span>
-                    <span class="subcategory-item" data-value="socialism" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#e53935;">people</span></span> Социализм
-                    </span>
-                    <span class="subcategory-item" data-value="capitalism" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#43a047;">attach_money</span></span> Капитализм
-                    </span>
-                    <span class="subcategory-item" data-value="liberalism" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#1e88e5;">balance</span></span> Либерализм
-                    </span>
-                    <span class="subcategory-item" data-value="conservatism" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#3949ab;">history</span></span> Консерватизм
-                    </span>
-                    <span class="subcategory-item" data-value="anarchism" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#6d4c41;">gavel</span></span> Анархизм
-                    </span>
-                    <span class="subcategory-item" data-value="nationalism" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#1565c0;">public</span></span> Национализм
-                    </span>
-                    <span class="subcategory-item" data-value="fascism" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#4e342e;">flag</span></span> Фашизм
-                    </span>
-                    <span class="subcategory-item" data-value="democracy" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#1565c0;">how_to_vote</span></span> Демократия
-                    </span>
-                    <span class="subcategory-item" data-value="authoritarianism" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#4e342e;">gavel</span></span> Авторитаризм
-                    </span>
+                    <span class="subcategory-item" data-value="communism" onclick="selectSubcategory(this)">Коммунизм</span>
+                    <span class="subcategory-item" data-value="socialism" onclick="selectSubcategory(this)">Социализм</span>
+                    <span class="subcategory-item" data-value="capitalism" onclick="selectSubcategory(this)">Капитализм</span>
+                    <span class="subcategory-item" data-value="liberalism" onclick="selectSubcategory(this)">Либерализм</span>
+                    <span class="subcategory-item" data-value="conservatism" onclick="selectSubcategory(this)">Консерватизм</span>
+                    <span class="subcategory-item" data-value="anarchism" onclick="selectSubcategory(this)">Анархизм</span>
+                    <span class="subcategory-item" data-value="nationalism" onclick="selectSubcategory(this)">Национализм</span>
+                    <span class="subcategory-item" data-value="fascism" onclick="selectSubcategory(this)">Фашизм</span>
+                    <span class="subcategory-item" data-value="democracy" onclick="selectSubcategory(this)">Демократия</span>
+                    <span class="subcategory-item" data-value="authoritarianism" onclick="selectSubcategory(this)">Авторитаризм</span>
                 </div>
             </div>
 
@@ -991,36 +1151,16 @@
                     <span class="material-icons" style="margin-left:auto;font-size:18px;">chevron_right</span>
                 </div>
                 <div class="subcategories">
-                    <span class="subcategory-item" data-value="minecraft" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#4caf50;">grass</span></span> Minecraft
-                    </span>
-                    <span class="subcategory-item" data-value="dota2" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#d32f2f;">swords</span></span> Dota 2
-                    </span>
-                    <span class="subcategory-item" data-value="csgo" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#f9a825;">sports_esports</span></span> CS:GO
-                    </span>
-                    <span class="subcategory-item" data-value="valorant" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#d32f2f;">sports_esports</span></span> Valorant
-                    </span>
-                    <span class="subcategory-item" data-value="league_of_legends" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#1a237e;">swords</span></span> League of Legends
-                    </span>
-                    <span class="subcategory-item" data-value="heartstone" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#ff6f00;">casino</span></span> Hearthstone
-                    </span>
-                    <span class="subcategory-item" data-value="wow" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#1565c0;">swords</span></span> World of Warcraft
-                    </span>
-                    <span class="subcategory-item" data-value="gta" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#4e342e;">directions_car</span></span> GTA V
-                    </span>
-                    <span class="subcategory-item" data-value="cyberpunk" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#7b1fa2;">science</span></span> Cyberpunk 2077
-                    </span>
-                    <span class="subcategory-item" data-value="indie" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#ef6c00;">psychology</span></span> Инди-игры
-                    </span>
+                    <span class="subcategory-item" data-value="minecraft" onclick="selectSubcategory(this)">Minecraft</span>
+                    <span class="subcategory-item" data-value="dota2" onclick="selectSubcategory(this)">Dota 2</span>
+                    <span class="subcategory-item" data-value="csgo" onclick="selectSubcategory(this)">CS:GO</span>
+                    <span class="subcategory-item" data-value="valorant" onclick="selectSubcategory(this)">Valorant</span>
+                    <span class="subcategory-item" data-value="league_of_legends" onclick="selectSubcategory(this)">League of Legends</span>
+                    <span class="subcategory-item" data-value="heartstone" onclick="selectSubcategory(this)">Hearthstone</span>
+                    <span class="subcategory-item" data-value="wow" onclick="selectSubcategory(this)">World of Warcraft</span>
+                    <span class="subcategory-item" data-value="gta" onclick="selectSubcategory(this)">GTA V</span>
+                    <span class="subcategory-item" data-value="cyberpunk" onclick="selectSubcategory(this)">Cyberpunk 2077</span>
+                    <span class="subcategory-item" data-value="indie" onclick="selectSubcategory(this)">Инди-игры</span>
                 </div>
             </div>
 
@@ -1032,30 +1172,14 @@
                     <span class="material-icons" style="margin-left:auto;font-size:18px;">chevron_right</span>
                 </div>
                 <div class="subcategories">
-                    <span class="subcategory-item" data-value="ai" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#7b1fa2;">psychology</span></span> Искусственный интеллект
-                    </span>
-                    <span class="subcategory-item" data-value="programming" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#2e7d32;">code</span></span> Программирование
-                    </span>
-                    <span class="subcategory-item" data-value="cybersecurity" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#c62828;">security</span></span> Кибербезопасность
-                    </span>
-                    <span class="subcategory-item" data-value="web3" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#6a1b9a;">language</span></span> Web3 / Blockchain
-                    </span>
-                    <span class="subcategory-item" data-value="space" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#1a237e;">rocket</span></span> Космос
-                    </span>
-                    <span class="subcategory-item" data-value="robotics" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#4e342e;">smart_toy</span></span> Робототехника
-                    </span>
-                    <span class="subcategory-item" data-value="biotech" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#2e7d32;">biotech</span></span> Биотехнологии
-                    </span>
-                    <span class="subcategory-item" data-value="nano" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#546e7a;">science</span></span> Нанотехнологии
-                    </span>
+                    <span class="subcategory-item" data-value="ai" onclick="selectSubcategory(this)">Искусственный интеллект</span>
+                    <span class="subcategory-item" data-value="programming" onclick="selectSubcategory(this)">Программирование</span>
+                    <span class="subcategory-item" data-value="cybersecurity" onclick="selectSubcategory(this)">Кибербезопасность</span>
+                    <span class="subcategory-item" data-value="web3" onclick="selectSubcategory(this)">Web3 / Blockchain</span>
+                    <span class="subcategory-item" data-value="space" onclick="selectSubcategory(this)">Космос</span>
+                    <span class="subcategory-item" data-value="robotics" onclick="selectSubcategory(this)">Робототехника</span>
+                    <span class="subcategory-item" data-value="biotech" onclick="selectSubcategory(this)">Биотехнологии</span>
+                    <span class="subcategory-item" data-value="nano" onclick="selectSubcategory(this)">Нанотехнологии</span>
                 </div>
             </div>
 
@@ -1067,30 +1191,14 @@
                     <span class="material-icons" style="margin-left:auto;font-size:18px;">chevron_right</span>
                 </div>
                 <div class="subcategories">
-                    <span class="subcategory-item" data-value="physics" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#1565c0;">bolt</span></span> Физика
-                    </span>
-                    <span class="subcategory-item" data-value="chemistry" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#2e7d32;">science</span></span> Химия
-                    </span>
-                    <span class="subcategory-item" data-value="biology" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#43a047;">grass</span></span> Биология
-                    </span>
-                    <span class="subcategory-item" data-value="astronomy" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#1a237e;">nights_stay</span></span> Астрономия
-                    </span>
-                    <span class="subcategory-item" data-value="math" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#4e342e;">functions</span></span> Математика
-                    </span>
-                    <span class="subcategory-item" data-value="psychology" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#7b1fa2;">psychology</span></span> Психология
-                    </span>
-                    <span class="subcategory-item" data-value="sociology" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#3949ab;">people</span></span> Социология
-                    </span>
-                    <span class="subcategory-item" data-value="philosophy" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#4e342e;">auto_awesome</span></span> Философия
-                    </span>
+                    <span class="subcategory-item" data-value="physics" onclick="selectSubcategory(this)">Физика</span>
+                    <span class="subcategory-item" data-value="chemistry" onclick="selectSubcategory(this)">Химия</span>
+                    <span class="subcategory-item" data-value="biology" onclick="selectSubcategory(this)">Биология</span>
+                    <span class="subcategory-item" data-value="astronomy" onclick="selectSubcategory(this)">Астрономия</span>
+                    <span class="subcategory-item" data-value="math" onclick="selectSubcategory(this)">Математика</span>
+                    <span class="subcategory-item" data-value="psychology" onclick="selectSubcategory(this)">Психология</span>
+                    <span class="subcategory-item" data-value="sociology" onclick="selectSubcategory(this)">Социология</span>
+                    <span class="subcategory-item" data-value="philosophy" onclick="selectSubcategory(this)">Философия</span>
                 </div>
             </div>
 
@@ -1102,27 +1210,13 @@
                     <span class="material-icons" style="margin-left:auto;font-size:18px;">chevron_right</span>
                 </div>
                 <div class="subcategories">
-                    <span class="subcategory-item" data-value="painting" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#d32f2f;">brush</span></span> Живопись
-                    </span>
-                    <span class="subcategory-item" data-value="music" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#2e7d32;">music_note</span></span> Музыка
-                    </span>
-                    <span class="subcategory-item" data-value="cinema" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#1565c0;">movie</span></span> Кино
-                    </span>
-                    <span class="subcategory-item" data-value="literature" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#4e342e;">menu_book</span></span> Литература
-                    </span>
-                    <span class="subcategory-item" data-value="photography" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#546e7a;">photo_camera</span></span> Фотография
-                    </span>
-                    <span class="subcategory-item" data-value="architecture" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#795548;">architecture</span></span> Архитектура
-                    </span>
-                    <span class="subcategory-item" data-value="design" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#7b1fa2;">design_services</span></span> Дизайн
-                    </span>
+                    <span class="subcategory-item" data-value="painting" onclick="selectSubcategory(this)">Живопись</span>
+                    <span class="subcategory-item" data-value="music" onclick="selectSubcategory(this)">Музыка</span>
+                    <span class="subcategory-item" data-value="cinema" onclick="selectSubcategory(this)">Кино</span>
+                    <span class="subcategory-item" data-value="literature" onclick="selectSubcategory(this)">Литература</span>
+                    <span class="subcategory-item" data-value="photography" onclick="selectSubcategory(this)">Фотография</span>
+                    <span class="subcategory-item" data-value="architecture" onclick="selectSubcategory(this)">Архитектура</span>
+                    <span class="subcategory-item" data-value="design" onclick="selectSubcategory(this)">Дизайн</span>
                 </div>
             </div>
 
@@ -1134,27 +1228,13 @@
                     <span class="material-icons" style="margin-left:auto;font-size:18px;">chevron_right</span>
                 </div>
                 <div class="subcategories">
-                    <span class="subcategory-item" data-value="football" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#43a047;">sports_soccer</span></span> Футбол
-                    </span>
-                    <span class="subcategory-item" data-value="basketball" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#e65100;">sports_basketball</span></span> Баскетбол
-                    </span>
-                    <span class="subcategory-item" data-value="tennis" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#2e7d32;">sports_tennis</span></span> Теннис
-                    </span>
-                    <span class="subcategory-item" data-value="hockey" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#1565c0;">sports_hockey</span></span> Хоккей
-                    </span>
-                    <span class="subcategory-item" data-value="boxing" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#d32f2f;">sports_martial_arts</span></span> Бокс
-                    </span>
-                    <span class="subcategory-item" data-value="esports" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#7b1fa2;">sports_esports</span></span> Киберспорт
-                    </span>
-                    <span class="subcategory-item" data-value="fitness" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#ef6c00;">fitness_center</span></span> Фитнес
-                    </span>
+                    <span class="subcategory-item" data-value="football" onclick="selectSubcategory(this)">Футбол</span>
+                    <span class="subcategory-item" data-value="basketball" onclick="selectSubcategory(this)">Баскетбол</span>
+                    <span class="subcategory-item" data-value="tennis" onclick="selectSubcategory(this)">Теннис</span>
+                    <span class="subcategory-item" data-value="hockey" onclick="selectSubcategory(this)">Хоккей</span>
+                    <span class="subcategory-item" data-value="boxing" onclick="selectSubcategory(this)">Бокс</span>
+                    <span class="subcategory-item" data-value="esports" onclick="selectSubcategory(this)">Киберспорт</span>
+                    <span class="subcategory-item" data-value="fitness" onclick="selectSubcategory(this)">Фитнес</span>
                 </div>
             </div>
 
@@ -1166,27 +1246,13 @@
                     <span class="material-icons" style="margin-left:auto;font-size:18px;">chevron_right</span>
                 </div>
                 <div class="subcategories">
-                    <span class="subcategory-item" data-value="life" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#43a047;">spa</span></span> Жизнь
-                    </span>
-                    <span class="subcategory-item" data-value="travel" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#1565c0;">flight</span></span> Путешествия
-                    </span>
-                    <span class="subcategory-item" data-value="food" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#e65100;">restaurant</span></span> Еда
-                    </span>
-                    <span class="subcategory-item" data-value="fashion" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#7b1fa2;">style</span></span> Мода
-                    </span>
-                    <span class="subcategory-item" data-value="education" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#2e7d32;">school</span></span> Образование
-                    </span>
-                    <span class="subcategory-item" data-value="business" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#43a047;">business</span></span> Бизнес
-                    </span>
-                    <span class="subcategory-item" data-value="health" onclick="selectSubcategory(this)">
-                        <span class="icon"><span class="material-icons" style="color:#d32f2f;">health_and_safety</span></span> Здоровье
-                    </span>
+                    <span class="subcategory-item" data-value="life" onclick="selectSubcategory(this)">Жизнь</span>
+                    <span class="subcategory-item" data-value="travel" onclick="selectSubcategory(this)">Путешествия</span>
+                    <span class="subcategory-item" data-value="food" onclick="selectSubcategory(this)">Еда</span>
+                    <span class="subcategory-item" data-value="fashion" onclick="selectSubcategory(this)">Мода</span>
+                    <span class="subcategory-item" data-value="education" onclick="selectSubcategory(this)">Образование</span>
+                    <span class="subcategory-item" data-value="business" onclick="selectSubcategory(this)">Бизнес</span>
+                    <span class="subcategory-item" data-value="health" onclick="selectSubcategory(this)">Здоровье</span>
                 </div>
             </div>
         </div>
@@ -1221,20 +1287,40 @@
         <div class="image-preview-grid" id="imagePreviewGrid"></div>
     </div>
 
-    <!-- Предпросмотр -->
+    <!-- Предпросмотр (как реальный пост) -->
     <div class="create-section">
         <div class="section-title">
             <span class="material-icons">preview</span> Предпросмотр
         </div>
-        <div class="create-preview" id="previewContainer">
+        <div class="preview-post" id="previewContainer">
             <div class="preview-header">
                 <div class="preview-avatar" id="previewAvatar">?</div>
-                <div class="preview-name" id="previewName">Ваше имя</div>
-                <div class="preview-time">только что</div>
+                <div class="preview-user">
+                    <div class="preview-username" id="previewName">Ваше имя</div>
+                    <div class="preview-meta">
+                        <span class="preview-time" id="previewTime">только что</span>
+                        <span class="preview-community-wrap" id="previewCommunityWrap" style="display:none;">
+                            <span class="material-icons" style="font-size:14px;color:var(--text-muted);">arrow_forward</span>
+                            <span class="community-avatar" id="previewCommunityAvatar"><span class="material-icons" style="font-size:12px;">group</span></span>
+                            <span class="community-name" id="previewCommunityName">Сообщество</span>
+                        </span>
+                    </div>
+                    <div class="preview-tags" id="previewTags"></div>
+                </div>
             </div>
+            
             <div class="preview-title" id="previewTitle">Заголовок тейка</div>
+            
             <div class="preview-content" id="previewContent">Текст тейка будет здесь...</div>
+            
             <div class="preview-images" id="previewImages"></div>
+            
+            <div class="preview-actions">
+                <span class="preview-action-btn"><span class="material-icons">thumb_up</span> 0</span>
+                <span class="preview-action-btn"><span class="material-icons">thumb_down</span> 0</span>
+                <span class="preview-action-btn"><span class="material-icons">comment</span> 0</span>
+                <span class="preview-action-btn"><span class="material-icons">share</span></span>
+            </div>
         </div>
     </div>
 
@@ -1291,9 +1377,56 @@ let uploadedImages = [];
 let selectedCategories = [];
 let isUploading = false;
 let previewTimeout = null;
+let onlineCheckInterval = null;
+let communityToSelect = null;
 
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
+
+// ============================================================
+// ПОЛУЧАЕМ COMMUNITY ИЗ URL
+// ============================================================
+function getCommunityFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('community');
+}
+
+// ============================================================
+// ОНЛАЙН СТАТУС
+// ============================================================
+function updateOnlineStatus() {
+    if (!currentUser) return;
+    db.collection('users').doc(currentUser.uid).update({
+        lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+        isOnline: true
+    }).catch(() => {});
+}
+
+function startOnlineTracking() {
+    if (onlineCheckInterval) clearInterval(onlineCheckInterval);
+    updateOnlineStatus();
+    onlineCheckInterval = setInterval(updateOnlineStatus, 30000);
+    window.addEventListener('beforeunload', () => {
+        if (currentUser) {
+            db.collection('users').doc(currentUser.uid).update({
+                isOnline: false,
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(() => {});
+        }
+    });
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            if (currentUser) {
+                db.collection('users').doc(currentUser.uid).update({
+                    isOnline: false,
+                    lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(() => {});
+            }
+        } else {
+            updateOnlineStatus();
+        }
+    });
+}
 
 function createUserInFirestore(user) {
     return db.collection('users').doc(user.uid).get().then(doc => {
@@ -1314,7 +1447,9 @@ function createUserInFirestore(user) {
                 reputation: 0,
                 followers: [],
                 following: [],
-                theme: currentTheme
+                theme: currentTheme,
+                isOnline: true,
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
             });
         }
         return doc;
@@ -1330,6 +1465,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `<span class="material-icons">${currentTheme === 'dark' ? 'dark_mode' : 'light_mode'}</span>`;
     });
 
+    communityToSelect = getCommunityFromURL();
     loadUserData();
     loadUserCommunities();
     setupEventListeners();
@@ -1348,9 +1484,12 @@ function setupEventListeners() {
     document.getElementById('customCategory').addEventListener('input', function() {
         if (this.value.trim()) {
             document.querySelectorAll('.subcategory-item.active').forEach(el => el.classList.remove('active'));
+            selectedCategories = [];
+            updateSelectedCategoriesDisplay();
             updatePreview();
         }
     });
+    document.getElementById('communitySelect').addEventListener('change', updatePreview);
 
     document.getElementById('imageUploadArea').addEventListener('click', () => {
         document.getElementById('imageInput').click();
@@ -1386,19 +1525,31 @@ function loadUserData() {
     currentUser = user;
     
     const avatarEl = document.getElementById('userAvatar');
+    const dotEl = document.getElementById('userOnlineDot');
+    
     if (user) {
         avatarEl.innerHTML = user.photoURL 
             ? `<img src="${user.photoURL}" alt="avatar">` 
             : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
         avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+        dotEl.classList.add('show');
         
         document.getElementById('previewName').textContent = user.displayName || 'Аноним';
         document.getElementById('previewAvatar').innerHTML = user.photoURL 
             ? `<img src="${user.photoURL}" style="width:100%;height:100%;object-fit:cover;">` 
             : (user.displayName || '?')[0].toUpperCase();
+        
+        createUserInFirestore(user).then(() => {
+            startOnlineTracking();
+        }).catch(err => console.error('Error creating user:', err));
     } else {
         avatarEl.innerHTML = '<span>?</span>';
         avatarEl.onclick = () => window.location.href = '/login.html';
+        dotEl.classList.remove('show');
+        if (onlineCheckInterval) {
+            clearInterval(onlineCheckInterval);
+            onlineCheckInterval = null;
+        }
         document.getElementById('previewName').textContent = 'Аноним';
     }
 }
@@ -1416,7 +1567,7 @@ function loadUserCommunities() {
         .get()
         .then(snapshot => {
             const select = document.getElementById('communitySelect');
-            // Оставляем только опцию "Без сообщества"
+            const communities = [];
             select.innerHTML = '<option value="">Без сообщества (опубликовать на главной)</option>';
             
             snapshot.forEach(doc => {
@@ -1424,8 +1575,22 @@ function loadUserCommunities() {
                 const option = document.createElement('option');
                 option.value = doc.id;
                 option.textContent = data.name || data.handle || doc.id;
+                option.dataset.avatar = data.avatar || '';
                 select.appendChild(option);
+                communities.push({ id: doc.id, name: data.name || doc.id, avatar: data.avatar || '' });
             });
+            
+            // Если есть community в URL, выбираем его
+            if (communityToSelect) {
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].value === communityToSelect) {
+                        select.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+            
+            updatePreview();
         })
         .catch(err => console.error('Load communities error:', err));
 }
@@ -1475,6 +1640,86 @@ function removeCategory(value) {
     document.querySelectorAll(`.subcategory-item[data-value="${value}"]`).forEach(el => el.classList.remove('active'));
     updateSelectedCategoriesDisplay();
     updatePreview();
+}
+
+// ============================================================
+// ЦВЕТА ДЛЯ ТЕГОВ
+// ============================================================
+function getTagClass(tag) {
+    const tagLower = tag.toLowerCase().trim().replace(/\s+/g, '_');
+    const map = {
+        'communism': 'tag-communism',
+        'socialism': 'tag-socialism',
+        'capitalism': 'tag-capitalism',
+        'liberalism': 'tag-liberalism',
+        'conservatism': 'tag-conservatism',
+        'anarchism': 'tag-anarchism',
+        'nationalism': 'tag-nationalism',
+        'fascism': 'tag-fascism',
+        'democracy': 'tag-democracy',
+        'authoritarianism': 'tag-authoritarianism',
+        'minecraft': 'tag-minecraft',
+        'dota2': 'tag-dota2',
+        'csgo': 'tag-csgo',
+        'valorant': 'tag-valorant',
+        'league_of_legends': 'tag-league_of_legends',
+        'heartstone': 'tag-heartstone',
+        'wow': 'tag-wow',
+        'gta': 'tag-gta',
+        'cyberpunk': 'tag-cyberpunk',
+        'indie': 'tag-indie',
+        'ai': 'tag-ai',
+        'programming': 'tag-programming',
+        'cybersecurity': 'tag-cybersecurity',
+        'web3': 'tag-web3',
+        'space': 'tag-space',
+        'robotics': 'tag-robotics',
+        'biotech': 'tag-biotech',
+        'nano': 'tag-nano',
+        'physics': 'tag-physics',
+        'chemistry': 'tag-chemistry',
+        'biology': 'tag-biology',
+        'astronomy': 'tag-astronomy',
+        'math': 'tag-math',
+        'psychology': 'tag-psychology',
+        'sociology': 'tag-sociology',
+        'philosophy': 'tag-philosophy',
+        'painting': 'tag-painting',
+        'music': 'tag-music',
+        'cinema': 'tag-cinema',
+        'literature': 'tag-literature',
+        'photography': 'tag-photography',
+        'architecture': 'tag-architecture',
+        'design': 'tag-design',
+        'football': 'tag-football',
+        'basketball': 'tag-basketball',
+        'tennis': 'tag-tennis',
+        'hockey': 'tag-hockey',
+        'boxing': 'tag-boxing',
+        'esports': 'tag-esports',
+        'fitness': 'tag-fitness',
+        'life': 'tag-life',
+        'travel': 'tag-travel',
+        'food': 'tag-food',
+        'fashion': 'tag-fashion',
+        'education': 'tag-education',
+        'business': 'tag-business',
+        'health': 'tag-health',
+        'politics': 'tag-politics',
+        'games': 'tag-games',
+        'tech': 'tag-tech',
+        'science': 'tag-science',
+        'art': 'tag-art',
+        'sport': 'tag-sport',
+        'other': 'tag-other'
+    };
+    if (map[tagLower]) return map[tagLower];
+    for (const [key, value] of Object.entries(map)) {
+        if (tagLower.includes(key) || key.includes(tagLower)) {
+            return value;
+        }
+    }
+    return 'tag-other';
 }
 
 // ============================================================
@@ -1570,8 +1815,6 @@ function insertImageBBC() {
 function resetColors() {
     document.getElementById('textColor').value = '#e8e8e8';
     document.getElementById('bgColor').value = '#1c1c1c';
-    document.getElementById('previewContent').style.color = '#e8e8e8';
-    document.getElementById('previewContent').style.background = '#1c1c1c';
     updatePreview();
 }
 
@@ -1657,45 +1900,96 @@ function removeImage(index) {
 }
 
 // ============================================================
-// PREVIEW
+// PREVIEW (как реальный пост)
 // ============================================================
 function updatePreview() {
     clearTimeout(previewTimeout);
     previewTimeout = setTimeout(() => {
         const title = document.getElementById('postTitle').value || 'Заголовок тейка';
         const content = document.getElementById('postContent').value || 'Текст тейка будет здесь...';
+        const textColor = document.getElementById('textColor').value;
+        const bgColor = document.getElementById('bgColor').value;
         const user = auth.currentUser;
+        const communitySelect = document.getElementById('communitySelect');
+        const selectedCommunity = communitySelect.options[communitySelect.selectedIndex];
         
-        // Категории
-        let categoryText = '';
-        if (selectedCategories.length) {
-            categoryText = '[' + selectedCategories.map(c => c.label).join(', ') + '] ';
-        }
-        const customCat = document.getElementById('customCategory').value.trim();
-        if (customCat) {
-            categoryText = `[${customCat}] `;
-        }
+        // Заголовок
+        document.getElementById('previewTitle').textContent = title;
         
-        document.getElementById('previewTitle').textContent = categoryText + title;
+        // Контент с BBC
         document.getElementById('previewContent').innerHTML = parseBBCPreview(content);
+        document.getElementById('previewContent').style.color = textColor;
+        document.getElementById('previewContent').style.background = bgColor;
         document.getElementById('previewContent').style.padding = '8px';
         document.getElementById('previewContent').style.borderRadius = 'var(--radius)';
-
+        
+        // Аватар и имя
         if (user) {
             document.getElementById('previewName').textContent = user.displayName || 'Аноним';
             document.getElementById('previewAvatar').innerHTML = user.photoURL 
                 ? `<img src="${user.photoURL}" style="width:100%;height:100%;object-fit:cover;">` 
                 : (user.displayName || '?')[0].toUpperCase();
         }
-
+        
+        // Теги (категории)
+        const tagsContainer = document.getElementById('previewTags');
+        let tagsHtml = '';
+        if (selectedCategories.length) {
+            selectedCategories.forEach(cat => {
+                const tagClass = getTagClass(cat.value);
+                tagsHtml += `<span class="preview-tag ${tagClass}">#${cat.label}</span>`;
+            });
+        }
+        const customCat = document.getElementById('customCategory').value.trim();
+        if (customCat) {
+            const tagClass = getTagClass(customCat);
+            tagsHtml += `<span class="preview-tag ${tagClass}">#${customCat}</span>`;
+        }
+        tagsContainer.innerHTML = tagsHtml;
+        
+        // Сообщество
+        const communityWrap = document.getElementById('previewCommunityWrap');
+        const communityName = document.getElementById('previewCommunityName');
+        const communityAvatar = document.getElementById('previewCommunityAvatar');
+        
+        if (selectedCommunity && selectedCommunity.value) {
+            communityWrap.style.display = 'inline-flex';
+            communityName.textContent = selectedCommunity.text;
+            const avatar = selectedCommunity.dataset.avatar || '';
+            communityAvatar.innerHTML = avatar 
+                ? `<img src="${avatar}" alt="">` 
+                : `<span class="material-icons" style="font-size:12px;">group</span>`;
+        } else {
+            communityWrap.style.display = 'none';
+        }
+        
+        // Изображения
         const previewImages = document.getElementById('previewImages');
         if (uploadedImages.length) {
+            const count = uploadedImages.length;
+            let gridStyle = '';
+            if (count === 1) gridStyle = 'grid-template-columns:1fr;';
+            else if (count === 2) gridStyle = 'grid-template-columns:1fr 1fr;';
+            else if (count === 3) gridStyle = 'grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;';
+            else gridStyle = 'grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;';
+            
             previewImages.style.display = 'grid';
-            previewImages.innerHTML = uploadedImages.map(url => `
-                <div class="img-wrap">
-                    <img src="${url}" loading="lazy">
-                </div>
-            `).join('');
+            previewImages.style.gridTemplateColumns = count === 1 ? '1fr' : '1fr 1fr';
+            previewImages.style.gridTemplateRows = count <= 2 ? '1fr' : '1fr 1fr';
+            
+            let imagesHtml = '';
+            const showCount = Math.min(uploadedImages.length, 4);
+            for (let i = 0; i < showCount; i++) {
+                const url = uploadedImages[i];
+                const extra = (i === 3 && uploadedImages.length > 4) ? `<span class="image-count" style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.7);color:#fff;padding:4px 10px;border-radius:var(--radius);font-size:12px;font-weight:600;">+${uploadedImages.length - 4}</span>` : '';
+                imagesHtml += `
+                    <div class="img-wrap" style="${i === 0 && count === 3 ? 'grid-row:1/3;' : ''}">
+                        <img src="${url}" alt="preview" loading="lazy">
+                        ${extra}
+                    </div>
+                `;
+            }
+            previewImages.innerHTML = imagesHtml;
         } else {
             previewImages.style.display = 'none';
         }
@@ -1711,7 +2005,7 @@ function parseBBCPreview(text) {
     html = html.replace(/\[s\](.*?)\[\/s\]/g, '<s>$1</s>');
     html = html.replace(/\[code\](.*?)\[\/code\]/g, '<code style="font-family:monospace;background:var(--bg-input);padding:2px 6px;border-radius:var(--radius);">$1</code>');
     html = html.replace(/\[quote\](.*?)\[\/quote\]/g, '<div style="border-left:3px solid var(--accent);padding-left:12px;margin:4px 0;color:var(--text-secondary);">$1</div>');
-    html = html.replace(/\[spoiler\](.*?)\[\/spoiler\]/g, '<span style="background:var(--bg-hover);color:var(--bg-hover);cursor:pointer;padding:2px 6px;border-radius:var(--radius);">$1</span>');
+    html = html.replace(/\[spoiler\](.*?)\[\/spoiler\]/g, '<span style="background:var(--bg-hover);color:var(--bg-hover);cursor:pointer;padding:2px 6px;border-radius:var(--radius);" onclick="this.style.color=\'var(--text-primary)\';">$1</span>');
     html = html.replace(/\[size=small\](.*?)\[\/size\]/g, '<span style="font-size:12px;">$1</span>');
     html = html.replace(/\[size=normal\](.*?)\[\/size\]/g, '<span style="font-size:15px;">$1</span>');
     html = html.replace(/\[size=large\](.*?)\[\/size\]/g, '<span style="font-size:20px;">$1</span>');
@@ -1755,7 +2049,7 @@ function publishPost() {
     
     let category = document.getElementById('customCategory').value.trim();
     if (!category && selectedCategories.length) {
-        category = selectedCategories.map(c => c.label).join(', ');
+        category = selectedCategories.map(c => c.value).join(', ');
     }
     if (!category) category = 'other';
 
@@ -1789,7 +2083,6 @@ function publishPost() {
                 shortId: shortId,
                 url: `/post/${shortId}`
             }).then(() => {
-                // Обновляем количество постов в сообществе
                 if (community) {
                     db.collection('communities').doc(community).update({
                         postsCount: firebase.firestore.FieldValue.increment(1)
@@ -1817,5 +2110,6 @@ function generateShortId() {
 
 console.log('📝 Create page loaded');
 </script>
+
 </body>
 </html>
