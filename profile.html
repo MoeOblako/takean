@@ -19,6 +19,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
+        /* ===== ВСЕ СТИЛИ ИЗ ПРЕДЫДУЩЕЙ ВЕРСИИ ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -526,7 +527,6 @@
             margin-top: 12px;
         }
 
-        /* ===== COMMUNITY-ACTIONS (для админов) ===== */
         .profile-actions .community-action-divider {
             width: 100%;
             height: 1px;
@@ -663,11 +663,52 @@
             color: var(--text-secondary);
             margin-bottom: 8px;
             word-wrap: break-word;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
+            max-height: 120px;
             overflow: hidden;
+            position: relative;
         }
+
+        .post-content::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: linear-gradient(transparent, var(--bg-card));
+            pointer-events: none;
+        }
+
+        .post-content .mention {
+            color: var(--accent);
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        /* BBC STYLES */
+        .bbc-bold { font-weight: 700; }
+        .bbc-italic { font-style: italic; }
+        .bbc-underline { text-decoration: underline; }
+        .bbc-strike { text-decoration: line-through; }
+        .bbc-code { font-family: monospace; background: var(--bg-input); padding: 2px 6px; border-radius: var(--radius); }
+        .bbc-quote { border-left: 3px solid var(--accent); padding-left: 12px; margin: 4px 0; color: var(--text-secondary); }
+        .bbc-spoiler { 
+            background: var(--bg-hover); 
+            color: var(--bg-hover); 
+            cursor: pointer; 
+            padding: 2px 6px; 
+            border-radius: var(--radius); 
+            transition: color 0.3s;
+            user-select: none;
+        }
+        .bbc-spoiler:hover { color: var(--text-primary); }
+        .bbc-spoiler.revealed { color: var(--text-primary); background: var(--bg-input); }
+        .bbc-size-small { font-size: 12px; }
+        .bbc-size-normal { font-size: 15px; }
+        .bbc-size-large { font-size: 20px; }
+        .bbc-size-huge { font-size: 26px; }
+        .bbc-color { transition: color 0.2s; }
+        .bbc-bg { transition: background 0.2s; }
 
         .post-images {
             display: grid;
@@ -966,7 +1007,7 @@
             color: var(--text-muted);
         }
 
-        /* ===== REPUTATION MODAL (собственное окно) ===== */
+        /* ===== REPUTATION MODAL ===== */
         .reputation-modal .modal-box {
             text-align: center;
             max-width: 400px;
@@ -986,6 +1027,9 @@
             color: var(--text-primary);
             margin-bottom: 4px;
         }
+
+        .reputation-modal .reputation-number.positive { color: var(--green); }
+        .reputation-modal .reputation-number.negative { color: var(--red); }
 
         .reputation-modal .reputation-label {
             font-size: 14px;
@@ -1295,30 +1339,6 @@
             padding: 8px 24px;
         }
 
-        /* ===== BBC STYLES ===== */
-        .bbc-bold { font-weight: 700; }
-        .bbc-italic { font-style: italic; }
-        .bbc-underline { text-decoration: underline; }
-        .bbc-strike { text-decoration: line-through; }
-        .bbc-code { font-family: monospace; background: var(--bg-input); padding: 2px 6px; border-radius: var(--radius); }
-        .bbc-quote { border-left: 3px solid var(--accent); padding-left: 12px; margin: 4px 0; color: var(--text-secondary); }
-        .bbc-spoiler { 
-            background: var(--bg-hover); 
-            color: var(--bg-hover); 
-            cursor: pointer; 
-            padding: 2px 6px; 
-            border-radius: var(--radius); 
-            transition: color 0.3s;
-            user-select: none;
-        }
-        .bbc-spoiler:hover { color: var(--text-primary); }
-        .bbc-size-small { font-size: 12px; }
-        .bbc-size-normal { font-size: 15px; }
-        .bbc-size-large { font-size: 20px; }
-        .bbc-size-huge { font-size: 26px; }
-        .bbc-color { transition: color 0.2s; }
-        .bbc-bg { transition: background 0.2s; }
-
         /* ===== FOOTER ===== */
         .footer {
             margin-top: auto;
@@ -1451,6 +1471,7 @@
             .topbar-actions .avatar-small .online-dot { width: 8px; height: 8px; bottom: 1px; right: 1px; }
             .profile-avatar .online-dot { width: 8px; height: 8px; bottom: 1px; right: 1px; }
             .profile-actions .ripple-btn { font-size: 12px; padding: 6px 12px; }
+            .post-content { max-height: 100px; }
         }
 
         @media (max-width: 480px) {
@@ -1471,7 +1492,7 @@
             .profile-stats .stat .num { font-size: 14px; }
             .post-card { padding: 10px; }
             .post-title { font-size: 14px; }
-            .post-content { font-size: 13px; }
+            .post-content { font-size: 13px; max-height: 80px; }
             .post-avatar { width: 30px; height: 30px; font-size: 12px; }
             .modal-box { padding: 16px; }
             .modal-box .modal-header h2 { font-size: 18px; }
@@ -1589,14 +1610,66 @@ let onlineCheckInterval = null;
 let lastActivityTime = Date.now();
 let isUserOnline = false;
 
-// Данные для интеграции с сообществом
-let communityContext = null; // { communityId, isAdmin, isOwner }
+let communityContext = null;
 
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
 
 // ============================================================
-// ПОЛУЧАЕМ ПАРАМЕТРЫ ИЗ URL (community, admin)
+// ПАРСИНГ BBC (ГЛАВНАЯ ФУНКЦИЯ)
+// ============================================================
+function parseBBC(text) {
+    if (!text) return '';
+    
+    let html = escapeHtml(text);
+    
+    html = html.replace(/\[b\](.*?)\[\/b\]/g, '<span class="bbc-bold">$1</span>');
+    html = html.replace(/\[i\](.*?)\[\/i\]/g, '<span class="bbc-italic">$1</span>');
+    html = html.replace(/\[u\](.*?)\[\/u\]/g, '<span class="bbc-underline">$1</span>');
+    html = html.replace(/\[s\](.*?)\[\/s\]/g, '<span class="bbc-strike">$1</span>');
+    html = html.replace(/\[code\](.*?)\[\/code\]/g, '<span class="bbc-code">$1</span>');
+    html = html.replace(/\[quote\](.*?)\[\/quote\]/g, '<div class="bbc-quote">$1</div>');
+    html = html.replace(/\[spoiler\](.*?)\[\/spoiler\]/g, '<span class="bbc-spoiler" onclick="event.stopPropagation();this.classList.toggle(\'revealed\')">$1</span>');
+    html = html.replace(/\[size=small\](.*?)\[\/size\]/g, '<span class="bbc-size-small">$1</span>');
+    html = html.replace(/\[size=normal\](.*?)\[\/size\]/g, '<span class="bbc-size-normal">$1</span>');
+    html = html.replace(/\[size=large\](.*?)\[\/size\]/g, '<span class="bbc-size-large">$1</span>');
+    html = html.replace(/\[size=huge\](.*?)\[\/size\]/g, '<span class="bbc-size-huge">$1</span>');
+    html = html.replace(/\[color=(#[0-9a-fA-F]{6})\](.*?)\[\/color\]/g, '<span class="bbc-color" style="color:$1;">$2</span>');
+    html = html.replace(/\[bg=(#[0-9a-fA-F]{6})\](.*?)\[\/bg\]/g, '<span class="bbc-bg" style="background:$1;padding:2px 4px;border-radius:var(--radius);">$2</span>');
+    html = html.replace(/\[url\](.*?)\[\/url\]/g, '<a href="$1" target="_blank" style="color:var(--accent);">$1</a>');
+    html = html.replace(/\[url=(.*?)\](.*?)\[\/url\]/g, '<a href="$1" target="_blank" style="color:var(--accent);">$2</a>');
+    html = html.replace(/\[img\](.*?)\[\/img\]/g, '<img src="$1" style="max-width:100%;max-height:300px;border-radius:var(--radius);margin:4px 0;" loading="lazy">');
+    
+    html = html.replace(/@([a-zA-Z0-9_.-]+)/g, '<span class="mention" onclick="goToProfileByUsername(\'$1\')">@$1</span>');
+    
+    html = html.replace(/\n/g, '<br>');
+    
+    return html;
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function goToProfile(uid) {
+    if (uid) window.location.href = `/profile.html?uid=${uid}`;
+}
+
+function goToProfileByUsername(username) {
+    db.collection('users').where('username', '==', username).get()
+        .then(snapshot => {
+            if (!snapshot.empty) {
+                window.location.href = `/profile.html?uid=${snapshot.docs[0].id}`;
+            }
+        })
+        .catch(() => {});
+}
+
+// ============================================================
+// ПОЛУЧАЕМ ПАРАМЕТРЫ ИЗ URL
 // ============================================================
 function getUrlParams() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -1687,9 +1760,6 @@ function checkUserOnline(uid) {
         .catch(() => false);
 }
 
-// ============================================================
-// СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ
-// ============================================================
 function createUserInFirestore(user) {
     return db.collection('users').doc(user.uid).get().then(doc => {
         if (!doc.exists) {
@@ -1718,9 +1788,6 @@ function createUserInFirestore(user) {
     });
 }
 
-// ============================================================
-// РАСЧЁТ РЕПУТАЦИИ
-// ============================================================
 function calculateReputation(uid) {
     let totalRep = 0;
     let likesCount = 0;
@@ -1763,9 +1830,6 @@ function calculateReputation(uid) {
         });
 }
 
-// ============================================================
-// ОБНОВЛЕНИЕ OG ТЕГОВ
-// ============================================================
 function updateOGTags(data) {
     const metaMap = {
         'og:title': data.title,
@@ -1787,9 +1851,6 @@ function updateOGTags(data) {
     }
 }
 
-// ============================================================
-// DOM CONTENT LOADED
-// ============================================================
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('themeToggle').addEventListener('click', () => {
         currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -1846,9 +1907,6 @@ function setupEventListeners() {
     });
 }
 
-// ============================================================
-// USER DATA
-// ============================================================
 function loadUserData() {
     const user = auth.currentUser;
     currentUser = user;
@@ -1884,9 +1942,6 @@ auth.onAuthStateChanged(user => {
     }
 });
 
-// ============================================================
-// LOAD PROFILE
-// ============================================================
 function loadProfile(uid) {
     const container = document.getElementById('profileContainer');
     container.innerHTML = '<div class="loading-spinner"><span class="material-icons">refresh</span> Загрузка...</div>';
@@ -1950,9 +2005,6 @@ function loadProfile(uid) {
         });
 }
 
-// ============================================================
-// RENDER PROFILE
-// ============================================================
 function renderProfile(user) {
     const container = document.getElementById('profileContainer');
     const isOwn = currentUser && user.id === currentUser.uid;
@@ -1961,11 +2013,9 @@ function renderProfile(user) {
     const displayName = user.displayName || user.username || 'Аноним';
     const isOnline = user._isOnline || false;
     
-    // Проверяем, есть ли контекст сообщества
     const hasCommunityContext = communityContext && communityContext.communityId;
     const canManageInCommunity = hasCommunityContext && (communityContext.isAdmin || communityContext.isOwner);
     const isTargetSelf = currentUser && user.id === currentUser.uid;
-    const isCommunityOwner = hasCommunityContext && communityContext.isOwner;
     
     container.innerHTML = `
         <div class="profile-header">
@@ -2030,15 +2080,9 @@ function renderProfile(user) {
                     ${canManageInCommunity && !isTargetSelf ? `
                         <div class="community-action-divider"></div>
                         <div class="community-action-label">Управление в сообществе</div>
-                        ${!isCommunityOwner ? `
-                            <button class="ripple-btn outline" onclick="showCommunityActions()" style="color:var(--accent);">
-                                <span class="material-icons">admin_panel_settings</span> Управление
-                            </button>
-                        ` : `
-                            <button class="ripple-btn outline" onclick="showCommunityActions()" style="color:var(--accent);">
-                                <span class="material-icons">admin_panel_settings</span> Управление
-                            </button>
-                        `}
+                        <button class="ripple-btn outline" onclick="showCommunityActions()" style="color:var(--accent);">
+                            <span class="material-icons">admin_panel_settings</span> Управление
+                        </button>
                     ` : ''}
                 </div>
             </div>
@@ -2068,7 +2112,7 @@ function renderProfile(user) {
 }
 
 // ============================================================
-// ПОКАЗ ДЕЙСТВИЙ В СООБЩЕСТВЕ (для админов)
+// ПОКАЗ ДЕЙСТВИЙ В СООБЩЕСТВЕ
 // ============================================================
 function showCommunityActions() {
     if (!communityContext || !communityContext.communityId) {
@@ -2082,8 +2126,6 @@ function showCommunityActions() {
     }
     
     const isOwner = communityContext.isOwner;
-    const isAdmin = communityContext.isAdmin || isOwner;
-    const isTargetAdmin = false; // будем проверять в момент загрузки
     
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
@@ -2111,7 +2153,6 @@ function showCommunityActions() {
     
     const container = modal.querySelector('#communityActionButtons');
     
-    // Проверяем, является ли целевой пользователь администратором
     db.collection('communities').doc(communityContext.communityId).get()
         .then(doc => {
             if (!doc.exists) {
@@ -2125,7 +2166,6 @@ function showCommunityActions() {
             
             let buttons = '';
             
-            // Нельзя удалить владельца и себя
             if (!isTargetOwner) {
                 buttons += `
                     <button class="ripple-btn danger" onclick="removeFromCommunity('${profileUser.id}')" style="width:100%;justify-content:center;">
@@ -2199,8 +2239,6 @@ function makeAdminFromProfile(uid) {
     }).then(() => {
         alert('Пользователь назначен администратором');
         document.querySelector('.modal-overlay')?.remove();
-        // Обновляем контекст
-        communityContext.isAdmin = true;
     }).catch(err => alert('Ошибка: ' + err.message));
 }
 
@@ -2217,20 +2255,17 @@ function removeAdminFromProfile(uid) {
     }).then(() => {
         alert('Администратор снят');
         document.querySelector('.modal-overlay')?.remove();
-        communityContext.isAdmin = false;
     }).catch(err => alert('Ошибка: ' + err.message));
 }
 
 // ============================================================
-// МОДАЛЬНОЕ ОКНО РЕПУТАЦИИ (вместо alert)
+// МОДАЛЬНОЕ ОКНО РЕПУТАЦИИ
 // ============================================================
 function showReputationModal() {
     if (!profileUser) return;
     
     const rep = profileUser.reputation || 0;
     const details = profileUser._repDetails || { postLikes: 0, postDislikes: 0, commentLikes: 0, commentDislikes: 0 };
-    const totalLikes = (details.postLikes || 0) + (details.commentLikes || 0);
-    const totalDislikes = (details.postDislikes || 0) + (details.commentDislikes || 0);
     
     const modal = document.createElement('div');
     modal.className = 'modal-overlay reputation-modal';
@@ -2281,7 +2316,7 @@ function showReputationModal() {
 }
 
 // ============================================================
-// LOAD USER POSTS
+// LOAD USER POSTS (С ПАРСИНГОМ BBC)
 // ============================================================
 function loadUserPosts(uid) {
     const container = document.getElementById('profilePosts');
@@ -2326,36 +2361,45 @@ function renderPosts(posts) {
         return;
     }
 
-    container.innerHTML = posts.map(post => `
-        <div class="post-card" onclick="window.location.href='/post.html?id=${post.id}'" style="cursor:pointer;">
-            <div class="post-header">
-                <div class="post-avatar" onclick="event.stopPropagation();">
-                    ${post.authorAvatar ? `<img src="${post.authorAvatar}" alt="">` : `<span>${(post.authorName || '?')[0].toUpperCase()}</span>`}
+    container.innerHTML = posts.map(post => {
+        const timeStr = post.createdAt 
+            ? new Date(post.createdAt.seconds * 1000).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
+            : 'недавно';
+        
+        // Парсим BBC для содержимого поста
+        const parsedContent = parseBBC(post.content || '');
+        
+        return `
+            <div class="post-card" onclick="window.location.href='/post.html?id=${post.id}'" style="cursor:pointer;">
+                <div class="post-header">
+                    <div class="post-avatar" onclick="event.stopPropagation();">
+                        ${post.authorAvatar ? `<img src="${post.authorAvatar}" alt="">` : `<span>${(post.authorName || '?')[0].toUpperCase()}</span>`}
+                    </div>
+                    <div class="post-user">
+                        <div class="post-username">${escapeHtml(post.authorName || 'Аноним')}</div>
+                        <div class="post-time">${timeStr}</div>
+                    </div>
                 </div>
-                <div class="post-user">
-                    <div class="post-username">${escapeHtml(post.authorName || 'Аноним')}</div>
-                    <div class="post-time">${post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleDateString('ru-RU') : 'недавно'}</div>
+                <div class="post-title">${escapeHtml(post.title || 'Без заголовка')}</div>
+                <div class="post-content">${parsedContent}</div>
+                ${post.images && post.images.length ? `
+                    <div class="post-images">
+                        ${post.images.slice(0, 3).map(img => `
+                            <div class="img-wrap"><img src="${img}" alt=""></div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+                <div class="post-actions">
+                    <span class="post-action-btn"><span class="material-icons">thumb_up</span> ${post.likes?.length || 0}</span>
+                    <span class="post-action-btn"><span class="material-icons">comment</span> ${post.commentsCount || 0}</span>
                 </div>
             </div>
-            <div class="post-title">${escapeHtml(post.title || 'Без заголовка')}</div>
-            <div class="post-content">${escapeHtml((post.content || '').substring(0, 200))}${(post.content || '').length > 200 ? '...' : ''}</div>
-            ${post.images && post.images.length ? `
-                <div class="post-images">
-                    ${post.images.slice(0, 3).map(img => `
-                        <div class="img-wrap"><img src="${img}" alt=""></div>
-                    `).join('')}
-                </div>
-            ` : ''}
-            <div class="post-actions">
-                <span class="post-action-btn"><span class="material-icons">thumb_up</span> ${post.likes?.length || 0}</span>
-                <span class="post-action-btn"><span class="material-icons">comment</span> ${post.commentsCount || 0}</span>
-            </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // ============================================================
-// LOAD USER COMMENTS
+// LOAD USER COMMENTS (С ПАРСИНГОМ BBC)
 // ============================================================
 function loadUserComments(uid) {
     const container = document.getElementById('profilePosts');
@@ -2400,75 +2444,47 @@ function renderComments(comments) {
         return;
     }
 
-    container.innerHTML = comments.map(comment => `
-        <div class="comment-card">
-            <div class="comment-header">
-                <div class="comment-avatar" onclick="window.location.href='/profile.html?uid=${comment.authorId}'">
-                    ${comment.authorAvatar ? `<img src="${comment.authorAvatar}" alt="">` : `<span>${(comment.authorName || '?')[0].toUpperCase()}</span>`}
+    container.innerHTML = comments.map(comment => {
+        const parsedText = parseBBC(comment.text || '');
+        return `
+            <div class="comment-card">
+                <div class="comment-header">
+                    <div class="comment-avatar" onclick="window.location.href='/profile.html?uid=${comment.authorId}'">
+                        ${comment.authorAvatar ? `<img src="${comment.authorAvatar}" alt="">` : `<span>${(comment.authorName || '?')[0].toUpperCase()}</span>`}
+                    </div>
+                    <div class="comment-username" onclick="window.location.href='/profile.html?uid=${comment.authorId}'">
+                        ${escapeHtml(comment.authorName || 'Аноним')}
+                    </div>
+                    <span class="comment-time">${comment.createdAt ? new Date(comment.createdAt.seconds * 1000).toLocaleDateString('ru-RU') : 'недавно'}</span>
                 </div>
-                <div class="comment-username" onclick="window.location.href='/profile.html?uid=${comment.authorId}'">
-                    ${escapeHtml(comment.authorName || 'Аноним')}
+                <div class="comment-text">
+                    ${parsedText}
+                    ${comment.image ? `<br><img src="${comment.image}" class="comment-image" onclick="window.open('${comment.image}', '_blank')">` : ''}
                 </div>
-                <span class="comment-time">${comment.createdAt ? new Date(comment.createdAt.seconds * 1000).toLocaleDateString('ru-RU') : 'недавно'}</span>
-            </div>
-            <div class="comment-text">
-                ${parseBBC(comment.text || '')}
-                ${comment.image ? `<br><img src="${comment.image}" class="comment-image" onclick="window.open('${comment.image}', '_blank')">` : ''}
-            </div>
-            <div class="comment-on">
-                Комментарий к <a onclick="window.location.href='/post.html?id=${comment.postId}'">тейку</a>
-            </div>
-            <div class="comment-actions">
-                <button onclick="voteComment('${comment.id}', 1)" class="${comment.likes && currentUser && comment.likes.includes(currentUser.uid) ? 'liked' : ''}">
-                    <span class="material-icons" style="font-size:16px;">thumb_up</span>
-                    ${comment.likes?.length || 0}
-                </button>
-                <button onclick="voteComment('${comment.id}', -1)" class="${comment.dislikes && currentUser && comment.dislikes.includes(currentUser.uid) ? 'disliked' : ''}">
-                    <span class="material-icons" style="font-size:16px;">thumb_down</span>
-                    ${comment.dislikes?.length || 0}
-                </button>
-                <span class="comment-score ${((comment.likes?.length || 0) - (comment.dislikes?.length || 0)) > 0 ? 'positive' : ((comment.likes?.length || 0) - (comment.dislikes?.length || 0)) < 0 ? 'negative' : ''}">
-                    ${(comment.likes?.length || 0) - (comment.dislikes?.length || 0)}
-                </span>
-                ${comment.authorId === currentUser?.uid ? `
-                    <button onclick="deleteComment('${comment.id}')" style="color:var(--red);">
-                        <span class="material-icons" style="font-size:16px;">delete</span>
+                <div class="comment-on">
+                    Комментарий к <a onclick="window.location.href='/post.html?id=${comment.postId}'">тейку</a>
+                </div>
+                <div class="comment-actions">
+                    <button onclick="voteComment('${comment.id}', 1)" class="${comment.likes && currentUser && comment.likes.includes(currentUser.uid) ? 'liked' : ''}">
+                        <span class="material-icons" style="font-size:16px;">thumb_up</span>
+                        ${comment.likes?.length || 0}
                     </button>
-                ` : ''}
+                    <button onclick="voteComment('${comment.id}', -1)" class="${comment.dislikes && currentUser && comment.dislikes.includes(currentUser.uid) ? 'disliked' : ''}">
+                        <span class="material-icons" style="font-size:16px;">thumb_down</span>
+                        ${comment.dislikes?.length || 0}
+                    </button>
+                    <span class="comment-score ${((comment.likes?.length || 0) - (comment.dislikes?.length || 0)) > 0 ? 'positive' : ((comment.likes?.length || 0) - (comment.dislikes?.length || 0)) < 0 ? 'negative' : ''}">
+                        ${(comment.likes?.length || 0) - (comment.dislikes?.length || 0)}
+                    </span>
+                    ${comment.authorId === currentUser?.uid ? `
+                        <button onclick="deleteComment('${comment.id}')" style="color:var(--red);">
+                            <span class="material-icons" style="font-size:16px;">delete</span>
+                        </button>
+                    ` : ''}
+                </div>
             </div>
-        </div>
-    `).join('');
-}
-
-function parseBBC(text) {
-    if (!text) return '';
-    let html = escapeHtml(text);
-    html = html.replace(/\[b\](.*?)\[\/b\]/g, '<span class="bbc-bold">$1</span>');
-    html = html.replace(/\[i\](.*?)\[\/i\]/g, '<span class="bbc-italic">$1</span>');
-    html = html.replace(/\[u\](.*?)\[\/u\]/g, '<span class="bbc-underline">$1</span>');
-    html = html.replace(/\[s\](.*?)\[\/s\]/g, '<span class="bbc-strike">$1</span>');
-    html = html.replace(/\[code\](.*?)\[\/code\]/g, '<span class="bbc-code">$1</span>');
-    html = html.replace(/\[quote\](.*?)\[\/quote\]/g, '<div class="bbc-quote">$1</div>');
-    html = html.replace(/\[spoiler\](.*?)\[\/spoiler\]/g, '<span class="bbc-spoiler" onclick="this.style.color=\'var(--text-primary)\';">$1</span>');
-    html = html.replace(/\[size=small\](.*?)\[\/size\]/g, '<span class="bbc-size-small">$1</span>');
-    html = html.replace(/\[size=normal\](.*?)\[\/size\]/g, '<span class="bbc-size-normal">$1</span>');
-    html = html.replace(/\[size=large\](.*?)\[\/size\]/g, '<span class="bbc-size-large">$1</span>');
-    html = html.replace(/\[size=huge\](.*?)\[\/size\]/g, '<span class="bbc-size-huge">$1</span>');
-    html = html.replace(/\[color=(#[0-9a-fA-F]{6})\](.*?)\[\/color\]/g, '<span class="bbc-color" style="color:$1;">$2</span>');
-    html = html.replace(/\[bg=(#[0-9a-fA-F]{6})\](.*?)\[\/bg\]/g, '<span class="bbc-bg" style="background:$1;padding:2px 4px;border-radius:var(--radius);">$2</span>');
-    html = html.replace(/\[url\](.*?)\[\/url\]/g, '<a href="$1" target="_blank" style="color:var(--accent);">$1</a>');
-    html = html.replace(/\[url=(.*?)\](.*?)\[\/url\]/g, '<a href="$1" target="_blank" style="color:var(--accent);">$2</a>');
-    html = html.replace(/\[img\](.*?)\[\/img\]/g, '<img src="$1" style="max-width:100%;max-height:300px;border-radius:var(--radius);margin:4px 0;" loading="lazy">');
-    html = html.replace(/@([a-zA-Z0-9_.-]+)/g, '<span class="mention">@$1</span>');
-    html = html.replace(/\n/g, '<br>');
-    return html;
-}
-
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+        `;
+    }).join('');
 }
 
 function voteComment(commentId, direction) {
@@ -2916,7 +2932,7 @@ function saveProfileChanges() {
         });
 }
 
-console.log('👤 Profile page loaded with community integration and reputation modal');
+console.log('👤 Profile page loaded with BBC parsing');
 </script>
 </body>
 </html>
