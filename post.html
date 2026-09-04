@@ -4,22 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
+    <!-- ===== OPEN GRAPH (обновляется динамически) ===== -->
     <meta property="og:title" id="ogTitle" content="Takean - Тейк">
     <meta property="og:description" id="ogDesc" content="Читайте тейк на платформе Takean">
-    <meta property="og:image" id="ogImage" content="https://takean.pages.dev/og-image.png">
-    <meta property="og:url" id="ogUrl" content="https://takean.pages.dev/post.html">
+    <meta property="og:image" id="ogImage" content="">
+    <meta property="og:url" id="ogUrl" content="">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Takean">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" id="twTitle" content="Takean - Тейк">
     <meta name="twitter:description" id="twDesc" content="Читайте тейк на платформе Takean">
-    <meta name="twitter:image" id="twImage" content="https://takean.pages.dev/og-image.png">
+    <meta name="twitter:image" id="twImage" content="">
     
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
-        /* ===== ВСЕ СТИЛИ ИЗ profile.html (такие же) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -42,6 +42,11 @@
             --radius: 4px;
             --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             --topbar-height: 60px;
+            --online-color: #4caf50;
+            --tag-anarchism-color: #ffffff;
+            --tag-fascism-color: #ffffff;
+            --tag-authoritarianism-color: #8b0000;
+            --post-content-bg: transparent;
         }
 
         [data-theme="light"] {
@@ -56,6 +61,10 @@
             --border-color: #e0e0e0;
             --border-light: #d0d0d0;
             --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            --tag-anarchism-color: #000000;
+            --tag-fascism-color: #000000;
+            --tag-authoritarianism-color: #8b0000;
+            --post-content-bg: #f5f5f5;
         }
 
         html {
@@ -64,6 +73,7 @@
             color: var(--text-primary);
             transition: background 0.3s, color 0.3s;
             -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -115,6 +125,55 @@
         .animate-fade { animation: fadeIn 0.25s ease-out; }
         .animate-slide { animation: slideUp 0.3s ease-out; }
 
+        /* ===== RIPPLE BUTTON ===== */
+        .ripple-btn {
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: var(--font);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            transition: background 0.2s, transform 0.1s;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+
+        .ripple-btn .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(0);
+            animation: ripple 0.5s ease-out;
+            pointer-events: none;
+        }
+
+        [data-theme="light"] .ripple-btn .ripple-effect {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .ripple-btn:hover { background: var(--bg-hover); }
+        .ripple-btn:active { transform: scale(0.96); }
+
+        .ripple-btn.primary {
+            background: var(--accent);
+            color: #fff;
+        }
+        .ripple-btn.primary:hover { background: var(--accent-hover); }
+
+        .ripple-btn.outline {
+            border: 1px solid var(--border-color);
+        }
+        .ripple-btn.outline:hover { background: var(--bg-hover); }
+
         /* ===== TOP BAR ===== */
         .topbar {
             position: sticky;
@@ -164,6 +223,7 @@
             align-items: center;
             gap: 4px;
             white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .topbar-nav a:hover {
@@ -207,6 +267,7 @@
             transition: border-color 0.2s;
             overflow: hidden;
             flex-shrink: 0;
+            position: relative;
         }
 
         .topbar-actions .avatar-small:hover {
@@ -217,6 +278,23 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .topbar-actions .avatar-small .online-dot {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-card);
+            background: var(--online-color);
+            display: none;
+            z-index: 2;
+        }
+
+        .topbar-actions .avatar-small .online-dot.show {
+            display: block;
         }
 
         .search-bar {
@@ -257,54 +335,6 @@
             font-size: 18px;
         }
 
-        /* ===== RIPPLE BUTTON ===== */
-        .ripple-btn {
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
-            border: none;
-            background: none;
-            font-family: var(--font);
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-primary);
-            padding: 8px 16px;
-            border-radius: var(--radius);
-            transition: background 0.2s, transform 0.1s;
-            user-select: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .ripple-btn .ripple-effect {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.15);
-            transform: scale(0);
-            animation: ripple 0.5s ease-out;
-            pointer-events: none;
-        }
-
-        [data-theme="light"] .ripple-btn .ripple-effect {
-            background: rgba(0, 0, 0, 0.1);
-        }
-
-        .ripple-btn:hover { background: var(--bg-hover); }
-        .ripple-btn:active { transform: scale(0.97); }
-
-        .ripple-btn.primary {
-            background: var(--accent);
-            color: #fff;
-        }
-        .ripple-btn.primary:hover { background: var(--accent-hover); }
-
-        .ripple-btn.outline {
-            border: 1px solid var(--border-color);
-        }
-        .ripple-btn.outline:hover { background: var(--bg-hover); }
-
         /* ===== POST VIEW ===== */
         .post-view {
             background: var(--bg-card);
@@ -316,9 +346,14 @@
 
         .post-view .post-header {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 12px;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
+        }
+
+        .post-view .post-avatar-wrap {
+            flex-shrink: 0;
+            position: relative;
         }
 
         .post-view .post-avatar {
@@ -333,14 +368,39 @@
             font-size: 18px;
             color: var(--text-secondary);
             cursor: pointer;
-            flex-shrink: 0;
             overflow: hidden;
+            position: relative;
         }
 
         .post-view .post-avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .post-view .post-avatar .online-dot {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-card);
+            background: var(--online-color);
+            display: none;
+            z-index: 2;
+        }
+
+        .post-view .post-avatar .online-dot.show {
+            display: block;
+        }
+
+        .post-view .post-user {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+            min-width: 0;
         }
 
         .post-view .post-username {
@@ -361,16 +421,62 @@
         }
 
         .post-view .post-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px 8px;
             color: var(--text-muted);
             font-size: 13px;
         }
 
-        .post-view .post-meta .community-link {
+        .post-view .post-meta .community-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
             color: var(--accent);
             cursor: pointer;
         }
 
-        .post-view .post-meta .community-link:hover { text-decoration: underline; }
+        .post-view .post-meta .community-wrap:hover { text-decoration: underline; }
+
+        .post-view .post-meta .community-wrap .community-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--bg-hover);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .post-view .post-meta .community-wrap .community-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .post-view .post-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 2px;
+        }
+
+        .post-view .post-tag {
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            background: rgba(255,255,255,0.05);
+            transition: all 0.2s;
+        }
+
+        .post-view .post-tag:hover { opacity: 0.8; }
 
         .post-view .post-title {
             font-size: 26px;
@@ -387,6 +493,7 @@
             word-wrap: break-word;
             padding: 12px;
             border-radius: var(--radius);
+            background: var(--post-content-bg);
         }
 
         .post-view .post-content .mention {
@@ -399,7 +506,6 @@
 
         .post-view .post-images {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 6px;
             margin: 14px 0;
             border-radius: var(--radius);
@@ -408,23 +514,20 @@
 
         .post-view .post-images .img-wrap {
             position: relative;
-            padding-bottom: 75%;
             background: var(--bg-hover);
             overflow: hidden;
             cursor: pointer;
+            border-radius: var(--radius);
         }
 
         .post-view .post-images .img-wrap img {
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
             transition: transform 0.3s;
         }
 
-        .post-view .post-images .img-wrap:hover img { transform: scale(1.03); }
+        .post-view .post-images .img-wrap:hover img { transform: scale(1.02); }
 
         .post-view .post-actions {
             display: flex;
@@ -451,6 +554,7 @@
             font-family: var(--font);
             transition: all 0.2s;
             -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
         }
 
         .post-view .post-action-btn:hover { background: var(--bg-hover); }
@@ -470,6 +574,72 @@
 
         .post-view .post-score.positive { color: var(--green); }
         .post-view .post-score.negative { color: var(--red); }
+
+        /* ===== ЦВЕТА ДЛЯ ТЕГОВ ===== */
+        .tag-communism { color: #c62828; }
+        .tag-socialism { color: #d32f2f; }
+        .tag-capitalism { color: #2e7d32; }
+        .tag-liberalism { color: #1e88e5; }
+        .tag-conservatism { color: #3949ab; }
+        .tag-anarchism { color: var(--tag-anarchism-color); }
+        .tag-nationalism { color: #1565c0; }
+        .tag-fascism { color: var(--tag-fascism-color); }
+        .tag-democracy { color: #1565c0; }
+        .tag-authoritarianism { color: var(--tag-authoritarianism-color); }
+        .tag-minecraft { color: #4caf50; }
+        .tag-dota2 { color: #d32f2f; }
+        .tag-csgo { color: #f9a825; }
+        .tag-valorant { color: #d32f2f; }
+        .tag-league_of_legends { color: #1a237e; }
+        .tag-heartstone { color: #ff6f00; }
+        .tag-wow { color: #1565c0; }
+        .tag-gta { color: #4e342e; }
+        .tag-cyberpunk { color: #7b1fa2; }
+        .tag-indie { color: #ef6c00; }
+        .tag-ai { color: #7b1fa2; }
+        .tag-programming { color: #2e7d32; }
+        .tag-cybersecurity { color: #c62828; }
+        .tag-web3 { color: #6a1b9a; }
+        .tag-space { color: #1a237e; }
+        .tag-robotics { color: #4e342e; }
+        .tag-biotech { color: #2e7d32; }
+        .tag-nano { color: #546e7a; }
+        .tag-physics { color: #1565c0; }
+        .tag-chemistry { color: #2e7d32; }
+        .tag-biology { color: #43a047; }
+        .tag-astronomy { color: #1a237e; }
+        .tag-math { color: #4e342e; }
+        .tag-psychology { color: #7b1fa2; }
+        .tag-sociology { color: #3949ab; }
+        .tag-philosophy { color: #4e342e; }
+        .tag-painting { color: #d32f2f; }
+        .tag-music { color: #7b1fa2; }
+        .tag-cinema { color: #1565c0; }
+        .tag-literature { color: #4e342e; }
+        .tag-photography { color: #546e7a; }
+        .tag-architecture { color: #795548; }
+        .tag-design { color: #7b1fa2; }
+        .tag-football { color: #43a047; }
+        .tag-basketball { color: #e65100; }
+        .tag-tennis { color: #2e7d32; }
+        .tag-hockey { color: #1565c0; }
+        .tag-boxing { color: #d32f2f; }
+        .tag-esports { color: #7b1fa2; }
+        .tag-fitness { color: #ef6c00; }
+        .tag-life { color: #43a047; }
+        .tag-travel { color: #1565c0; }
+        .tag-food { color: #e65100; }
+        .tag-fashion { color: #7b1fa2; }
+        .tag-education { color: #2e7d32; }
+        .tag-business { color: #43a047; }
+        .tag-health { color: #d32f2f; }
+        .tag-politics { color: #d32f2f; }
+        .tag-games { color: #7cb342; }
+        .tag-tech { color: #1e88e5; }
+        .tag-science { color: #00897b; }
+        .tag-art { color: #d32f2f; }
+        .tag-sport { color: #f9a825; }
+        .tag-other { color: #78909c; }
 
         /* ===== COMMENTS ===== */
         .comments-section {
@@ -507,12 +677,30 @@
             font-weight: 600;
             font-size: 12px;
             color: var(--text-secondary);
+            position: relative;
         }
 
         .comment-input-area .comment-avatar-small img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .comment-input-area .comment-avatar-small .online-dot {
+            position: absolute;
+            bottom: 1px;
+            right: 1px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-card);
+            background: var(--online-color);
+            display: none;
+            z-index: 2;
+        }
+
+        .comment-input-area .comment-avatar-small .online-dot.show {
+            display: block;
         }
 
         .comment-input-area .comment-input-wrap {
@@ -553,6 +741,46 @@
             font-size: 12px;
         }
 
+        .comment-images-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .comment-images-preview .img-wrap {
+            width: 60px;
+            height: 60px;
+            border-radius: var(--radius);
+            overflow: hidden;
+            background: var(--bg-hover);
+            position: relative;
+            border: 1px solid var(--border-color);
+        }
+
+        .comment-images-preview .img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .comment-images-preview .img-wrap .remove-img {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         /* ===== COMMENT ===== */
         .comment {
             padding: 12px 0;
@@ -569,6 +797,11 @@
             margin-bottom: 4px;
         }
 
+        .comment-avatar-wrap {
+            flex-shrink: 0;
+            position: relative;
+        }
+
         .comment-avatar {
             width: 30px;
             height: 30px;
@@ -581,14 +814,31 @@
             font-size: 11px;
             color: var(--text-secondary);
             cursor: pointer;
-            flex-shrink: 0;
             overflow: hidden;
+            position: relative;
         }
 
         .comment-avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .comment-avatar .online-dot {
+            position: absolute;
+            bottom: 1px;
+            right: 1px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-card);
+            background: var(--online-color);
+            display: none;
+            z-index: 2;
+        }
+
+        .comment-avatar .online-dot.show {
+            display: block;
         }
 
         .comment-username {
@@ -622,12 +872,30 @@
 
         .comment-text .mention:hover { text-decoration: underline; }
 
-        .comment-text .comment-image {
-            max-width: 200px;
-            max-height: 200px;
-            border-radius: var(--radius);
+        .comment-text .comment-images-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 4px;
             margin-top: 4px;
+            max-width: 400px;
+        }
+
+        .comment-text .comment-images-grid .img-wrap {
+            position: relative;
+            padding-bottom: 100%;
+            background: var(--bg-hover);
+            border-radius: var(--radius);
+            overflow: hidden;
             cursor: pointer;
+        }
+
+        .comment-text .comment-images-grid .img-wrap img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .comment-actions {
@@ -715,6 +983,52 @@
 
         .comment-reply-form button:hover { background: var(--accent-hover); }
 
+        .comment-reply-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .comment-reply-badge .material-icons {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .comment-reply-badge .reply-to {
+            color: var(--accent);
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .comment-reply-badge .reply-to:hover { text-decoration: underline; }
+
+        /* ===== BBC STYLES ===== */
+        .bbc-bold { font-weight: 700; }
+        .bbc-italic { font-style: italic; }
+        .bbc-underline { text-decoration: underline; }
+        .bbc-strike { text-decoration: line-through; }
+        .bbc-code { font-family: monospace; background: var(--bg-input); padding: 2px 6px; border-radius: var(--radius); }
+        .bbc-quote { border-left: 3px solid var(--accent); padding-left: 12px; margin: 4px 0; color: var(--text-secondary); }
+        .bbc-spoiler { 
+            background: var(--bg-hover); 
+            color: var(--bg-hover); 
+            cursor: pointer; 
+            padding: 2px 6px; 
+            border-radius: var(--radius); 
+            transition: color 0.3s;
+            user-select: none;
+        }
+        .bbc-spoiler:hover { color: var(--text-primary); }
+        .bbc-size-small { font-size: 12px; }
+        .bbc-size-normal { font-size: 15px; }
+        .bbc-size-large { font-size: 20px; }
+        .bbc-size-huge { font-size: 26px; }
+        .bbc-color { transition: color 0.2s; }
+        .bbc-bg { transition: background 0.2s; }
+
         /* ===== EMPTY STATE ===== */
         .empty-state {
             text-align: center;
@@ -764,6 +1078,57 @@
             animation: spin 1s linear infinite;
             font-size: 28px;
             margin-right: 10px;
+        }
+
+        /* ===== IMAGE VIEWER ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            animation: fadeIn 0.2s ease-out;
+            padding: 16px;
+        }
+
+        .modal-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 8px;
+            max-width: 90%;
+            background: transparent;
+            border: none;
+        }
+
+        .modal-box .close-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            border: none;
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-box img {
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: var(--radius);
+            margin: 0 auto;
+            display: block;
         }
 
         /* ===== FOOTER ===== */
@@ -817,6 +1182,7 @@
             .search-bar input { min-width: 50px; font-size: 12px; }
             .topbar-nav a { padding: 4px 8px; font-size: 12px; }
             .topbar-nav a .material-icons { font-size: 18px; }
+            .post-view .post-images { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
         }
 
         @media (max-width: 768px) {
@@ -831,6 +1197,7 @@
             .post-view .post-title { font-size: 20px; }
             .post-view .post-content { font-size: 15px; padding: 8px; }
             .post-view .post-images { grid-template-columns: 1fr; }
+            .post-view .post-images .img-wrap { min-height: 200px; }
             .comments-section { padding: 14px 16px; }
             .comment-input-area { flex-direction: column; }
             .comment-input-area .comment-avatar-small { display: none; }
@@ -839,6 +1206,10 @@
             .comment-actions { margin-left: 0; }
             .comment-reply-form { margin-left: 0; }
             .footer-inner { flex-direction: column; align-items: center; text-align: center; }
+            .post-view .post-tag { font-size: 11px; padding: 1px 8px; }
+            .topbar-actions .avatar-small .online-dot { width: 8px; height: 8px; bottom: 1px; right: 1px; }
+            .post-view .post-avatar .online-dot { width: 8px; height: 8px; bottom: 1px; right: 1px; }
+            .comment-avatar .online-dot { width: 7px; height: 7px; }
         }
 
         @media (max-width: 480px) {
@@ -855,10 +1226,16 @@
             .post-view .post-content { font-size: 14px; }
             .post-view .post-avatar { width: 36px; height: 36px; font-size: 14px; }
             .post-view .post-username { font-size: 15px; }
+            .post-view .post-images .img-wrap { min-height: 150px; }
             .comments-section { padding: 10px 12px; }
             .comments-section h3 { font-size: 16px; }
             .comment-input-area textarea { font-size: 13px; min-height: 44px; }
             .comment-text { font-size: 13px; }
+            .post-view .post-tag { font-size: 10px; padding: 1px 6px; }
+            .topbar-actions .avatar-small .online-dot { width: 6px; height: 6px; bottom: 0px; right: 0px; }
+            .post-view .post-avatar .online-dot { width: 6px; height: 6px; bottom: 0px; right: 0px; }
+            .comment-avatar .online-dot { width: 6px; height: 6px; bottom: 0px; right: 0px; }
+            .modal-box .close-btn { top: 10px; right: 10px; width: 32px; height: 32px; font-size: 18px; }
         }
     </style>
 </head>
@@ -882,6 +1259,10 @@
                     <span class="material-icons">add_box</span>
                     <span>Создать</span>
                 </a>
+                <a href="/communities.html">
+                    <span class="material-icons">group</span>
+                    <span>Сообщества</span>
+                </a>
             </nav>
 
             <div class="topbar-actions">
@@ -896,6 +1277,7 @@
 
                 <div class="avatar-small" id="userAvatar">
                     <span>?</span>
+                    <span class="online-dot" id="userOnlineDot"></span>
                 </div>
             </div>
         </div>
@@ -932,10 +1314,17 @@
     </div>
 </footer>
 
+<!-- IMAGE VIEWER -->
+<div class="modal-overlay hidden" id="imageViewer">
+    <div class="modal-box">
+        <button class="close-btn" onclick="closeImageViewer()">×</button>
+        <img id="viewerImage" src="" alt="Просмотр">
+    </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
 <script>
 const firebaseConfig = {
@@ -951,7 +1340,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
-const storage = firebase.storage();
 
 const IMGBB_API_KEY = '82ba1ce293103084398ae828937d95d4';
 
@@ -959,12 +1347,282 @@ let currentUser = null;
 let currentPost = null;
 let postId = null;
 let comments = [];
-let commentImage = null;
-let isLoadingComments = false;
+let commentImages = [];
+let onlineCheckInterval = null;
+let lastActivityTime = Date.now();
+let isUserOnline = false;
 
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
 
+// ============================================================
+// ЦВЕТА ДЛЯ ТЕГОВ
+// ============================================================
+function getTagClass(tag) {
+    const tagLower = tag.toLowerCase().trim().replace(/\s+/g, '_');
+    const map = {
+        'communism': 'tag-communism',
+        'socialism': 'tag-socialism',
+        'capitalism': 'tag-capitalism',
+        'liberalism': 'tag-liberalism',
+        'conservatism': 'tag-conservatism',
+        'anarchism': 'tag-anarchism',
+        'nationalism': 'tag-nationalism',
+        'fascism': 'tag-fascism',
+        'democracy': 'tag-democracy',
+        'authoritarianism': 'tag-authoritarianism',
+        'minecraft': 'tag-minecraft',
+        'dota2': 'tag-dota2',
+        'csgo': 'tag-csgo',
+        'valorant': 'tag-valorant',
+        'league_of_legends': 'tag-league_of_legends',
+        'heartstone': 'tag-heartstone',
+        'wow': 'tag-wow',
+        'gta': 'tag-gta',
+        'cyberpunk': 'tag-cyberpunk',
+        'indie': 'tag-indie',
+        'ai': 'tag-ai',
+        'programming': 'tag-programming',
+        'cybersecurity': 'tag-cybersecurity',
+        'web3': 'tag-web3',
+        'space': 'tag-space',
+        'robotics': 'tag-robotics',
+        'biotech': 'tag-biotech',
+        'nano': 'tag-nano',
+        'physics': 'tag-physics',
+        'chemistry': 'tag-chemistry',
+        'biology': 'tag-biology',
+        'astronomy': 'tag-astronomy',
+        'math': 'tag-math',
+        'psychology': 'tag-psychology',
+        'sociology': 'tag-sociology',
+        'philosophy': 'tag-philosophy',
+        'painting': 'tag-painting',
+        'music': 'tag-music',
+        'cinema': 'tag-cinema',
+        'literature': 'tag-literature',
+        'photography': 'tag-photography',
+        'architecture': 'tag-architecture',
+        'design': 'tag-design',
+        'football': 'tag-football',
+        'basketball': 'tag-basketball',
+        'tennis': 'tag-tennis',
+        'hockey': 'tag-hockey',
+        'boxing': 'tag-boxing',
+        'esports': 'tag-esports',
+        'fitness': 'tag-fitness',
+        'life': 'tag-life',
+        'travel': 'tag-travel',
+        'food': 'tag-food',
+        'fashion': 'tag-fashion',
+        'education': 'tag-education',
+        'business': 'tag-business',
+        'health': 'tag-health',
+        'politics': 'tag-politics',
+        'games': 'tag-games',
+        'tech': 'tag-tech',
+        'science': 'tag-science',
+        'art': 'tag-art',
+        'sport': 'tag-sport',
+        'other': 'tag-other'
+    };
+    if (map[tagLower]) return map[tagLower];
+    for (const [key, value] of Object.entries(map)) {
+        if (tagLower.includes(key) || key.includes(tagLower)) {
+            return value;
+        }
+    }
+    return 'tag-other';
+}
+
+function getTagDisplayName(tag) {
+    const map = {
+        'communism': 'Коммунизм',
+        'socialism': 'Социализм',
+        'capitalism': 'Капитализм',
+        'liberalism': 'Либерализм',
+        'conservatism': 'Консерватизм',
+        'anarchism': 'Анархизм',
+        'nationalism': 'Национализм',
+        'fascism': 'Фашизм',
+        'democracy': 'Демократия',
+        'authoritarianism': 'Авторитаризм',
+        'minecraft': 'Minecraft',
+        'dota2': 'Dota 2',
+        'csgo': 'CS:GO',
+        'valorant': 'Valorant',
+        'league_of_legends': 'League of Legends',
+        'heartstone': 'Hearthstone',
+        'wow': 'World of Warcraft',
+        'gta': 'GTA V',
+        'cyberpunk': 'Cyberpunk 2077',
+        'indie': 'Инди-игры',
+        'ai': 'Искусственный интеллект',
+        'programming': 'Программирование',
+        'cybersecurity': 'Кибербезопасность',
+        'web3': 'Web3 / Blockchain',
+        'space': 'Космос',
+        'robotics': 'Робототехника',
+        'biotech': 'Биотехнологии',
+        'nano': 'Нанотехнологии',
+        'physics': 'Физика',
+        'chemistry': 'Химия',
+        'biology': 'Биология',
+        'astronomy': 'Астрономия',
+        'math': 'Математика',
+        'psychology': 'Психология',
+        'sociology': 'Социология',
+        'philosophy': 'Философия',
+        'painting': 'Живопись',
+        'music': 'Музыка',
+        'cinema': 'Кино',
+        'literature': 'Литература',
+        'photography': 'Фотография',
+        'architecture': 'Архитектура',
+        'design': 'Дизайн',
+        'football': 'Футбол',
+        'basketball': 'Баскетбол',
+        'tennis': 'Теннис',
+        'hockey': 'Хоккей',
+        'boxing': 'Бокс',
+        'esports': 'Киберспорт',
+        'fitness': 'Фитнес',
+        'life': 'Жизнь',
+        'travel': 'Путешествия',
+        'food': 'Еда',
+        'fashion': 'Мода',
+        'education': 'Образование',
+        'business': 'Бизнес',
+        'health': 'Здоровье'
+    };
+    const tagLower = tag.toLowerCase().trim().replace(/\s+/g, '_');
+    if (map[tagLower]) return map[tagLower];
+    return tag.charAt(0).toUpperCase() + tag.slice(1);
+}
+
+// ============================================================
+// BBC ПАРСЕР
+// ============================================================
+function parseBBC(text) {
+    if (!text) return '';
+    
+    let html = escapeHtml(text);
+    
+    html = html.replace(/\[b\](.*?)\[\/b\]/g, '<span class="bbc-bold">$1</span>');
+    html = html.replace(/\[i\](.*?)\[\/i\]/g, '<span class="bbc-italic">$1</span>');
+    html = html.replace(/\[u\](.*?)\[\/u\]/g, '<span class="bbc-underline">$1</span>');
+    html = html.replace(/\[s\](.*?)\[\/s\]/g, '<span class="bbc-strike">$1</span>');
+    html = html.replace(/\[code\](.*?)\[\/code\]/g, '<span class="bbc-code">$1</span>');
+    html = html.replace(/\[quote\](.*?)\[\/quote\]/g, '<div class="bbc-quote">$1</div>');
+    html = html.replace(/\[spoiler\](.*?)\[\/spoiler\]/g, '<span class="bbc-spoiler" onclick="event.stopPropagation();this.style.color=\'var(--text-primary)\';">$1</span>');
+    html = html.replace(/\[size=small\](.*?)\[\/size\]/g, '<span class="bbc-size-small">$1</span>');
+    html = html.replace(/\[size=normal\](.*?)\[\/size\]/g, '<span class="bbc-size-normal">$1</span>');
+    html = html.replace(/\[size=large\](.*?)\[\/size\]/g, '<span class="bbc-size-large">$1</span>');
+    html = html.replace(/\[size=huge\](.*?)\[\/size\]/g, '<span class="bbc-size-huge">$1</span>');
+    html = html.replace(/\[color=(#[0-9a-fA-F]{6})\](.*?)\[\/color\]/g, '<span class="bbc-color" style="color:$1;">$2</span>');
+    html = html.replace(/\[bg=(#[0-9a-fA-F]{6})\](.*?)\[\/bg\]/g, '<span class="bbc-bg" style="background:$1;padding:2px 4px;border-radius:var(--radius);">$2</span>');
+    html = html.replace(/\[url\](.*?)\[\/url\]/g, '<a href="$1" target="_blank" style="color:var(--accent);">$1</a>');
+    html = html.replace(/\[url=(.*?)\](.*?)\[\/url\]/g, '<a href="$1" target="_blank" style="color:var(--accent);">$2</a>');
+    html = html.replace(/\[img\](.*?)\[\/img\]/g, '<img src="$1" style="max-width:100%;max-height:300px;border-radius:var(--radius);margin:4px 0;" loading="lazy">');
+    
+    html = html.replace(/@([a-zA-Z0-9_.-]+)/g, '<span class="mention" onclick="goToProfileByUsername(\'$1\')">@$1</span>');
+    
+    html = html.replace(/\n/g, '<br>');
+    
+    return html;
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ============================================================
+// ОНЛАЙН СТАТУС
+// ============================================================
+function updateLastActivity() {
+    lastActivityTime = Date.now();
+    if (!isUserOnline && currentUser) {
+        isUserOnline = true;
+        updateOnlineStatus(true);
+    }
+}
+
+function updateOnlineStatus(status) {
+    if (!currentUser) return;
+    db.collection('users').doc(currentUser.uid).update({
+        lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+        isOnline: status
+    }).catch(() => {});
+}
+
+function checkOnlineStatus() {
+    if (!currentUser) return;
+    const now = Date.now();
+    const inactiveTime = (now - lastActivityTime) / 1000;
+    if (inactiveTime > 120 && isUserOnline) {
+        isUserOnline = false;
+        updateOnlineStatus(false);
+    }
+}
+
+function startOnlineTracking() {
+    if (onlineCheckInterval) clearInterval(onlineCheckInterval);
+    lastActivityTime = Date.now();
+    isUserOnline = true;
+    updateOnlineStatus(true);
+    onlineCheckInterval = setInterval(checkOnlineStatus, 30000);
+    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click', 'input', 'focus'];
+    events.forEach(event => {
+        document.addEventListener(event, updateLastActivity);
+    });
+    window.addEventListener('beforeunload', () => {
+        if (currentUser) {
+            db.collection('users').doc(currentUser.uid).update({
+                isOnline: false,
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(() => {});
+        }
+    });
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            if (currentUser) {
+                isUserOnline = false;
+                db.collection('users').doc(currentUser.uid).update({
+                    isOnline: false,
+                    lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(() => {});
+            }
+        } else {
+            lastActivityTime = Date.now();
+            isUserOnline = true;
+            updateOnlineStatus(true);
+        }
+    });
+}
+
+function checkUserOnline(uid) {
+    return db.collection('users').doc(uid).get()
+        .then(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                if (data.isOnline === true) return true;
+                if (data.lastSeen) {
+                    const lastSeen = data.lastSeen.seconds * 1000;
+                    const now = Date.now();
+                    return (now - lastSeen) < 120000;
+                }
+            }
+            return false;
+        })
+        .catch(() => false);
+}
+
+// ============================================================
+// СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ
+// ============================================================
 function createUserInFirestore(user) {
     return db.collection('users').doc(user.uid).get().then(doc => {
         if (!doc.exists) {
@@ -975,6 +1633,7 @@ function createUserInFirestore(user) {
             }
             return db.collection('users').doc(user.uid).set({
                 username: username,
+                displayName: user.displayName || username,
                 email: user.email || '',
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 avatar: user.photoURL || null,
@@ -983,40 +1642,28 @@ function createUserInFirestore(user) {
                 reputation: 0,
                 followers: [],
                 following: [],
-                theme: currentTheme
+                theme: currentTheme,
+                isOnline: true,
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
             });
         }
         return doc;
     });
 }
 
-function updatePostOGTags(data) {
-    const title = data.title || 'Тейк на Takean';
-    const description = data.description || 'Читайте тейк на платформе Takean';
-    const image = data.image || 'https://takean.pages.dev/og-image.png';
-    const url = data.url || window.location.href;
-    
-    document.title = `${title} | Takean`;
-    
-    const metaMap = {
-        'og:title': title,
-        'og:description': description,
-        'og:image': image,
-        'og:url': url,
-        'twitter:title': title,
-        'twitter:description': description,
-        'twitter:image': image
-    };
-    
-    for (const [property, content] of Object.entries(metaMap)) {
-        let meta = document.querySelector(`meta[property="${property}"]`);
-        if (!meta) {
-            meta = document.querySelector(`meta[name="${property}"]`);
-        }
-        if (meta) {
-            meta.setAttribute('content', content);
-        }
-    }
+// ============================================================
+// IMAGE VIEWER
+// ============================================================
+function openImageViewer(url) {
+    const viewer = document.getElementById('imageViewer');
+    document.getElementById('viewerImage').src = url;
+    viewer.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeImageViewer() {
+    document.getElementById('imageViewer').classList.add('hidden');
+    document.body.style.overflow = '';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1056,6 +1703,10 @@ function setupEventListeners() {
             if (q) window.location.href = `/search.html?q=${encodeURIComponent(q)}`;
         }
     });
+
+    document.getElementById('imageViewer').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('imageViewer')) closeImageViewer();
+    });
 }
 
 function loadUserData() {
@@ -1063,20 +1714,33 @@ function loadUserData() {
     currentUser = user;
     
     const avatarEl = document.getElementById('userAvatar');
+    const dotEl = document.getElementById('userOnlineDot');
+    
     if (user) {
         avatarEl.innerHTML = user.photoURL 
             ? `<img src="${user.photoURL}" alt="avatar">` 
             : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
         avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
-        createUserInFirestore(user).catch(err => console.error('Error creating user:', err));
+        dotEl.classList.add('show');
+        createUserInFirestore(user).then(() => {
+            startOnlineTracking();
+        }).catch(err => console.error('Error creating user:', err));
     } else {
         avatarEl.innerHTML = '<span>?</span>';
         avatarEl.onclick = () => window.location.href = '/login.html';
+        dotEl.classList.remove('show');
+        if (onlineCheckInterval) {
+            clearInterval(onlineCheckInterval);
+            onlineCheckInterval = null;
+        }
     }
 }
 
 auth.onAuthStateChanged(user => { loadUserData(); });
 
+// ============================================================
+// LOAD POST
+// ============================================================
 function loadPost(id) {
     const container = document.getElementById('postContainer');
     container.innerHTML = '<div class="loading-spinner"><span class="material-icons">refresh</span> Загрузка...</div>';
@@ -1099,22 +1763,60 @@ function loadPost(id) {
             
             currentPost = { id: doc.id, ...doc.data() };
             
-            const title = currentPost.title || 'Тейк на Takean';
-            const description = (currentPost.content || '').substring(0, 200) + '...';
-            const image = currentPost.images && currentPost.images.length > 0 
-                ? currentPost.images[0] 
-                : 'https://takean.pages.dev/og-image.png';
-            const url = window.location.href;
+            let communityPromise = Promise.resolve();
+            let communityData = null;
+            if (currentPost.communityId) {
+                communityPromise = db.collection('communities').doc(currentPost.communityId).get()
+                    .then(doc => {
+                        if (doc.exists) communityData = doc.data();
+                    })
+                    .catch(() => {});
+            }
             
-            updatePostOGTags({
-                title: title,
-                description: description,
-                image: image,
-                url: url
+            let authorOnline = false;
+            const authorPromise = checkUserOnline(currentPost.authorId).then(isOnline => {
+                authorOnline = isOnline;
             });
             
-            renderPost(currentPost);
-            loadComments(postId);
+            Promise.all([communityPromise, authorPromise])
+                .then(() => {
+                    currentPost._communityData = communityData;
+                    currentPost._authorOnline = authorOnline;
+                    
+                    // ===== OPEN GRAPH =====
+                    const title = currentPost.title || 'Тейк на Takean';
+                    const description = (currentPost.content || '').substring(0, 200) + '...';
+                    const image = currentPost.images && currentPost.images.length > 0 
+                        ? currentPost.images[0] 
+                        : 'https://takean.pages.dev/og-image.png';
+                    const url = window.location.href;
+                    
+                    document.title = `${title} | Takean`;
+                    
+                    // Обновляем OG мета-теги
+                    const metaMap = {
+                        'og:title': title,
+                        'og:description': description,
+                        'og:image': image,
+                        'og:url': url,
+                        'twitter:title': title,
+                        'twitter:description': description,
+                        'twitter:image': image
+                    };
+                    
+                    for (const [property, content] of Object.entries(metaMap)) {
+                        let meta = document.querySelector(`meta[property="${property}"]`);
+                        if (!meta) {
+                            meta = document.querySelector(`meta[name="${property}"]`);
+                        }
+                        if (meta) {
+                            meta.setAttribute('content', content);
+                        }
+                    }
+                    
+                    renderPost(currentPost);
+                    loadComments(postId);
+                });
         })
         .catch(err => {
             console.error('Load post error:', err);
@@ -1131,6 +1833,9 @@ function loadPost(id) {
         });
 }
 
+// ============================================================
+// RENDER POST
+// ============================================================
 function renderPost(post) {
     const container = document.getElementById('postContainer');
     const isLiked = post.likes && currentUser && post.likes.includes(currentUser.uid);
@@ -1138,7 +1843,9 @@ function renderPost(post) {
     const score = (post.likes?.length || 0) - (post.dislikes?.length || 0);
     const scoreClass = score > 0 ? 'positive' : score < 0 ? 'negative' : '';
     const textColor = post.textColor || 'var(--text-secondary)';
-    const bgColor = post.bgColor || 'transparent';
+    const bgColor = post.bgColor || 'var(--post-content-bg)';
+    const isOnline = post._authorOnline || false;
+    const communityData = post._communityData || null;
     
     const timeStr = post.createdAt 
         ? new Date(post.createdAt.seconds * 1000).toLocaleString('ru-RU', { 
@@ -1147,24 +1854,103 @@ function renderPost(post) {
           })
         : 'недавно';
     
+    let tagsHtml = '';
+    if (post.category) {
+        const categories = post.category.split(',').map(c => c.trim());
+        categories.forEach(cat => {
+            const tagClass = getTagClass(cat);
+            const displayName = getTagDisplayName(cat);
+            tagsHtml += `<span class="post-tag ${tagClass}" onclick="applyFilter('${cat}')">#${displayName}</span>`;
+        });
+    }
+    
+    let communityHtml = '';
+    if (post.communityId && communityData) {
+        const communityName = communityData.name || post.community || 'Сообщество';
+        const communityAvatar = communityData.avatar || '';
+        communityHtml = `
+            <span class="community-wrap" onclick="goToCommunity('${post.communityId}')">
+                <span class="material-icons" style="font-size:16px;">arrow_forward</span>
+                <span class="community-avatar">
+                    ${communityAvatar ? `<img src="${communityAvatar}" alt="">` : `<span class="material-icons" style="font-size:14px;">group</span>`}
+                </span>
+                ${escapeHtml(communityName)}
+            </span>
+        `;
+    } else if (post.community) {
+        communityHtml = `<span>• ${escapeHtml(post.community)}</span>`;
+    }
+    
+    let imagesHtml = '';
+    if (post.images && post.images.length) {
+        const count = post.images.length;
+        if (count === 1) {
+            imagesHtml = `
+                <div class="post-images" style="grid-template-columns:1fr;">
+                    ${post.images.map(img => `
+                        <div class="img-wrap" onclick="openImageViewer('${img}')">
+                            <img src="${img}" alt="post image" loading="lazy">
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } else if (count === 2) {
+            imagesHtml = `
+                <div class="post-images" style="grid-template-columns:1fr 1fr;">
+                    ${post.images.map(img => `
+                        <div class="img-wrap" onclick="openImageViewer('${img}')">
+                            <img src="${img}" alt="post image" loading="lazy">
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } else if (count === 3) {
+            imagesHtml = `
+                <div class="post-images" style="grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;">
+                    <div class="img-wrap" style="grid-row:1/3;" onclick="openImageViewer('${post.images[0]}')">
+                        <img src="${post.images[0]}" alt="post image" loading="lazy">
+                    </div>
+                    ${post.images.slice(1, 3).map(img => `
+                        <div class="img-wrap" onclick="openImageViewer('${img}')">
+                            <img src="${img}" alt="post image" loading="lazy">
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } else {
+            imagesHtml = `
+                <div class="post-images" style="grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;">
+                    ${post.images.slice(0, 4).map(img => `
+                        <div class="img-wrap" onclick="openImageViewer('${img}')">
+                            <img src="${img}" alt="post image" loading="lazy">
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+    }
+    
     container.innerHTML = `
         <div class="post-view">
             <div class="post-header">
-                <div class="post-avatar" onclick="goToProfile('${post.authorId}')">
-                    ${post.authorAvatar 
-                        ? `<img src="${post.authorAvatar}" alt="">` 
-                        : `<span>${(post.authorName || '?')[0].toUpperCase()}</span>`}
+                <div class="post-avatar-wrap">
+                    <div class="post-avatar" onclick="goToProfile('${post.authorId}')">
+                        ${post.authorAvatar 
+                            ? `<img src="${post.authorAvatar}" alt="">` 
+                            : `<span>${(post.authorName || '?')[0].toUpperCase()}</span>`}
+                        <span class="online-dot ${isOnline ? 'show' : ''}"></span>
+                    </div>
                 </div>
-                <div>
+                <div class="post-user">
                     <div class="post-username" onclick="goToProfile('${post.authorId}')">
                         ${escapeHtml(post.authorName || 'Аноним')}
                         ${post.authorBadge ? `<span class="post-badge">${escapeHtml(post.authorBadge)}</span>` : ''}
                     </div>
                     <div class="post-meta">
-                        ${timeStr}
-                        ${post.category ? ` • #${escapeHtml(post.category)}` : ''}
-                        ${post.community ? ` • <span class="community-link" onclick="goToCommunity('${post.communityId || post.community}')">${escapeHtml(post.community)}</span>` : ''}
+                        <span>${timeStr}</span>
+                        ${communityHtml}
                     </div>
+                    ${tagsHtml ? `<div class="post-tags">${tagsHtml}</div>` : ''}
                 </div>
                 ${post.authorId === currentUser?.uid ? `
                     <div style="margin-left:auto;display:flex;gap:4px;">
@@ -1178,27 +1964,19 @@ function renderPost(post) {
             <h1 class="post-title">${escapeHtml(post.title || 'Без заголовка')}</h1>
             
             <div class="post-content" style="color:${textColor};background:${bgColor};">
-                ${renderContent(post.content || '')}
+                ${parseBBC(post.content || '')}
             </div>
             
-            ${post.images && post.images.length ? `
-                <div class="post-images">
-                    ${post.images.map(img => `
-                        <div class="img-wrap" onclick="window.open('${img}', '_blank')">
-                            <img src="${img}" alt="post image" loading="lazy">
-                        </div>
-                    `).join('')}
-                </div>
-            ` : ''}
+            ${imagesHtml}
             
             <div class="post-actions">
                 <button class="post-action-btn ${isLiked ? 'liked' : ''}" onclick="votePost(1)">
                     <span class="material-icons">thumb_up</span>
-                    ${post.likes?.length || 0}
+                    <span class="vote-count">${post.likes?.length || 0}</span>
                 </button>
                 <button class="post-action-btn ${isDisliked ? 'disliked' : ''}" onclick="votePost(-1)">
                     <span class="material-icons">thumb_down</span>
-                    ${post.dislikes?.length || 0}
+                    <span class="vote-count">${post.dislikes?.length || 0}</span>
                 </button>
                 <span class="post-score ${scoreClass}">${score}</span>
                 <button class="post-action-btn" onclick="sharePost()">
@@ -1218,6 +1996,7 @@ function renderPost(post) {
                     ${currentUser?.photoURL 
                         ? `<img src="${currentUser.photoURL}" alt="">` 
                         : `<span>${currentUser?.displayName?.[0] || '?'}</span>`}
+                    <span class="online-dot ${currentUser ? 'show' : ''}"></span>
                 </div>
                 <div class="comment-input-wrap">
                     <textarea id="commentInput" placeholder="Напишите комментарий... (поддерживает @упоминания)"></textarea>
@@ -1225,17 +2004,12 @@ function renderPost(post) {
                         <button class="ripple-btn outline" onclick="addCommentImage()" style="padding:4px 10px;font-size:12px;">
                             <span class="material-icons" style="font-size:16px;">image</span> Фото
                         </button>
-                        ${commentImage ? `
-                            <span style="font-size:11px;color:var(--text-muted);">
-                                Фото загружено 
-                                <span style="cursor:pointer;color:var(--red);" onclick="removeCommentImage()">×</span>
-                            </span>
-                        ` : ''}
+                        <div class="comment-images-preview" id="commentImagesPreview"></div>
                         <button class="ripple-btn primary" onclick="submitComment()" id="submitCommentBtn" style="padding:4px 14px;font-size:12px;">
                             <span class="material-icons" style="font-size:16px;">send</span> Отправить
                         </button>
                     </div>
-                    <input type="file" id="commentImageInput" accept="image/*" style="display:none;" onchange="handleCommentImageUpload(event)">
+                    <input type="file" id="commentImageInput" accept="image/*" multiple style="display:none;" onchange="handleCommentImageUpload(event)">
                 </div>
             </div>
             
@@ -1246,25 +2020,9 @@ function renderPost(post) {
     `;
 }
 
-function renderContent(text) {
-    if (!text) return '';
-    let html = escapeHtml(text);
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    html = html.replace(/__(.*?)__/g, '<u>$1</u>');
-    html = html.replace(/~~(.*?)~~/g, '<s>$1</s>');
-    html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" style="color:var(--accent);">$1</a>');
-    html = html.replace(/@([a-zA-Z0-9_.-]+)/g, '<span class="mention" onclick="goToProfileByUsername(\'$1\')">@$1</span>');
-    return html;
-}
-
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
+// ============================================================
+// VOTE SYSTEM (мгновенное обновление)
+// ============================================================
 function votePost(direction) {
     if (!currentUser) {
         window.location.href = '/login.html';
@@ -1272,15 +2030,39 @@ function votePost(direction) {
     }
     if (!currentPost) return;
     
-    const postRef = db.collection('posts').doc(currentPost.id);
+    const uid = currentUser.uid;
+    const wasLiked = currentPost.likes && currentPost.likes.includes(uid);
+    const wasDisliked = currentPost.dislikes && currentPost.dislikes.includes(uid);
     
+    if (direction === 1) {
+        if (wasLiked) {
+            currentPost.likes = currentPost.likes.filter(id => id !== uid);
+        } else {
+            currentPost.likes = [...(currentPost.likes || []), uid];
+            if (wasDisliked) {
+                currentPost.dislikes = currentPost.dislikes.filter(id => id !== uid);
+            }
+        }
+    } else if (direction === -1) {
+        if (wasDisliked) {
+            currentPost.dislikes = currentPost.dislikes.filter(id => id !== uid);
+        } else {
+            currentPost.dislikes = [...(currentPost.dislikes || []), uid];
+            if (wasLiked) {
+                currentPost.likes = currentPost.likes.filter(id => id !== uid);
+            }
+        }
+    }
+    
+    renderPost(currentPost);
+    
+    const postRef = db.collection('posts').doc(currentPost.id);
     db.runTransaction(transaction => {
         return transaction.get(postRef).then(doc => {
             if (!doc.exists) return;
             const data = doc.data();
             const likes = data.likes || [];
             const dislikes = data.dislikes || [];
-            const uid = currentUser.uid;
             
             let newLikes = likes.filter(id => id !== uid);
             let newDislikes = dislikes.filter(id => id !== uid);
@@ -1296,16 +2078,6 @@ function votePost(direction) {
                 dislikes: newDislikes
             });
         });
-    }).then(() => {
-        const uid = currentUser.uid;
-        if (direction === 1) {
-            currentPost.likes = [...(currentPost.likes || []).filter(id => id !== uid), uid];
-            currentPost.dislikes = (currentPost.dislikes || []).filter(id => id !== uid);
-        } else {
-            currentPost.dislikes = [...(currentPost.dislikes || []).filter(id => id !== uid), uid];
-            currentPost.likes = (currentPost.likes || []).filter(id => id !== uid);
-        }
-        renderPost(currentPost);
     }).catch(err => console.error('Vote error:', err));
 }
 
@@ -1340,17 +2112,12 @@ function deletePost() {
 }
 
 // ============================================================
-// LOAD COMMENTS - ИСПРАВЛЕННАЯ ВЕРСИЯ
+// COMMENTS
 // ============================================================
 function loadComments(postId) {
-    if (isLoadingComments) return;
-    isLoadingComments = true;
-    
     const container = document.getElementById('commentsContainer');
-    if (container) {
-        container.innerHTML = '<div class="loading-spinner"><span class="material-icons">refresh</span> Загрузка комментариев...</div>';
-    }
-    
+    container.innerHTML = '<div class="loading-spinner"><span class="material-icons">refresh</span> Загрузка...</div>';
+
     db.collection('comments')
         .where('postId', '==', postId)
         .where('parentId', '==', null)
@@ -1358,13 +2125,18 @@ function loadComments(postId) {
         .get()
         .then(snapshot => {
             comments = [];
+            const promises = [];
             snapshot.forEach(doc => {
                 comments.push({ id: doc.id, ...doc.data() });
             });
             
-            // Загружаем ответы
-            if (comments.length) {
-                const promises = comments.map(c => 
+            comments.forEach(c => {
+                promises.push(
+                    checkUserOnline(c.authorId).then(isOnline => {
+                        c._authorOnline = isOnline;
+                    })
+                );
+                promises.push(
                     db.collection('comments')
                         .where('postId', '==', postId)
                         .where('parentId', '==', c.id)
@@ -1373,34 +2145,35 @@ function loadComments(postId) {
                         .then(snap => {
                             c.replies = [];
                             snap.forEach(doc => {
-                                c.replies.push({ id: doc.id, ...doc.data() });
+                                const reply = { id: doc.id, ...doc.data() };
+                                promises.push(
+                                    checkUserOnline(reply.authorId).then(isOnline => {
+                                        reply._authorOnline = isOnline;
+                                    })
+                                );
+                                c.replies.push(reply);
                             });
                         })
                 );
-                return Promise.all(promises);
-            }
-            return Promise.resolve();
+            });
+            
+            return Promise.all(promises);
         })
         .then(() => {
-            isLoadingComments = false;
             renderComments();
         })
         .catch(err => {
             console.error('Load comments error:', err);
-            isLoadingComments = false;
-            const container = document.getElementById('commentsContainer');
-            if (container) {
-                container.innerHTML = `
-                    <div class="error-state">
-                        <span class="material-icons">error</span>
-                        <h3 style="font-weight:500;">Ошибка загрузки комментариев</h3>
-                        <div class="error-details">${err.message}</div>
-                        <button class="ripple-btn primary" style="margin-top:12px;" onclick="loadComments('${postId}')">
-                            <span class="material-icons">refresh</span> Повторить
-                        </button>
-                    </div>
-                `;
-            }
+            container.innerHTML = `
+                <div class="error-state">
+                    <span class="material-icons">error</span>
+                    <h3 style="font-weight:500;">Ошибка загрузки комментариев</h3>
+                    <div class="error-details">${err.message}</div>
+                    <button class="ripple-btn primary" style="margin-top:12px;" onclick="loadComments('${postId}')">
+                        <span class="material-icons">refresh</span> Повторить
+                    </button>
+                </div>
+            `;
         });
 }
 
@@ -1418,7 +2191,7 @@ function renderComments() {
         return;
     }
     
-    container.innerHTML = comments.map(comment => createCommentHTML(comment)).join('');
+    container.innerHTML = comments.map(comment => createCommentHTML(comment, 0)).join('');
     
     const countEl = document.getElementById('commentsCount');
     if (countEl) {
@@ -1427,11 +2200,12 @@ function renderComments() {
     }
 }
 
-function createCommentHTML(comment, depth = 0) {
+function createCommentHTML(comment, depth) {
     const isLiked = comment.likes && currentUser && comment.likes.includes(currentUser.uid);
     const isDisliked = comment.dislikes && currentUser && comment.dislikes.includes(currentUser.uid);
     const score = (comment.likes?.length || 0) - (comment.dislikes?.length || 0);
     const scoreClass = score > 0 ? 'positive' : score < 0 ? 'negative' : '';
+    const isOnline = comment._authorOnline || false;
     const timeStr = comment.createdAt 
         ? new Date(comment.createdAt.seconds * 1000).toLocaleString('ru-RU', { 
             hour: '2-digit', minute: '2-digit', 
@@ -1439,18 +2213,34 @@ function createCommentHTML(comment, depth = 0) {
           })
         : 'недавно';
     
+    let imagesHtml = '';
+    if (comment.images && comment.images.length) {
+        imagesHtml = `
+            <div class="comment-images-grid">
+                ${comment.images.map(img => `
+                    <div class="img-wrap" onclick="openImageViewer('${img}')">
+                        <img src="${img}" alt="comment image" loading="lazy">
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+    
     let repliesHtml = '';
     if (comment.replies && comment.replies.length) {
-        repliesHtml = comment.replies.map(r => createCommentHTML(r, depth + 1)).join('');
+        repliesHtml = comment.replies.map(reply => createCommentHTML(reply, depth + 1)).join('');
     }
     
     return `
         <div class="comment" id="comment-${comment.id}" style="${depth > 0 ? 'margin-left:12px;' : ''}">
             <div class="comment-header">
-                <div class="comment-avatar" onclick="goToProfile('${comment.authorId}')">
-                    ${comment.authorAvatar 
-                        ? `<img src="${comment.authorAvatar}" alt="">` 
-                        : `<span>${(comment.authorName || '?')[0].toUpperCase()}</span>`}
+                <div class="comment-avatar-wrap">
+                    <div class="comment-avatar" onclick="goToProfile('${comment.authorId}')">
+                        ${comment.authorAvatar 
+                            ? `<img src="${comment.authorAvatar}" alt="">` 
+                            : `<span>${(comment.authorName || '?')[0].toUpperCase()}</span>`}
+                        <span class="online-dot ${isOnline ? 'show' : ''}"></span>
+                    </div>
                 </div>
                 <div class="comment-username" onclick="goToProfile('${comment.authorId}')">
                     ${escapeHtml(comment.authorName || 'Аноним')}
@@ -1458,22 +2248,29 @@ function createCommentHTML(comment, depth = 0) {
                 <span class="comment-time">${timeStr}</span>
             </div>
             
+            ${depth > 0 ? `
+                <div class="comment-reply-badge">
+                    <span class="material-icons">reply</span>
+                    Ответ для <span class="reply-to" onclick="scrollToComment('${comment.parentId}')">@${escapeHtml(comment.parentAuthorName || 'пользователь')}</span>
+                </div>
+            ` : ''}
+            
             <div class="comment-text">
-                ${renderContent(comment.text || '')}
-                ${comment.image ? `<br><img src="${comment.image}" class="comment-image" onclick="window.open('${comment.image}', '_blank')">` : ''}
+                ${parseBBC(comment.text || '')}
+                ${imagesHtml}
             </div>
             
             <div class="comment-actions">
                 <button onclick="voteComment('${comment.id}', 1)" class="${isLiked ? 'liked' : ''}">
                     <span class="material-icons" style="font-size:16px;">thumb_up</span>
-                    ${comment.likes?.length || 0}
+                    <span class="vote-count">${comment.likes?.length || 0}</span>
                 </button>
                 <button onclick="voteComment('${comment.id}', -1)" class="${isDisliked ? 'disliked' : ''}">
                     <span class="material-icons" style="font-size:16px;">thumb_down</span>
-                    ${comment.dislikes?.length || 0}
+                    <span class="vote-count">${comment.dislikes?.length || 0}</span>
                 </button>
                 <span class="comment-score ${scoreClass}">${score}</span>
-                <button onclick="showReplyForm('${comment.id}')">
+                <button onclick="showReplyForm('${comment.id}', '${escapeHtml(comment.authorName || 'пользователь')}')">
                     <span class="material-icons" style="font-size:16px;">reply</span> Ответить
                 </button>
                 ${comment.authorId === currentUser?.uid ? `
@@ -1493,13 +2290,27 @@ function createCommentHTML(comment, depth = 0) {
     `;
 }
 
-function showReplyForm(commentId) {
+function scrollToComment(commentId) {
+    const el = document.getElementById(`comment-${commentId}`);
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.style.background = 'var(--accent-light)';
+        setTimeout(() => {
+            el.style.background = 'transparent';
+        }, 2000);
+    }
+}
+
+function showReplyForm(commentId, authorName) {
     const form = document.getElementById(`replyForm-${commentId}`);
     if (form) {
         form.classList.toggle('hidden');
         if (!form.classList.contains('hidden')) {
             const input = document.getElementById(`replyInput-${commentId}`);
-            if (input) input.focus();
+            if (input) {
+                input.placeholder = `Ответ @${authorName}`;
+                input.focus();
+            }
         }
     }
 }
@@ -1515,13 +2326,35 @@ function submitReply(parentId) {
     const text = input.value.trim();
     if (!text) return;
     
+    let parentAuthorName = null;
+    const findParent = (list) => {
+        for (const c of list) {
+            if (c.id === parentId) {
+                parentAuthorName = c.authorName;
+                return true;
+            }
+            if (c.replies) {
+                for (const r of c.replies) {
+                    if (r.id === parentId) {
+                        parentAuthorName = r.authorName;
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    };
+    findParent(comments);
+    
     const commentData = {
         postId: postId,
         parentId: parentId,
+        parentAuthorName: parentAuthorName || 'пользователь',
         authorId: currentUser.uid,
         authorName: currentUser.displayName || 'Аноним',
         authorAvatar: currentUser.photoURL || null,
         text: text,
+        images: [],
         likes: [],
         dislikes: [],
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1545,7 +2378,7 @@ function submitComment() {
     
     const textarea = document.getElementById('commentInput');
     const text = textarea.value.trim();
-    if (!text) return;
+    if (!text && commentImages.length === 0) return;
     
     const btn = document.getElementById('submitCommentBtn');
     btn.disabled = true;
@@ -1554,11 +2387,12 @@ function submitComment() {
     const commentData = {
         postId: postId,
         parentId: null,
+        parentAuthorName: null,
         authorId: currentUser.uid,
         authorName: currentUser.displayName || 'Аноним',
         authorAvatar: currentUser.photoURL || null,
-        text: text,
-        image: commentImage || null,
+        text: text || '',
+        images: commentImages.slice(),
         likes: [],
         dislikes: [],
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1567,7 +2401,8 @@ function submitComment() {
     db.collection('comments').add(commentData)
         .then(() => {
             textarea.value = '';
-            commentImage = null;
+            commentImages = [];
+            document.getElementById('commentImagesPreview').innerHTML = '';
             document.getElementById('commentImageInput').value = '';
             loadComments(postId);
             updateCommentCount();
@@ -1587,6 +2422,62 @@ function voteComment(commentId, direction) {
     
     const commentRef = db.collection('comments').doc(commentId);
     
+    // Мгновенное обновление
+    const updateCommentInList = (list) => {
+        for (const c of list) {
+            if (c.id === commentId) {
+                const uid = currentUser.uid;
+                const wasLiked = c.likes && c.likes.includes(uid);
+                const wasDisliked = c.dislikes && c.dislikes.includes(uid);
+                if (direction === 1) {
+                    if (wasLiked) {
+                        c.likes = c.likes.filter(id => id !== uid);
+                    } else {
+                        c.likes = [...(c.likes || []), uid];
+                        if (wasDisliked) c.dislikes = c.dislikes.filter(id => id !== uid);
+                    }
+                } else {
+                    if (wasDisliked) {
+                        c.dislikes = c.dislikes.filter(id => id !== uid);
+                    } else {
+                        c.dislikes = [...(c.dislikes || []), uid];
+                        if (wasLiked) c.likes = c.likes.filter(id => id !== uid);
+                    }
+                }
+                return true;
+            }
+            if (c.replies) {
+                for (const r of c.replies) {
+                    if (r.id === commentId) {
+                        const uid = currentUser.uid;
+                        const wasLiked = r.likes && r.likes.includes(uid);
+                        const wasDisliked = r.dislikes && r.dislikes.includes(uid);
+                        if (direction === 1) {
+                            if (wasLiked) {
+                                r.likes = r.likes.filter(id => id !== uid);
+                            } else {
+                                r.likes = [...(r.likes || []), uid];
+                                if (wasDisliked) r.dislikes = r.dislikes.filter(id => id !== uid);
+                            }
+                        } else {
+                            if (wasDisliked) {
+                                r.dislikes = r.dislikes.filter(id => id !== uid);
+                            } else {
+                                r.dislikes = [...(r.dislikes || []), uid];
+                                if (wasLiked) r.likes = r.likes.filter(id => id !== uid);
+                            }
+                        }
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    };
+    updateCommentInList(comments);
+    renderComments();
+    
+    // Отправка в БД
     db.runTransaction(transaction => {
         return transaction.get(commentRef).then(doc => {
             if (!doc.exists) return;
@@ -1609,8 +2500,6 @@ function voteComment(commentId, direction) {
                 dislikes: newDislikes
             });
         });
-    }).then(() => {
-        loadComments(postId);
     }).catch(err => console.error('Vote comment error:', err));
 }
 
@@ -1638,39 +2527,83 @@ function updateCommentCount() {
         });
 }
 
+// ============================================================
+// COMMENT IMAGES
+// ============================================================
 function addCommentImage() {
     document.getElementById('commentImageInput').click();
 }
 
 function handleCommentImageUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+    const files = event.target.files;
+    if (!files || !files.length) return;
+    if (commentImages.length + files.length > 10) {
+        alert('Максимум 10 изображений в комментарии');
+        return;
+    }
     
-    const formData = new FormData();
-    formData.append('key', IMGBB_API_KEY);
-    formData.append('image', file);
+    const total = files.length;
+    let completed = 0;
     
-    fetch('https://api.imgbb.com/1/upload', {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            commentImage = data.data.url;
-            alert('Фото загружено!');
-        } else {
-            alert('Ошибка загрузки: ' + (data.error?.message || 'Unknown'));
+    Array.from(files).forEach(file => {
+        if (file.size > 10 * 1024 * 1024) {
+            alert(`Файл ${file.name} слишком большой (>10MB)`);
+            completed++;
+            checkComplete();
+            return;
         }
-    })
-    .catch(err => alert('Ошибка: ' + err.message));
+        
+        const formData = new FormData();
+        formData.append('key', IMGBB_API_KEY);
+        formData.append('image', file);
+        
+        fetch('https://api.imgbb.com/1/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                commentImages.push(data.data.url);
+                renderCommentImagesPreview();
+            } else {
+                alert('Ошибка загрузки: ' + (data.error?.message || 'Unknown'));
+            }
+        })
+        .catch(err => {
+            alert('Ошибка: ' + err.message);
+        })
+        .finally(() => {
+            completed++;
+            checkComplete();
+        });
+    });
+    
+    function checkComplete() {
+        if (completed >= total) {
+            document.getElementById('commentImageInput').value = '';
+        }
+    }
 }
 
-function removeCommentImage() {
-    commentImage = null;
-    document.getElementById('commentImageInput').value = '';
+function renderCommentImagesPreview() {
+    const container = document.getElementById('commentImagesPreview');
+    container.innerHTML = commentImages.map((url, i) => `
+        <div class="img-wrap">
+            <img src="${url}" alt="comment image" loading="lazy">
+            <button class="remove-img" onclick="removeCommentImage(${i})">×</button>
+        </div>
+    `).join('');
 }
 
+function removeCommentImage(index) {
+    commentImages.splice(index, 1);
+    renderCommentImagesPreview();
+}
+
+// ============================================================
+// NAVIGATION HELPERS
+// ============================================================
 function goToProfile(uid) {
     if (uid) window.location.href = `/profile.html?uid=${uid}`;
 }
@@ -1687,6 +2620,10 @@ function goToProfileByUsername(username) {
 
 function goToCommunity(communityId) {
     if (communityId) window.location.href = `/community.html?id=${communityId}`;
+}
+
+function applyFilter(filter) {
+    window.location.href = `/search.html?q=${encodeURIComponent(filter)}`;
 }
 
 console.log('📄 Post page loaded');
