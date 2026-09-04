@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
-        /* ===== БАЗОВЫЕ СТИЛИ (без изменений) ===== */
+        /* ===== БАЗОВЫЕ СТИЛИ ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -31,6 +31,7 @@
             --radius: 4px;
             --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             --topbar-height: 60px;
+            --online-color: #4caf50;
         }
 
         [data-theme="light"] {
@@ -53,6 +54,7 @@
             color: var(--text-primary);
             transition: background 0.3s, color 0.3s;
             -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -131,12 +133,9 @@
             gap: 6px;
             -webkit-tap-highlight-color: transparent;
             -webkit-touch-callout: none;
-            /* Убираем стандартный WebKit highlight */
-            -webkit-tap-highlight-color: transparent;
             outline: none;
         }
 
-        /* Убираем стандартный фокус и выделение */
         .ripple-btn:focus-visible {
             outline: 2px solid var(--accent);
             outline-offset: 2px;
@@ -173,6 +172,11 @@
             color: var(--red);
         }
         .ripple-btn.danger:hover { background: rgba(244, 67, 54, 0.1); }
+
+        .ripple-btn.success {
+            color: var(--green);
+        }
+        .ripple-btn.success:hover { background: rgba(76, 175, 80, 0.1); }
 
         /* ===== TOP BAR ===== */
         .topbar {
@@ -289,7 +293,7 @@
             height: 10px;
             border-radius: 50%;
             border: 2px solid var(--bg-card);
-            background: #4caf50;
+            background: var(--online-color);
             display: none;
         }
 
@@ -498,6 +502,7 @@
             font-size: 10px;
             font-weight: 600;
             color: var(--text-secondary);
+            position: relative;
         }
 
         .community-members .avatar-stack .mini-avatar:first-child { margin-left: 0; }
@@ -505,6 +510,22 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .community-members .avatar-stack .mini-avatar .online-dot {
+            position: absolute;
+            bottom: -1px;
+            right: -1px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-card);
+            background: var(--online-color);
+            display: none;
+        }
+
+        .community-members .avatar-stack .mini-avatar .online-dot.show {
+            display: block;
         }
 
         .community-members .members-count {
@@ -571,7 +592,7 @@
             height: 10px;
             border-radius: 50%;
             border: 2px solid var(--bg-card);
-            background: #4caf50;
+            background: var(--online-color);
             display: none;
         }
 
@@ -626,7 +647,6 @@
             cursor: pointer;
         }
 
-        /* Стили для BBC в посте */
         .post-content .bbc-bold { font-weight: 700; }
         .post-content .bbc-italic { font-style: italic; }
         .post-content .bbc-underline { text-decoration: underline; }
@@ -739,7 +759,7 @@
             border: 1px solid var(--border-color);
             border-radius: var(--radius);
             padding: 24px 28px;
-            max-width: 500px;
+            max-width: 520px;
             width: 100%;
             max-height: 80vh;
             overflow-y: auto;
@@ -809,7 +829,7 @@
             height: 10px;
             border-radius: 50%;
             border: 2px solid var(--bg-card);
-            background: #4caf50;
+            background: var(--online-color);
             display: none;
         }
 
@@ -825,6 +845,52 @@
         .modal-user-item .username {
             font-size: 12px;
             color: var(--text-muted);
+        }
+
+        .modal-user-item .admin-badge {
+            font-size: 10px;
+            background: var(--accent-light);
+            color: var(--accent);
+            padding: 1px 8px;
+            border-radius: 10px;
+            margin-left: 6px;
+            font-weight: 500;
+        }
+
+        .modal-user-item .member-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .modal-user-item .member-actions button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: var(--radius);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .modal-user-item .member-actions button:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .modal-user-item .member-actions .remove-btn:hover {
+            color: var(--red);
+            background: rgba(244, 67, 54, 0.1);
+        }
+
+        .modal-user-item .member-actions .admin-btn:hover {
+            color: var(--green);
+            background: rgba(76, 175, 80, 0.1);
         }
 
         /* ===== EDIT MODAL ===== */
@@ -1119,6 +1185,8 @@
             .modal-box { padding: 20px; margin: 8px; }
             .edit-media-row { flex-direction: column; align-items: center; }
             .edit-cover-box { width: 100%; }
+            .modal-user-item { flex-wrap: wrap; }
+            .modal-user-item .member-actions { margin-left: 0; width: 100%; justify-content: flex-end; }
         }
 
         @media (max-width: 480px) {
@@ -1137,6 +1205,9 @@
             .post-title { font-size: 14px; }
             .post-content { font-size: 13px; }
             .modal-box { padding: 16px; }
+            .modal-user-item { padding: 8px 0; }
+            .modal-user-item .avatar { width: 32px; height: 32px; font-size: 12px; }
+            .modal-user-item .name { font-size: 13px; }
         }
     </style>
 </head>
@@ -1237,13 +1308,15 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-const IMGBB_API_KEY = '82ba1ce293103084398ae828937d95d4'; // Твой ключ
+const IMGBB_API_KEY = '82ba1ce293103084398ae828937d95d4';
 
 let currentUser = null;
 let communityData = null;
 let communityId = null;
 let communityPosts = [];
 let userOnlineStatus = {};
+let communityAdmins = [];
+let isCommunityOwner = false;
 
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
@@ -1346,19 +1419,16 @@ function startOnlineTracking() {
     isUserActive = true;
     updateOnlineStatus();
     
-    // Сбрасываем таймер бездействия при активности
     function resetInactivity() {
         isUserActive = true;
         updateOnlineStatus();
         clearTimeout(inactivityTimer);
-        // Через 2 минуты бездействия считаем пользователя офлайн
         inactivityTimer = setTimeout(() => {
             isUserActive = false;
             updateOnlineStatus();
-        }, 120000); // 2 минуты
+        }, 120000);
     }
     
-    // События активности
     const events = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
     events.forEach(event => {
         document.addEventListener(event, resetInactivity);
@@ -1366,14 +1436,12 @@ function startOnlineTracking() {
     
     resetInactivity();
     
-    // Обновляем статус каждые 30 секунд
     onlineCheckInterval = setInterval(() => {
         if (currentUser) {
             updateOnlineStatus();
         }
     }, 30000);
     
-    // При закрытии страницы
     window.addEventListener('beforeunload', () => {
         if (currentUser) {
             db.collection('users').doc(currentUser.uid).update({
@@ -1383,7 +1451,6 @@ function startOnlineTracking() {
         }
     });
     
-    // При скрытии вкладки
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
             isUserActive = false;
@@ -1498,6 +1565,8 @@ function loadCommunity(id) {
                 return;
             }
             communityData = { id: doc.id, ...doc.data() };
+            communityAdmins = communityData.admins || [];
+            isCommunityOwner = currentUser && communityData.ownerId === currentUser.uid;
             document.title = `${communityData.name || 'Сообщество'} | Takean`;
             renderCommunity(communityData);
             loadCommunityPosts(id);
@@ -1535,7 +1604,6 @@ function loadMembersStatus(memberIds) {
 }
 
 function updateMemberOnlineStatus(uid, isOnline) {
-    // Обновляем статус в стеке аватаров
     const dots = document.querySelectorAll(`.mini-avatar[data-uid="${uid}"] .online-dot`);
     dots.forEach(dot => {
         if (isOnline) {
@@ -1547,6 +1615,15 @@ function updateMemberOnlineStatus(uid, isOnline) {
 }
 
 // ============================================================
+// ПРОВЕРКА ПРАВ АДМИНА
+// ============================================================
+function isAdmin(uid) {
+    if (!uid) return false;
+    if (isCommunityOwner) return true;
+    return communityAdmins && communityAdmins.includes(uid);
+}
+
+// ============================================================
 // ОТОБРАЖЕНИЕ СООБЩЕСТВА
 // ============================================================
 function renderCommunity(community) {
@@ -1555,8 +1632,8 @@ function renderCommunity(community) {
     const isOwner = currentUser && community.ownerId === currentUser.uid;
     const displayMembers = community.members || [];
     const memberCount = community.memberCount || displayMembers.length;
+    const canManage = isOwner || isAdmin(currentUser?.uid);
     
-    // Создаем HTML для стека аватаров с онлайн-статусом
     let membersStackHtml = '';
     const showMembers = displayMembers.slice(0, 5);
     showMembers.forEach((member, i) => {
@@ -1635,6 +1712,11 @@ function renderCommunity(community) {
                     <button class="ripple-btn outline" onclick="copyCommunityLink()">
                         <span class="material-icons">link</span> Скопировать ссылку
                     </button>
+                    ${canManage ? `
+                        <button class="ripple-btn outline" onclick="showMembers()">
+                            <span class="material-icons">manage_accounts</span> Управление
+                        </button>
+                    ` : ''}
                 </div>
             </div>
         </div>
@@ -1644,7 +1726,6 @@ function renderCommunity(community) {
         </div>
     `;
     
-    // Обновляем онлайн-статусы участников
     if (displayMembers.length) {
         displayMembers.forEach(uid => {
             if (userOnlineStatus[uid] !== undefined) {
@@ -1671,7 +1752,6 @@ function loadCommunityPosts(id) {
             snapshot.forEach(doc => {
                 const data = doc.data();
                 communityPosts.push({ id: doc.id, ...data });
-                // Проверяем, есть ли данные об авторе
                 if (data.authorId && !data.authorName) {
                     promises.push(
                         db.collection('users').doc(data.authorId).get().then(userDoc => {
@@ -1707,7 +1787,7 @@ function loadCommunityPosts(id) {
 }
 
 // ============================================================
-// ОТОБРАЖЕНИЕ ПОСТОВ (С ПАРСИНГОМ BBC И ПРАВИЛЬНЫМИ ИЗОБРАЖЕНИЯМИ)
+// ОТОБРАЖЕНИЕ ПОСТОВ
 // ============================================================
 function renderPosts(posts) {
     const container = document.getElementById('communityPosts');
@@ -1725,7 +1805,6 @@ function renderPosts(posts) {
     }
 
     container.innerHTML = posts.map(post => {
-        // Определяем количество изображений и сетку
         const images = post.images || [];
         const imageCount = images.length;
         let gridStyle = '';
@@ -1748,17 +1827,13 @@ function renderPosts(posts) {
             }
         }
         
-        // Форматируем дату
         let timeText = 'недавно';
         if (post.createdAt) {
             const date = post.createdAt.toDate ? post.createdAt.toDate() : new Date(post.createdAt);
             timeText = date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
         }
         
-        // Парсим BBC для контента
         const parsedContent = parseBBCForDisplay(post.content || '');
-        
-        // Определяем название сообщества для отображения
         const communityName = post.communityName || post.community || 'Сообщество';
         
         return `
@@ -1803,7 +1878,7 @@ function renderPosts(posts) {
 }
 
 // ============================================================
-// ЛАЙКИ / ДИЗЛАЙКИ (МГНОВЕННОЕ ОБНОВЛЕНИЕ)
+// ЛАЙКИ / ДИЗЛАЙКИ
 // ============================================================
 function toggleLike(postId) {
     if (!currentUser) {
@@ -1816,7 +1891,6 @@ function toggleLike(postId) {
     const countEl = document.getElementById(`likeCount_${postId}`);
     const isLiked = btn.classList.contains('liked');
     
-    // Мгновенное обновление UI
     if (isLiked) {
         btn.classList.remove('liked');
         btn.querySelector('.material-icons').textContent = 'thumb_up_off_alt';
@@ -1825,7 +1899,6 @@ function toggleLike(postId) {
         btn.classList.add('liked');
         btn.querySelector('.material-icons').textContent = 'thumb_up';
         countEl.textContent = parseInt(countEl.textContent) + 1;
-        // Если был дизлайк, убираем его
         const dislikeBtn = document.getElementById(`dislikeBtn_${postId}`);
         if (dislikeBtn && dislikeBtn.classList.contains('disliked')) {
             dislikeBtn.classList.remove('disliked');
@@ -1835,7 +1908,6 @@ function toggleLike(postId) {
         }
     }
     
-    // Отправляем в Firestore
     db.runTransaction(transaction => {
         return transaction.get(postRef).then(doc => {
             if (!doc.exists) return;
@@ -1854,7 +1926,6 @@ function toggleLike(postId) {
         });
     }).catch(err => {
         console.error('Like error:', err);
-        // Откатываем UI при ошибке
         if (isLiked) {
             btn.classList.add('liked');
             btn.querySelector('.material-icons').textContent = 'thumb_up';
@@ -1878,7 +1949,6 @@ function toggleDislike(postId) {
     const countEl = document.getElementById(`dislikeCount_${postId}`);
     const isDisliked = btn.classList.contains('disliked');
     
-    // Мгновенное обновление UI
     if (isDisliked) {
         btn.classList.remove('disliked');
         btn.querySelector('.material-icons').textContent = 'thumb_down_off_alt';
@@ -1887,7 +1957,6 @@ function toggleDislike(postId) {
         btn.classList.add('disliked');
         btn.querySelector('.material-icons').textContent = 'thumb_down';
         countEl.textContent = parseInt(countEl.textContent) + 1;
-        // Если был лайк, убираем его
         const likeBtn = document.getElementById(`likeBtn_${postId}`);
         if (likeBtn && likeBtn.classList.contains('liked')) {
             likeBtn.classList.remove('liked');
@@ -1897,7 +1966,6 @@ function toggleDislike(postId) {
         }
     }
     
-    // Отправляем в Firestore
     db.runTransaction(transaction => {
         return transaction.get(postRef).then(doc => {
             if (!doc.exists) return;
@@ -1916,7 +1984,6 @@ function toggleDislike(postId) {
         });
     }).catch(err => {
         console.error('Dislike error:', err);
-        // Откатываем UI при ошибке
         if (isDisliked) {
             btn.classList.add('disliked');
             btn.querySelector('.material-icons').textContent = 'thumb_down';
@@ -1930,7 +1997,7 @@ function toggleDislike(postId) {
 }
 
 // ============================================================
-// ОТКРЫТИЕ ИЗОБРАЖЕНИЯ В МОДАЛЬНОМ ОКНЕ
+// ОТКРЫТИЕ ИЗОБРАЖЕНИЯ
 // ============================================================
 function openImageModal(url) {
     const modal = document.createElement('div');
@@ -2010,7 +2077,7 @@ function toggleJoinCommunity() {
 }
 
 // ============================================================
-// ПОКАЗ УЧАСТНИКОВ
+// ПОКАЗ УЧАСТНИКОВ С УПРАВЛЕНИЕМ
 // ============================================================
 function showMembers() {
     if (!communityData || !communityData.members || !communityData.members.length) {
@@ -2018,12 +2085,14 @@ function showMembers() {
         return;
     }
 
+    const canManage = isCommunityOwner || isAdmin(currentUser?.uid);
+
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.innerHTML = `
         <div class="modal-box">
             <button class="close-modal" onclick="this.closest('.modal-overlay').remove()">×</button>
-            <h3>Участники сообщества</h3>
+            <h3>Участники сообщества ${canManage ? '(управление)' : ''}</h3>
             <div id="membersList">
                 <div class="loading-spinner"><span class="material-icons">refresh</span></div>
             </div>
@@ -2035,22 +2104,161 @@ function showMembers() {
     Promise.all(communityData.members.map(id => 
         db.collection('users').doc(id).get().then(doc => ({ id, data: doc.exists ? doc.data() : null }))
     )).then(results => {
-        list.innerHTML = results.filter(r => r.data).map(r => {
+        const sorted = results.filter(r => r.data).sort((a, b) => {
+            // Владелец всегда сверху
+            if (a.id === communityData.ownerId) return -1;
+            if (b.id === communityData.ownerId) return 1;
+            // Админы следом
+            const aIsAdmin = communityAdmins.includes(a.id);
+            const bIsAdmin = communityAdmins.includes(b.id);
+            if (aIsAdmin && !bIsAdmin) return -1;
+            if (!aIsAdmin && bIsAdmin) return 1;
+            return 0;
+        });
+        
+        list.innerHTML = sorted.map(r => {
             const isOnline = r.data.isOnline || false;
+            const isOwner = r.id === communityData.ownerId;
+            const isAdmin = communityAdmins.includes(r.id);
+            const isSelf = currentUser && r.id === currentUser.uid;
+            const showControls = canManage && !isOwner && !isSelf;
+            
             return `
-                <div class="modal-user-item" onclick="window.location.href='/profile.html?uid=${r.id}'">
-                    <div class="avatar">
+                <div class="modal-user-item">
+                    <div class="avatar" onclick="window.location.href='/profile.html?uid=${r.id}'">
                         ${r.data.avatar ? `<img src="${r.data.avatar}" alt="">` : `<span>${(r.data.username || '?')[0].toUpperCase()}</span>`}
                         <span class="online-dot ${isOnline ? 'show' : ''}"></span>
                     </div>
-                    <div>
-                        <div class="name">${r.data.displayName || r.data.username || 'Аноним'}</div>
+                    <div onclick="window.location.href='/profile.html?uid=${r.id}'" style="flex:1;cursor:pointer;">
+                        <div class="name">
+                            ${r.data.displayName || r.data.username || 'Аноним'}
+                            ${isOwner ? '<span class="admin-badge">Создатель</span>' : ''}
+                            ${isAdmin && !isOwner ? '<span class="admin-badge">Админ</span>' : ''}
+                        </div>
                         <div class="username">@${r.data.username || 'anonymous'}</div>
                     </div>
+                    ${showControls ? `
+                        <div class="member-actions">
+                            ${!isAdmin ? `
+                                <button class="admin-btn" onclick="event.stopPropagation(); makeAdmin('${r.id}')" title="Сделать администратором">
+                                    <span class="material-icons" style="font-size:18px;">admin_panel_settings</span>
+                                </button>
+                            ` : `
+                                <button class="admin-btn" onclick="event.stopPropagation(); removeAdmin('${r.id}')" title="Снять с администратора">
+                                    <span class="material-icons" style="font-size:18px;">remove_moderator</span>
+                                </button>
+                            `}
+                            <button class="remove-btn" onclick="event.stopPropagation(); removeMember('${r.id}')" title="Удалить из сообщества">
+                                <span class="material-icons" style="font-size:18px;">person_remove</span>
+                            </button>
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }).join('');
     });
+}
+
+// ============================================================
+// УПРАВЛЕНИЕ УЧАСТНИКАМИ
+// ============================================================
+function makeAdmin(uid) {
+    if (!currentUser) return;
+    if (!isCommunityOwner && !isAdmin(currentUser.uid)) {
+        alert('Недостаточно прав');
+        return;
+    }
+    if (uid === communityData.ownerId) {
+        alert('Владелец сообщества всегда администратор');
+        return;
+    }
+    if (communityAdmins.includes(uid)) {
+        alert('Уже администратор');
+        return;
+    }
+    
+    const ref = db.collection('communities').doc(communityData.id);
+    db.runTransaction(transaction => {
+        return transaction.get(ref).then(doc => {
+            const admins = doc.data().admins || [];
+            if (!admins.includes(uid)) {
+                admins.push(uid);
+                transaction.update(ref, { admins: admins });
+            }
+        });
+    }).then(() => {
+        if (!communityAdmins.includes(uid)) communityAdmins.push(uid);
+        alert('Пользователь назначен администратором');
+        showMembers();
+    }).catch(err => alert('Ошибка: ' + err.message));
+}
+
+function removeAdmin(uid) {
+    if (!currentUser) return;
+    if (!isCommunityOwner && !isAdmin(currentUser.uid)) {
+        alert('Недостаточно прав');
+        return;
+    }
+    if (uid === communityData.ownerId) {
+        alert('Нельзя снять с администратора владельца');
+        return;
+    }
+    if (!communityAdmins.includes(uid)) {
+        alert('Не администратор');
+        return;
+    }
+    
+    const ref = db.collection('communities').doc(communityData.id);
+    db.runTransaction(transaction => {
+        return transaction.get(ref).then(doc => {
+            let admins = doc.data().admins || [];
+            admins = admins.filter(id => id !== uid);
+            transaction.update(ref, { admins: admins });
+        });
+    }).then(() => {
+        communityAdmins = communityAdmins.filter(id => id !== uid);
+        alert('Администратор снят');
+        showMembers();
+    }).catch(err => alert('Ошибка: ' + err.message));
+}
+
+function removeMember(uid) {
+    if (!currentUser) return;
+    if (!isCommunityOwner && !isAdmin(currentUser.uid)) {
+        alert('Недостаточно прав');
+        return;
+    }
+    if (uid === communityData.ownerId) {
+        alert('Нельзя удалить владельца сообщества');
+        return;
+    }
+    if (!communityData.members || !communityData.members.includes(uid)) {
+        alert('Пользователь не в сообществе');
+        return;
+    }
+    if (!confirm('Удалить этого пользователя из сообщества?')) return;
+    
+    const ref = db.collection('communities').doc(communityData.id);
+    db.runTransaction(transaction => {
+        return transaction.get(ref).then(doc => {
+            let members = doc.data().members || [];
+            members = members.filter(id => id !== uid);
+            let admins = doc.data().admins || [];
+            admins = admins.filter(id => id !== uid);
+            transaction.update(ref, {
+                members: members,
+                admins: admins,
+                memberCount: members.length
+            });
+        });
+    }).then(() => {
+        communityData.members = (communityData.members || []).filter(id => id !== uid);
+        communityData.memberCount = communityData.members.length;
+        communityAdmins = communityAdmins.filter(id => id !== uid);
+        renderCommunity(communityData);
+        alert('Пользователь удалён из сообщества');
+        showMembers();
+    }).catch(err => alert('Ошибка: ' + err.message));
 }
 
 // ============================================================
@@ -2065,7 +2273,7 @@ function createPostInCommunity() {
 }
 
 // ============================================================
-// КОПИРОВАНИЕ ССЫЛКИ НА СООБЩЕСТВО
+// КОПИРОВАНИЕ ССЫЛКИ
 // ============================================================
 function copyCommunityLink() {
     const url = window.location.href;
@@ -2154,7 +2362,7 @@ function editCommunity() {
 }
 
 // ============================================================
-// РЕДАКТИРОВАНИЕ МЕДИА СООБЩЕСТВА (ЧЕРЕЗ IMGBB)
+// РЕДАКТИРОВАНИЕ МЕДИА (ЧЕРЕЗ IMGBB)
 // ============================================================
 function editCommunityMedia(type) {
     if (!currentUser || communityData.ownerId !== currentUser.uid) return;
@@ -2171,7 +2379,6 @@ function editCommunityMedia(type) {
             return;
         }
         
-        // Показываем прогресс
         const progressId = type === 'avatar' ? 'avatarProgress' : 'coverProgress';
         const barId = type === 'avatar' ? 'avatarBar' : 'coverBar';
         const progressEl = document.getElementById(progressId);
@@ -2195,12 +2402,10 @@ function editCommunityMedia(type) {
             
             const url = data.data.url;
             
-            // Обновляем в Firestore
             const update = {};
             update[type] = url;
             await db.collection('communities').doc(communityData.id).update(update);
             
-            // Обновляем локальные данные
             communityData[type] = url;
             renderCommunity(communityData);
             alert('Обновлено!');
@@ -2231,7 +2436,7 @@ function deleteCommunity() {
         .catch(err => alert('Ошибка: ' + err.message));
 }
 
-console.log('👥 Community page loaded with all fixes');
+console.log('👥 Community page loaded with member management');
 </script>
 </body>
 </html>
