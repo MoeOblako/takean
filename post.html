@@ -781,7 +781,7 @@
             justify-content: center;
         }
 
-        /* ===== COMMENT ===== */
+        /* ===== COMMENT (плоская структура, как в ТикТоке) ===== */
         .comment {
             padding: 12px 0;
             border-bottom: 1px solid var(--border-color);
@@ -856,11 +856,35 @@
             margin-left: auto;
         }
 
+        /* Блок "Ответ для @username" — как в ТикТоке */
+        .comment-reply-to {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .comment-reply-to .material-icons {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .comment-reply-to .reply-to-name {
+            color: var(--accent);
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .comment-reply-to .reply-to-name:hover {
+            text-decoration: underline;
+        }
+
         .comment-text {
             font-size: 14px;
             line-height: 1.5;
             color: var(--text-secondary);
-            margin: 4px 0 6px 40px;
             word-wrap: break-word;
         }
 
@@ -902,7 +926,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-left: 40px;
+            margin-top: 4px;
         }
 
         .comment-actions button {
@@ -939,14 +963,8 @@
         .comment-actions button.liked { color: var(--green); }
         .comment-actions button.disliked { color: var(--red); }
 
-        .comment-replies {
-            margin-left: 40px;
-            padding-left: 12px;
-            border-left: 2px solid var(--border-color);
-        }
-
         .comment-reply-form {
-            margin: 6px 0 6px 40px;
+            margin: 6px 0 0 0;
             display: flex;
             gap: 6px;
         }
@@ -982,28 +1000,6 @@
         }
 
         .comment-reply-form button:hover { background: var(--accent-hover); }
-
-        .comment-reply-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-bottom: 2px;
-        }
-
-        .comment-reply-badge .material-icons {
-            font-size: 14px;
-            color: var(--text-muted);
-        }
-
-        .comment-reply-badge .reply-to {
-            color: var(--accent);
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        .comment-reply-badge .reply-to:hover { text-decoration: underline; }
 
         /* ===== BBC STYLES ===== */
         .bbc-bold { font-weight: 700; }
@@ -1201,10 +1197,6 @@
             .comments-section { padding: 14px 16px; }
             .comment-input-area { flex-direction: column; }
             .comment-input-area .comment-avatar-small { display: none; }
-            .comment-replies { margin-left: 20px; }
-            .comment-text { margin-left: 0; }
-            .comment-actions { margin-left: 0; }
-            .comment-reply-form { margin-left: 0; }
             .footer-inner { flex-direction: column; align-items: center; text-align: center; }
             .post-view .post-tag { font-size: 11px; padding: 1px 8px; }
             .topbar-actions .avatar-small .online-dot { width: 8px; height: 8px; bottom: 1px; right: 1px; }
@@ -1356,7 +1348,7 @@ let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
 
 // ============================================================
-// ЦВЕТА ДЛЯ ТЕГОВ
+// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 // ============================================================
 function getTagClass(tag) {
     const tagLower = tag.toLowerCase().trim().replace(/\s+/g, '_');
@@ -1500,9 +1492,6 @@ function getTagDisplayName(tag) {
     return tag.charAt(0).toUpperCase() + tag.slice(1);
 }
 
-// ============================================================
-// BBC ПАРСЕР
-// ============================================================
 function parseBBC(text) {
     if (!text) return '';
     
@@ -1620,9 +1609,6 @@ function checkUserOnline(uid) {
         .catch(() => false);
 }
 
-// ============================================================
-// СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ
-// ============================================================
 function createUserInFirestore(user) {
     return db.collection('users').doc(user.uid).get().then(doc => {
         if (!doc.exists) {
@@ -1651,9 +1637,6 @@ function createUserInFirestore(user) {
     });
 }
 
-// ============================================================
-// IMAGE VIEWER
-// ============================================================
 function openImageViewer(url) {
     const viewer = document.getElementById('imageViewer');
     document.getElementById('viewerImage').src = url;
@@ -2110,76 +2093,36 @@ function deletePost() {
 }
 
 // ============================================================
-// COMMENTS (с поддержкой ответов на ответы)
+// COMMENTS (плоская структура как в ТикТоке)
 // ============================================================
 function loadComments(postId) {
     const container = document.getElementById('commentsContainer');
     container.innerHTML = '<div class="loading-spinner"><span class="material-icons">refresh</span> Загрузка...</div>';
 
-    // Загружаем все комментарии к посту (включая ответы)
+    // Загружаем все комментарии к посту (плоский список)
     db.collection('comments')
         .where('postId', '==', postId)
         .orderBy('createdAt', 'asc')
         .get()
         .then(snapshot => {
-            const allComments = [];
+            comments = [];
             const promises = [];
             
             snapshot.forEach(doc => {
                 const data = doc.data();
-                allComments.push({ id: doc.id, ...data });
+                comments.push({ id: doc.id, ...data });
             });
-            
-            // Строим дерево комментариев
-            const commentMap = {};
-            const rootComments = [];
-            
-            allComments.forEach(c => {
-                commentMap[c.id] = c;
-                c.replies = [];
-                c._authorOnline = false;
-            });
-            
-            allComments.forEach(c => {
-                if (c.parentId && commentMap[c.parentId]) {
-                    commentMap[c.parentId].replies.push(c);
-                } else if (!c.parentId) {
-                    rootComments.push(c);
-                }
-            });
-            
-            // Сортируем корневые комментарии по дате
-            rootComments.sort((a, b) => {
-                const aTime = a.createdAt?.seconds || 0;
-                const bTime = b.createdAt?.seconds || 0;
-                return aTime - bTime;
-            });
-            
-            // Сортируем ответы по дате
-            const sortReplies = (comments) => {
-                comments.sort((a, b) => {
-                    const aTime = a.createdAt?.seconds || 0;
-                    const bTime = b.createdAt?.seconds || 0;
-                    return aTime - bTime;
-                });
-                comments.forEach(c => {
-                    if (c.replies && c.replies.length) {
-                        sortReplies(c.replies);
-                    }
-                });
-            };
-            sortReplies(rootComments);
             
             // Проверяем онлайн статус для всех комментаторов
             const userIds = new Set();
-            allComments.forEach(c => {
+            comments.forEach(c => {
                 if (c.authorId) userIds.add(c.authorId);
             });
             
             userIds.forEach(uid => {
                 promises.push(
                     checkUserOnline(uid).then(isOnline => {
-                        allComments.forEach(c => {
+                        comments.forEach(c => {
                             if (c.authorId === uid) {
                                 c._authorOnline = isOnline;
                             }
@@ -2188,10 +2131,10 @@ function loadComments(postId) {
                 );
             });
             
-            return Promise.all(promises).then(() => {
-                comments = rootComments;
-                renderComments();
-            });
+            return Promise.all(promises);
+        })
+        .then(() => {
+            renderComments();
         })
         .catch(err => {
             console.error('Load comments error:', err);
@@ -2222,22 +2165,15 @@ function renderComments() {
         return;
     }
     
-    container.innerHTML = comments.map(comment => createCommentHTML(comment, 0)).join('');
+    container.innerHTML = comments.map(comment => createCommentHTML(comment)).join('');
     
     const countEl = document.getElementById('commentsCount');
     if (countEl) {
-        const total = comments.reduce((acc, c) => {
-            let count = 1 + (c.replies?.length || 0);
-            c.replies?.forEach(r => {
-                count += r.replies?.length || 0;
-            });
-            return acc + count;
-        }, 0);
-        countEl.textContent = total;
+        countEl.textContent = comments.length;
     }
 }
 
-function createCommentHTML(comment, depth) {
+function createCommentHTML(comment) {
     const isLiked = comment.likes && currentUser && comment.likes.includes(currentUser.uid);
     const isDisliked = comment.dislikes && currentUser && comment.dislikes.includes(currentUser.uid);
     const score = (comment.likes?.length || 0) - (comment.dislikes?.length || 0);
@@ -2263,48 +2199,19 @@ function createCommentHTML(comment, depth) {
         `;
     }
     
-    // Определяем имя автора родительского комментария для ответа
-    let parentAuthorName = null;
-    if (comment.parentId) {
-        const findParent = (list) => {
-            for (const c of list) {
-                if (c.id === comment.parentId) {
-                    parentAuthorName = c.authorName;
-                    return true;
-                }
-                if (c.replies) {
-                    for (const r of c.replies) {
-                        if (r.id === comment.parentId) {
-                            parentAuthorName = r.authorName;
-                            return true;
-                        }
-                        if (r.replies) {
-                            for (const rr of r.replies) {
-                                if (rr.id === comment.parentId) {
-                                    parentAuthorName = rr.authorName;
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            return false;
-        };
-        findParent(comments);
+    // Показываем "Ответ для @username" если есть parentId и parentAuthorName
+    let replyToHtml = '';
+    if (comment.parentId && comment.parentAuthorName) {
+        replyToHtml = `
+            <div class="comment-reply-to">
+                <span class="material-icons">reply</span>
+                Ответ для <span class="reply-to-name" onclick="scrollToComment('${comment.parentId}')">@${escapeHtml(comment.parentAuthorName)}</span>
+            </div>
+        `;
     }
-    
-    let repliesHtml = '';
-    if (comment.replies && comment.replies.length) {
-        repliesHtml = comment.replies.map(reply => createCommentHTML(reply, depth + 1)).join('');
-    }
-    
-    // Показываем "Ответ для @username" только если это ответ на чей-то комментарий (глубина > 0)
-    // и если автор ответа не равен автору родительского комментария (чтобы не писать "Ответ для себя")
-    const showReplyBadge = depth > 0 && parentAuthorName && comment.authorName !== parentAuthorName;
     
     return `
-        <div class="comment" id="comment-${comment.id}" style="${depth > 0 ? 'margin-left:12px;' : ''}">
+        <div class="comment" id="comment-${comment.id}">
             <div class="comment-header">
                 <div class="comment-avatar-wrap">
                     <div class="comment-avatar" onclick="goToProfile('${comment.authorId}')">
@@ -2320,12 +2227,7 @@ function createCommentHTML(comment, depth) {
                 <span class="comment-time">${timeStr}</span>
             </div>
             
-            ${showReplyBadge ? `
-                <div class="comment-reply-badge">
-                    <span class="material-icons">reply</span>
-                    Ответ для <span class="reply-to" onclick="scrollToComment('${comment.parentId}')">@${escapeHtml(parentAuthorName)}</span>
-                </div>
-            ` : ''}
+            ${replyToHtml}
             
             <div class="comment-text">
                 ${parseBBC(comment.text || '')}
@@ -2342,7 +2244,7 @@ function createCommentHTML(comment, depth) {
                     <span class="vote-count">${comment.dislikes?.length || 0}</span>
                 </button>
                 <span class="comment-score ${scoreClass}">${score}</span>
-                <button onclick="showReplyForm('${comment.id}')">
+                <button onclick="showReplyForm('${comment.id}', '${escapeHtml(comment.authorName || 'пользователь')}')">
                     <span class="material-icons" style="font-size:16px;">reply</span> Ответить
                 </button>
                 ${comment.authorId === currentUser?.uid ? `
@@ -2356,8 +2258,6 @@ function createCommentHTML(comment, depth) {
                 <input type="text" id="replyInput-${comment.id}" placeholder="Напишите ответ... @${comment.authorName || 'пользователь'}">
                 <button onclick="submitReply('${comment.id}')">Ответить</button>
             </div>
-            
-            ${repliesHtml ? `<div class="comment-replies">${repliesHtml}</div>` : ''}
         </div>
     `;
 }
@@ -2373,13 +2273,16 @@ function scrollToComment(commentId) {
     }
 }
 
-function showReplyForm(commentId) {
+function showReplyForm(commentId, authorName) {
     const form = document.getElementById(`replyForm-${commentId}`);
     if (form) {
         form.classList.toggle('hidden');
         if (!form.classList.contains('hidden')) {
             const input = document.getElementById(`replyInput-${commentId}`);
-            if (input) input.focus();
+            if (input) {
+                input.placeholder = `Ответ @${authorName}`;
+                input.focus();
+            }
         }
     }
 }
@@ -2395,9 +2298,19 @@ function submitReply(parentId) {
     const text = input.value.trim();
     if (!text) return;
     
+    // Находим имя автора родительского комментария
+    let parentAuthorName = null;
+    for (const c of comments) {
+        if (c.id === parentId) {
+            parentAuthorName = c.authorName;
+            break;
+        }
+    }
+    
     const commentData = {
         postId: postId,
         parentId: parentId,
+        parentAuthorName: parentAuthorName || 'пользователь',
         authorId: currentUser.uid,
         authorName: currentUser.displayName || 'Аноним',
         authorAvatar: currentUser.photoURL || null,
@@ -2435,6 +2348,7 @@ function submitComment() {
     const commentData = {
         postId: postId,
         parentId: null,
+        parentAuthorName: null,
         authorId: currentUser.uid,
         authorName: currentUser.displayName || 'Аноним',
         authorAvatar: currentUser.photoURL || null,
@@ -2467,42 +2381,34 @@ function voteComment(commentId, direction) {
         return;
     }
     
-    const commentRef = db.collection('comments').doc(commentId);
-    
     // Мгновенное обновление UI
-    const findAndUpdate = (list) => {
-        for (const c of list) {
-            if (c.id === commentId) {
-                const uid = currentUser.uid;
-                const wasLiked = c.likes && c.likes.includes(uid);
-                const wasDisliked = c.dislikes && c.dislikes.includes(uid);
-                if (direction === 1) {
-                    if (wasLiked) {
-                        c.likes = c.likes.filter(id => id !== uid);
-                    } else {
-                        c.likes = [...(c.likes || []), uid];
-                        if (wasDisliked) c.dislikes = c.dislikes.filter(id => id !== uid);
-                    }
+    for (const c of comments) {
+        if (c.id === commentId) {
+            const uid = currentUser.uid;
+            const wasLiked = c.likes && c.likes.includes(uid);
+            const wasDisliked = c.dislikes && c.dislikes.includes(uid);
+            if (direction === 1) {
+                if (wasLiked) {
+                    c.likes = c.likes.filter(id => id !== uid);
                 } else {
-                    if (wasDisliked) {
-                        c.dislikes = c.dislikes.filter(id => id !== uid);
-                    } else {
-                        c.dislikes = [...(c.dislikes || []), uid];
-                        if (wasLiked) c.likes = c.likes.filter(id => id !== uid);
-                    }
+                    c.likes = [...(c.likes || []), uid];
+                    if (wasDisliked) c.dislikes = c.dislikes.filter(id => id !== uid);
                 }
-                return true;
+            } else {
+                if (wasDisliked) {
+                    c.dislikes = c.dislikes.filter(id => id !== uid);
+                } else {
+                    c.dislikes = [...(c.dislikes || []), uid];
+                    if (wasLiked) c.likes = c.likes.filter(id => id !== uid);
+                }
             }
-            if (c.replies) {
-                if (findAndUpdate(c.replies)) return true;
-            }
+            break;
         }
-        return false;
-    };
-    findAndUpdate(comments);
+    }
     renderComments();
     
     // Отправка в БД (фоном)
+    const commentRef = db.collection('comments').doc(commentId);
     db.runTransaction(transaction => {
         return transaction.get(commentRef).then(doc => {
             if (!doc.exists) return;
