@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
-        /* ===== БАЗОВЫЕ СТИЛИ ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -83,7 +82,6 @@
         .text-center { text-align: center; }
         .text-muted { color: var(--text-muted); }
 
-        /* ===== АНИМАЦИИ ===== */
         @keyframes ripple {
             0% { transform: scale(0); opacity: 0.4; }
             100% { transform: scale(4); opacity: 0; }
@@ -112,71 +110,6 @@
 
         .animate-fade { animation: fadeIn 0.25s ease-out; }
         .animate-slide { animation: slideUp 0.3s ease-out; }
-
-        /* ===== КНОПКА С RIPPLE ЭФФЕКТОМ ===== */
-        .ripple-btn {
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
-            border: none;
-            background: none;
-            font-family: var(--font);
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-primary);
-            padding: 8px 16px;
-            border-radius: var(--radius);
-            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-            user-select: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-            outline: none;
-        }
-
-        .ripple-btn:focus-visible {
-            outline: 2px solid var(--accent);
-            outline-offset: 2px;
-        }
-
-        .ripple-btn .ripple-effect {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.15);
-            transform: scale(0);
-            animation: ripple 0.6s ease-out;
-            pointer-events: none;
-        }
-
-        [data-theme="light"] .ripple-btn .ripple-effect {
-            background: rgba(0, 0, 0, 0.1);
-        }
-
-        .ripple-btn:hover { background: var(--bg-hover); }
-        .ripple-btn:active { transform: scale(0.96); }
-
-        .ripple-btn.primary {
-            background: var(--accent);
-            color: #fff;
-        }
-        .ripple-btn.primary:hover { background: var(--accent-hover); }
-
-        .ripple-btn.outline {
-            border: 1px solid var(--border-color);
-        }
-        .ripple-btn.outline:hover { background: var(--bg-hover); }
-
-        .ripple-btn.danger {
-            color: var(--red);
-        }
-        .ripple-btn.danger:hover { background: rgba(244, 67, 54, 0.1); }
-
-        .ripple-btn.success {
-            color: var(--green);
-        }
-        .ripple-btn.success:hover { background: rgba(76, 175, 80, 0.1); }
 
         /* ===== TOP BAR ===== */
         .topbar {
@@ -272,7 +205,6 @@
             overflow: hidden;
             flex-shrink: 0;
             position: relative;
-            -webkit-tap-highlight-color: transparent;
         }
 
         .topbar-actions .avatar-small:hover {
@@ -287,14 +219,15 @@
 
         .topbar-actions .avatar-small .online-dot {
             position: absolute;
-            bottom: -1px;
-            right: -1px;
+            bottom: 2px;
+            right: 2px;
             width: 10px;
             height: 10px;
             border-radius: 50%;
             border: 2px solid var(--bg-card);
             background: var(--online-color);
             display: none;
+            z-index: 2;
         }
 
         .topbar-actions .avatar-small .online-dot.show {
@@ -338,6 +271,71 @@
             color: var(--text-muted);
             font-size: 18px;
         }
+
+        /* ===== RIPPLE BUTTON ===== */
+        .ripple-btn {
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: var(--font);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            outline: none;
+        }
+
+        .ripple-btn:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .ripple-btn .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(0);
+            animation: ripple 0.6s ease-out;
+            pointer-events: none;
+        }
+
+        [data-theme="light"] .ripple-btn .ripple-effect {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .ripple-btn:hover { background: var(--bg-hover); }
+        .ripple-btn:active { transform: scale(0.96); }
+
+        .ripple-btn.primary {
+            background: var(--accent);
+            color: #fff;
+        }
+        .ripple-btn.primary:hover { background: var(--accent-hover); }
+
+        .ripple-btn.outline {
+            border: 1px solid var(--border-color);
+        }
+        .ripple-btn.outline:hover { background: var(--bg-hover); }
+
+        .ripple-btn.danger {
+            color: var(--red);
+        }
+        .ripple-btn.danger:hover { background: rgba(244, 67, 54, 0.1); }
+
+        .ripple-btn.success {
+            color: var(--green);
+        }
+        .ripple-btn.success:hover { background: rgba(76, 175, 80, 0.1); }
 
         /* ===== COMMUNITY ===== */
         .community-header {
@@ -486,6 +484,7 @@
 
         .community-members .avatar-stack {
             display: flex;
+            flex-wrap: wrap;
         }
 
         .community-members .avatar-stack .mini-avatar {
@@ -503,9 +502,13 @@
             font-weight: 600;
             color: var(--text-secondary);
             position: relative;
+            cursor: pointer;
+            transition: border-color 0.2s;
         }
 
         .community-members .avatar-stack .mini-avatar:first-child { margin-left: 0; }
+        .community-members .avatar-stack .mini-avatar:hover { border-color: var(--accent); }
+
         .community-members .avatar-stack .mini-avatar img {
             width: 100%;
             height: 100%;
@@ -639,6 +642,20 @@
             color: var(--text-secondary);
             margin-bottom: 8px;
             word-wrap: break-word;
+            max-height: 120px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .post-content::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: linear-gradient(transparent, var(--bg-card));
+            pointer-events: none;
         }
 
         .post-content .mention {
@@ -647,13 +664,14 @@
             cursor: pointer;
         }
 
-        .post-content .bbc-bold { font-weight: 700; }
-        .post-content .bbc-italic { font-style: italic; }
-        .post-content .bbc-underline { text-decoration: underline; }
-        .post-content .bbc-strike { text-decoration: line-through; }
-        .post-content .bbc-code { font-family: monospace; background: var(--bg-input); padding: 2px 6px; border-radius: var(--radius); }
-        .post-content .bbc-quote { border-left: 3px solid var(--accent); padding-left: 12px; margin: 4px 0; color: var(--text-secondary); }
-        .post-content .bbc-spoiler {
+        /* BBC STYLES */
+        .bbc-bold { font-weight: 700; }
+        .bbc-italic { font-style: italic; }
+        .bbc-underline { text-decoration: underline; }
+        .bbc-strike { text-decoration: line-through; }
+        .bbc-code { font-family: monospace; background: var(--bg-input); padding: 2px 6px; border-radius: var(--radius); }
+        .bbc-quote { border-left: 3px solid var(--accent); padding-left: 12px; margin: 4px 0; color: var(--text-secondary); }
+        .bbc-spoiler {
             background: var(--bg-hover);
             color: var(--bg-hover);
             cursor: pointer;
@@ -662,12 +680,12 @@
             transition: color 0.3s, background 0.3s;
             user-select: none;
         }
-        .post-content .bbc-spoiler:hover { color: var(--text-primary); background: var(--bg-input); }
-        .post-content .bbc-spoiler.revealed { color: var(--text-primary); background: var(--bg-input); }
-        .post-content .bbc-size-small { font-size: 12px; }
-        .post-content .bbc-size-normal { font-size: 15px; }
-        .post-content .bbc-size-large { font-size: 20px; }
-        .post-content .bbc-size-huge { font-size: 26px; }
+        .bbc-spoiler:hover { color: var(--text-primary); background: var(--bg-input); }
+        .bbc-spoiler.revealed { color: var(--text-primary); background: var(--bg-input); }
+        .bbc-size-small { font-size: 12px; }
+        .bbc-size-normal { font-size: 15px; }
+        .bbc-size-large { font-size: 20px; }
+        .bbc-size-huge { font-size: 26px; }
 
         .post-images {
             display: grid;
@@ -738,6 +756,8 @@
             animation: likePop 0.3s ease-out;
         }
         .post-action-btn.liked { color: var(--accent); }
+        .post-action-btn.disliked .material-icons { color: var(--red); }
+        .post-action-btn.disliked { color: var(--red); }
 
         /* ===== MODAL ===== */
         .modal-overlay {
@@ -813,6 +833,7 @@
             font-weight: 600;
             color: var(--text-secondary);
             position: relative;
+            cursor: pointer;
         }
 
         .modal-user-item .avatar img {
@@ -837,9 +858,18 @@
             display: block;
         }
 
+        .modal-user-item .info {
+            flex: 1;
+            cursor: pointer;
+        }
+
         .modal-user-item .name {
             font-weight: 600;
             font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
         }
 
         .modal-user-item .username {
@@ -853,12 +883,10 @@
             color: var(--accent);
             padding: 1px 8px;
             border-radius: 10px;
-            margin-left: 6px;
             font-weight: 500;
         }
 
         .modal-user-item .member-actions {
-            margin-left: auto;
             display: flex;
             gap: 4px;
             flex-shrink: 0;
@@ -891,6 +919,49 @@
         .modal-user-item .member-actions .admin-btn:hover {
             color: var(--green);
             background: rgba(76, 175, 80, 0.1);
+        }
+
+        /* ===== IMAGE VIEWER ===== */
+        .image-viewer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.2s ease-out;
+            padding: 20px;
+            cursor: pointer;
+        }
+
+        .image-viewer-overlay img {
+            max-width: 90vw;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: var(--radius);
+        }
+
+        .image-viewer-overlay .close-viewer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: none;
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .image-viewer-overlay .close-viewer:hover {
+            background: rgba(0, 0, 0, 0.8);
         }
 
         /* ===== EDIT MODAL ===== */
@@ -1164,6 +1235,7 @@
             .search-bar input { min-width: 50px; font-size: 12px; }
             .topbar-nav a { padding: 4px 8px; font-size: 12px; }
             .topbar-nav a .material-icons { font-size: 18px; }
+            .post-images { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
         }
 
         @media (max-width: 768px) {
@@ -1180,13 +1252,18 @@
             .community-info { padding: 12px 16px 16px; }
             .post-card { padding: 12px; }
             .post-title { font-size: 15px; }
-            .post-images { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
+            .post-images { grid-template-columns: 1fr; }
             .footer-inner { flex-direction: column; align-items: center; text-align: center; }
             .modal-box { padding: 20px; margin: 8px; }
             .edit-media-row { flex-direction: column; align-items: center; }
             .edit-cover-box { width: 100%; }
             .modal-user-item { flex-wrap: wrap; }
             .modal-user-item .member-actions { margin-left: 0; width: 100%; justify-content: flex-end; }
+            .post-content { max-height: 100px; }
+            .topbar-actions .avatar-small .online-dot { width: 8px; height: 8px; bottom: 1px; right: 1px; }
+            .post-avatar .online-dot { width: 8px; height: 8px; bottom: 1px; right: 1px; }
+            .community-members .avatar-stack .mini-avatar { width: 24px; height: 24px; font-size: 8px; }
+            .community-members .avatar-stack .mini-avatar .online-dot { width: 6px; height: 6px; }
         }
 
         @media (max-width: 480px) {
@@ -1203,11 +1280,17 @@
             .community-name { font-size: 16px; }
             .post-card { padding: 10px; }
             .post-title { font-size: 14px; }
-            .post-content { font-size: 13px; }
+            .post-content { font-size: 13px; max-height: 80px; }
             .modal-box { padding: 16px; }
+            .modal-box h3 { font-size: 17px; }
             .modal-user-item { padding: 8px 0; }
             .modal-user-item .avatar { width: 32px; height: 32px; font-size: 12px; }
             .modal-user-item .name { font-size: 13px; }
+            .post-avatar { width: 30px; height: 30px; font-size: 12px; }
+            .topbar-actions .avatar-small .online-dot { width: 6px; height: 6px; bottom: 0px; right: 0px; }
+            .post-avatar .online-dot { width: 6px; height: 6px; bottom: 0px; right: 0px; }
+            .community-members .avatar-stack .mini-avatar { width: 20px; height: 20px; font-size: 7px; border-width: 1px; }
+            .community-members .avatar-stack .mini-avatar .online-dot { width: 5px; height: 5px; border-width: 1px; }
         }
     </style>
 </head>
@@ -1317,6 +1400,7 @@ let communityPosts = [];
 let userOnlineStatus = {};
 let communityAdmins = [];
 let isCommunityOwner = false;
+let allUsersCache = {};
 
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
@@ -1352,7 +1436,7 @@ function parseBBCForDisplay(text) {
     html = html.replace(/\[s\](.*?)\[\/s\]/g, '<span class="bbc-strike">$1</span>');
     html = html.replace(/\[code\](.*?)\[\/code\]/g, '<span class="bbc-code">$1</span>');
     html = html.replace(/\[quote\](.*?)\[\/quote\]/g, '<div class="bbc-quote">$1</div>');
-    html = html.replace(/\[spoiler\](.*?)\[\/spoiler\]/g, '<span class="bbc-spoiler" onclick="this.classList.toggle(\'revealed\')">$1</span>');
+    html = html.replace(/\[spoiler\](.*?)\[\/spoiler\]/g, '<span class="bbc-spoiler" onclick="event.stopPropagation();this.classList.toggle(\'revealed\')">$1</span>');
     html = html.replace(/\[size=small\](.*?)\[\/size\]/g, '<span class="bbc-size-small">$1</span>');
     html = html.replace(/\[size=normal\](.*?)\[\/size\]/g, '<span class="bbc-size-normal">$1</span>');
     html = html.replace(/\[size=large\](.*?)\[\/size\]/g, '<span class="bbc-size-large">$1</span>');
@@ -1362,9 +1446,19 @@ function parseBBCForDisplay(text) {
     html = html.replace(/\[url\](.*?)\[\/url\]/g, '<a href="$1" target="_blank" style="color:var(--accent);">$1</a>');
     html = html.replace(/\[url=(.*?)\](.*?)\[\/url\]/g, '<a href="$1" target="_blank" style="color:var(--accent);">$2</a>');
     html = html.replace(/\[img\](.*?)\[\/img\]/g, '<img src="$1" style="max-width:100%;max-height:300px;border-radius:var(--radius);margin:4px 0;" loading="lazy">');
-    html = html.replace(/@([a-zA-Z0-9_.-]+)/g, '<span class="mention">@$1</span>');
+    html = html.replace(/@([a-zA-Z0-9_.-]+)/g, '<span class="mention" onclick="goToProfileByUsername(\'$1\')">@$1</span>');
     html = html.replace(/\n/g, '<br>');
     return html;
+}
+
+function goToProfileByUsername(username) {
+    db.collection('users').where('username', '==', username).get()
+        .then(snapshot => {
+            if (!snapshot.empty) {
+                window.location.href = `/profile.html?uid=${snapshot.docs[0].id}`;
+            }
+        })
+        .catch(() => {});
 }
 
 // ============================================================
@@ -1597,6 +1691,7 @@ function loadMembersStatus(memberIds) {
             if (doc.exists) {
                 const data = doc.data();
                 userOnlineStatus[uid] = data.isOnline || false;
+                allUsersCache[uid] = data;
                 updateMemberOnlineStatus(uid, data.isOnline || false);
             }
         }).catch(() => {});
@@ -1638,10 +1733,11 @@ function renderCommunity(community) {
     const showMembers = displayMembers.slice(0, 5);
     showMembers.forEach((member, i) => {
         const letter = String.fromCharCode(65 + (i % 26));
+        const isOnline = userOnlineStatus[member] || false;
         membersStackHtml += `
-            <div class="mini-avatar" data-uid="${member}">
+            <div class="mini-avatar" data-uid="${member}" onclick="goToProfileWithContext('${member}')">
                 <span>${letter}</span>
-                <span class="online-dot"></span>
+                <span class="online-dot ${isOnline ? 'show' : ''}"></span>
             </div>
         `;
     });
@@ -1736,6 +1832,21 @@ function renderCommunity(community) {
 }
 
 // ============================================================
+// ПЕРЕХОД В ПРОФИЛЬ С КОНТЕКСТОМ СООБЩЕСТВА
+// ============================================================
+function goToProfileWithContext(uid) {
+    if (!uid) return;
+    const params = new URLSearchParams();
+    params.set('uid', uid);
+    if (communityId) {
+        params.set('community', communityId);
+        params.set('admin', isCommunityOwner || isAdmin(currentUser?.uid) ? 'true' : 'false');
+        params.set('owner', isCommunityOwner ? 'true' : 'false');
+    }
+    window.location.href = `/profile.html?${params.toString()}`;
+}
+
+// ============================================================
 // ЗАГРУЗКА ПОСТОВ СООБЩЕСТВА
 // ============================================================
 function loadCommunityPosts(id) {
@@ -1787,7 +1898,7 @@ function loadCommunityPosts(id) {
 }
 
 // ============================================================
-// ОТОБРАЖЕНИЕ ПОСТОВ
+// ОТОБРАЖЕНИЕ ПОСТОВ (С ПАРСИНГОМ BBC И ПРАВИЛЬНЫМИ ИЗОБРАЖЕНИЯМИ)
 // ============================================================
 function renderPosts(posts) {
     const container = document.getElementById('communityPosts');
@@ -1819,7 +1930,7 @@ function renderPosts(posts) {
             for (let i = 0; i < showCount; i++) {
                 const extra = (i === 3 && imageCount > 4) ? `<span class="image-count">+${imageCount - 4}</span>` : '';
                 imagesHtml += `
-                    <div class="img-wrap" onclick="event.stopPropagation(); openImageModal('${images[i]}')">
+                    <div class="img-wrap" onclick="event.stopPropagation(); openImageViewer('${images[i]}')">
                         <img src="${images[i]}" alt="post image" loading="lazy">
                         ${extra}
                     </div>
@@ -1834,16 +1945,19 @@ function renderPosts(posts) {
         }
         
         const parsedContent = parseBBCForDisplay(post.content || '');
-        const communityName = post.communityName || post.community || 'Сообщество';
+        const communityName = post.communityName || communityData?.name || post.community || 'Сообщество';
+        
+        const isLiked = post.likes && currentUser && post.likes.includes(currentUser.uid);
+        const isDisliked = post.dislikes && currentUser && post.dislikes.includes(currentUser.uid);
         
         return `
             <div class="post-card" onclick="window.location.href='/post.html?id=${post.id}'" style="cursor:pointer;">
                 <div class="post-header">
-                    <div class="post-avatar" onclick="event.stopPropagation(); window.location.href='/profile.html?uid=${post.authorId}'">
+                    <div class="post-avatar" onclick="event.stopPropagation(); goToProfileWithContext('${post.authorId}')">
                         ${post.authorAvatar ? `<img src="${post.authorAvatar}" alt="">` : `<span>${(post.authorName || '?')[0].toUpperCase()}</span>`}
                     </div>
                     <div class="post-user">
-                        <div class="post-username" onclick="event.stopPropagation(); window.location.href='/profile.html?uid=${post.authorId}'">
+                        <div class="post-username" onclick="event.stopPropagation(); goToProfileWithContext('${post.authorId}')">
                             ${post.authorName || 'Аноним'}
                         </div>
                         <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;">
@@ -1859,12 +1973,12 @@ function renderPosts(posts) {
                 <div class="post-content">${parsedContent}</div>
                 ${imagesHtml ? `<div class="post-images" style="${gridStyle}">${imagesHtml}</div>` : ''}
                 <div class="post-actions">
-                    <button class="post-action-btn" onclick="event.stopPropagation(); toggleLike('${post.id}')" id="likeBtn_${post.id}">
-                        <span class="material-icons">${(post.likes || []).includes(currentUser?.uid) ? 'thumb_up' : 'thumb_up_off_alt'}</span>
+                    <button class="post-action-btn ${isLiked ? 'liked' : ''}" onclick="event.stopPropagation(); toggleLike('${post.id}')" id="likeBtn_${post.id}">
+                        <span class="material-icons">${isLiked ? 'thumb_up' : 'thumb_up_off_alt'}</span>
                         <span id="likeCount_${post.id}">${(post.likes || []).length}</span>
                     </button>
-                    <button class="post-action-btn" onclick="event.stopPropagation(); toggleDislike('${post.id}')" id="dislikeBtn_${post.id}">
-                        <span class="material-icons">${(post.dislikes || []).includes(currentUser?.uid) ? 'thumb_down' : 'thumb_down_off_alt'}</span>
+                    <button class="post-action-btn ${isDisliked ? 'disliked' : ''}" onclick="event.stopPropagation(); toggleDislike('${post.id}')" id="dislikeBtn_${post.id}">
+                        <span class="material-icons">${isDisliked ? 'thumb_down' : 'thumb_down_off_alt'}</span>
                         <span id="dislikeCount_${post.id}">${(post.dislikes || []).length}</span>
                     </button>
                     <span class="post-action-btn"><span class="material-icons">comment</span> ${post.commentsCount || 0}</span>
@@ -1878,7 +1992,24 @@ function renderPosts(posts) {
 }
 
 // ============================================================
-// ЛАЙКИ / ДИЗЛАЙКИ
+// ОТКРЫТИЕ ИЗОБРАЖЕНИЯ
+// ============================================================
+function openImageViewer(url) {
+    const overlay = document.createElement('div');
+    overlay.className = 'image-viewer-overlay';
+    overlay.innerHTML = `
+        <button class="close-viewer" onclick="this.parentElement.remove()">×</button>
+        <img src="${url}" alt="Просмотр изображения">
+    `;
+    overlay.onclick = (e) => {
+        if (e.target === overlay) overlay.remove();
+    };
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+}
+
+// ============================================================
+// ЛАЙКИ / ДИЗЛАЙКИ (МГНОВЕННОЕ ОБНОВЛЕНИЕ)
 // ============================================================
 function toggleLike(postId) {
     if (!currentUser) {
@@ -1889,8 +2020,11 @@ function toggleLike(postId) {
     const postRef = db.collection('posts').doc(postId);
     const btn = document.getElementById(`likeBtn_${postId}`);
     const countEl = document.getElementById(`likeCount_${postId}`);
+    if (!btn || !countEl) return;
+    
     const isLiked = btn.classList.contains('liked');
     
+    // Мгновенное обновление UI
     if (isLiked) {
         btn.classList.remove('liked');
         btn.querySelector('.material-icons').textContent = 'thumb_up_off_alt';
@@ -1899,6 +2033,7 @@ function toggleLike(postId) {
         btn.classList.add('liked');
         btn.querySelector('.material-icons').textContent = 'thumb_up';
         countEl.textContent = parseInt(countEl.textContent) + 1;
+        // Если был дизлайк, убираем его
         const dislikeBtn = document.getElementById(`dislikeBtn_${postId}`);
         if (dislikeBtn && dislikeBtn.classList.contains('disliked')) {
             dislikeBtn.classList.remove('disliked');
@@ -1908,6 +2043,7 @@ function toggleLike(postId) {
         }
     }
     
+    // Отправляем в Firestore
     db.runTransaction(transaction => {
         return transaction.get(postRef).then(doc => {
             if (!doc.exists) return;
@@ -1926,6 +2062,7 @@ function toggleLike(postId) {
         });
     }).catch(err => {
         console.error('Like error:', err);
+        // Откатываем UI при ошибке
         if (isLiked) {
             btn.classList.add('liked');
             btn.querySelector('.material-icons').textContent = 'thumb_up';
@@ -1947,8 +2084,11 @@ function toggleDislike(postId) {
     const postRef = db.collection('posts').doc(postId);
     const btn = document.getElementById(`dislikeBtn_${postId}`);
     const countEl = document.getElementById(`dislikeCount_${postId}`);
+    if (!btn || !countEl) return;
+    
     const isDisliked = btn.classList.contains('disliked');
     
+    // Мгновенное обновление UI
     if (isDisliked) {
         btn.classList.remove('disliked');
         btn.querySelector('.material-icons').textContent = 'thumb_down_off_alt';
@@ -1957,6 +2097,7 @@ function toggleDislike(postId) {
         btn.classList.add('disliked');
         btn.querySelector('.material-icons').textContent = 'thumb_down';
         countEl.textContent = parseInt(countEl.textContent) + 1;
+        // Если был лайк, убираем его
         const likeBtn = document.getElementById(`likeBtn_${postId}`);
         if (likeBtn && likeBtn.classList.contains('liked')) {
             likeBtn.classList.remove('liked');
@@ -1966,6 +2107,7 @@ function toggleDislike(postId) {
         }
     }
     
+    // Отправляем в Firestore
     db.runTransaction(transaction => {
         return transaction.get(postRef).then(doc => {
             if (!doc.exists) return;
@@ -1984,6 +2126,7 @@ function toggleDislike(postId) {
         });
     }).catch(err => {
         console.error('Dislike error:', err);
+        // Откатываем UI при ошибке
         if (isDisliked) {
             btn.classList.add('disliked');
             btn.querySelector('.material-icons').textContent = 'thumb_down';
@@ -1994,25 +2137,6 @@ function toggleDislike(postId) {
             countEl.textContent = parseInt(countEl.textContent) - 1;
         }
     });
-}
-
-// ============================================================
-// ОТКРЫТИЕ ИЗОБРАЖЕНИЯ
-// ============================================================
-function openImageModal(url) {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.style.background = 'rgba(0,0,0,0.9)';
-    modal.innerHTML = `
-        <div style="max-width:90vw;max-height:90vh;display:flex;align-items:center;justify-content:center;position:relative;">
-            <button onclick="this.closest('.modal-overlay').remove()" style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.5);border:none;color:#fff;font-size:28px;cursor:pointer;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10;">×</button>
-            <img src="${url}" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:4px;">
-        </div>
-    `;
-    modal.onclick = (e) => {
-        if (e.target === modal) modal.remove();
-    };
-    document.body.appendChild(modal);
 }
 
 // ============================================================
@@ -2105,10 +2229,8 @@ function showMembers() {
         db.collection('users').doc(id).get().then(doc => ({ id, data: doc.exists ? doc.data() : null }))
     )).then(results => {
         const sorted = results.filter(r => r.data).sort((a, b) => {
-            // Владелец всегда сверху
             if (a.id === communityData.ownerId) return -1;
             if (b.id === communityData.ownerId) return 1;
-            // Админы следом
             const aIsAdmin = communityAdmins.includes(a.id);
             const bIsAdmin = communityAdmins.includes(b.id);
             if (aIsAdmin && !bIsAdmin) return -1;
@@ -2125,11 +2247,11 @@ function showMembers() {
             
             return `
                 <div class="modal-user-item">
-                    <div class="avatar" onclick="window.location.href='/profile.html?uid=${r.id}'">
+                    <div class="avatar" onclick="goToProfileWithContext('${r.id}')">
                         ${r.data.avatar ? `<img src="${r.data.avatar}" alt="">` : `<span>${(r.data.username || '?')[0].toUpperCase()}</span>`}
                         <span class="online-dot ${isOnline ? 'show' : ''}"></span>
                     </div>
-                    <div onclick="window.location.href='/profile.html?uid=${r.id}'" style="flex:1;cursor:pointer;">
+                    <div class="info" onclick="goToProfileWithContext('${r.id}')">
                         <div class="name">
                             ${r.data.displayName || r.data.username || 'Аноним'}
                             ${isOwner ? '<span class="admin-badge">Создатель</span>' : ''}
@@ -2436,7 +2558,7 @@ function deleteCommunity() {
         .catch(err => alert('Ошибка: ' + err.message));
 }
 
-console.log('👥 Community page loaded with member management');
+console.log('👥 Community page loaded with profile integration and BBC parsing');
 </script>
 </body>
 </html>
