@@ -2249,12 +2249,12 @@ function publishPost() {
                             postsCount: firebase.firestore.FieldValue.increment(1)
                         }).catch(() => {});
                     }
-                    alert('Тейк успешно опубликован!');
+                    alert('✅ Тейк успешно опубликован!');
                     window.location.href = `/post.html?id=${docRef.id}`;
                 });
         })
         .catch(err => {
-            alert('Ошибка публикации: ' + err.message);
+            alert('❌ Ошибка публикации: ' + err.message);
             btn.disabled = false;
             btn.innerHTML = '<span class="material-icons">send</span> Опубликовать тейк';
         });
