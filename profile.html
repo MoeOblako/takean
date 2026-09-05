@@ -933,7 +933,7 @@
         }
 
         .modal-box .modal-icon.warning {
-            color: var(--orange) || #ff9800;
+            color: #ff9800;
         }
 
         .modal-box .modal-text {
@@ -1559,16 +1559,15 @@ let userComments = [];
 let onlineCheckInterval = null;
 let lastActivityTime = Date.now();
 let isUserOnline = false;
-let userFollowPrivacy = 'all'; // по умолчанию все могут подписываться
+let userFollowPrivacy = 'all';
 
-// Данные для интеграции с сообществом
 let communityContext = null;
 
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
 
 // ============================================================
-// ПОЛУЧАЕМ ПАРАМЕТРЫ ИЗ URL (community, admin)
+// ПОЛУЧАЕМ ПАРАМЕТРЫ ИЗ URL
 // ============================================================
 function getUrlParams() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -1639,7 +1638,6 @@ function updateLastActivity() {
 
 function updateOnlineStatus(status) {
     if (!currentUser) return;
-    // Проверяем настройку приватности онлайн-статуса
     db.collection('users').doc(currentUser.uid).get().then(doc => {
         if (doc.exists) {
             const data = doc.data();
@@ -1821,6 +1819,63 @@ function updateOGTags(data) {
 }
 
 // ============================================================
+// ===== НОВАЯ ФУНКЦИЯ: ОБНОВЛЕНИЕ АВАТАРКИ ВО ВСЕХ ПОСТАХ И КОММЕНТАРИЯХ =====
+// ============================================================
+function updateAvatarInAllContent(uid, newAvatarUrl) {
+    if (!uid || !newAvatarUrl) return;
+    
+    console.log('🔄 Обновляем аватарку во всех постах и комментариях пользователя:', uid);
+    console.log('🖼️ Новая аватарка:', newAvatarUrl);
+    
+    // Обновляем во всех постах пользователя
+    db.collection('posts')
+        .where('authorId', '==', uid)
+        .get()
+        .then(snapshot => {
+            console.log(`📝 Найдено постов для обновления: ${snapshot.size}`);
+            if (snapshot.size === 0) return;
+            
+            const batch = db.batch();
+            snapshot.forEach(doc => {
+                batch.update(doc.ref, { authorAvatar: newAvatarUrl });
+            });
+            return batch.commit();
+        })
+        .then(() => {
+            console.log('✅ Посты обновлены');
+        })
+        .catch(err => {
+            console.error('❌ Ошибка обновления постов:', err);
+        });
+    
+    // Обновляем во всех комментариях пользователя
+    db.collection('comments')
+        .where('authorId', '==', uid)
+        .get()
+        .then(snapshot => {
+            console.log(`💬 Найдено комментариев для обновления: ${snapshot.size}`);
+            if (snapshot.size === 0) return;
+            
+            const batch = db.batch();
+            snapshot.forEach(doc => {
+                batch.update(doc.ref, { authorAvatar: newAvatarUrl });
+            });
+            return batch.commit();
+        })
+        .then(() => {
+            console.log('✅ Комментарии обновлены');
+        })
+        .catch(err => {
+            console.error('❌ Ошибка обновления комментариев:', err);
+        });
+    
+    // Также обновляем аватарку в самом профиле пользователя (на всякий случай)
+    db.collection('users').doc(uid).update({
+        avatar: newAvatarUrl
+    }).catch(() => {});
+}
+
+// ============================================================
 // DOM CONTENT LOADED
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -1941,7 +1996,6 @@ function loadProfile(uid) {
             }
             profileUser = { id: doc.id, ...doc.data() };
             
-            // Сохраняем настройку приватности подписок
             userFollowPrivacy = profileUser.followPrivacy || 'all';
             
             checkUserOnline(uid).then(isOnline => {
@@ -2065,15 +2119,9 @@ function renderProfile(user) {
                     ${canManageInCommunity && !isTargetSelf ? `
                         <div class="community-action-divider"></div>
                         <div class="community-action-label">Управление в сообществе</div>
-                        ${!isCommunityOwner ? `
-                            <button class="ripple-btn outline" onclick="showCommunityActions()" style="color:var(--accent);">
-                                <span class="material-icons">admin_panel_settings</span> Управление
-                            </button>
-                        ` : `
-                            <button class="ripple-btn outline" onclick="showCommunityActions()" style="color:var(--accent);">
-                                <span class="material-icons">admin_panel_settings</span> Управление
-                            </button>
-                        `}
+                        <button class="ripple-btn outline" onclick="showCommunityActions()" style="color:var(--accent);">
+                            <span class="material-icons">admin_panel_settings</span> Управление
+                        </button>
                     ` : ''}
                 </div>
             </div>
@@ -2103,7 +2151,7 @@ function renderProfile(user) {
 }
 
 // ============================================================
-// ПРОВЕРКА ПРИВАТНОСТИ ПОДПИСОК (НОВАЯ ФУНКЦИЯ)
+// ПРОВЕРКА ПРИВАТНОСТИ ПОДПИСОК
 // ============================================================
 function canUserFollow(targetUserId) {
     return new Promise((resolve) => {
@@ -2131,7 +2179,6 @@ function canUserFollow(targetUserId) {
                 }
                 
                 if (privacy === 'followers') {
-                    // Проверяем, подписан ли целевой пользователь на текущего
                     const followers = data.followers || [];
                     if (followers.includes(currentUser.uid)) {
                         resolve({ allowed: true });
@@ -2141,7 +2188,6 @@ function canUserFollow(targetUserId) {
                     return;
                 }
                 
-                // privacy === 'all'
                 resolve({ allowed: true });
             })
             .catch(() => {
@@ -2151,7 +2197,7 @@ function canUserFollow(targetUserId) {
 }
 
 // ============================================================
-// TOGGLE FOLLOW (С ПРОВЕРКОЙ ПРИВАТНОСТИ)
+// TOGGLE FOLLOW
 // ============================================================
 function toggleFollow() {
     if (!currentUser) {
@@ -2160,7 +2206,6 @@ function toggleFollow() {
     }
     if (!profileUser) return;
     
-    // Проверяем, можно ли подписаться
     canUserFollow(profileUser.id).then(result => {
         if (!result.allowed) {
             let message = '';
@@ -2190,7 +2235,6 @@ function toggleFollow() {
                     message = 'Невозможно подписаться на этого пользователя.';
             }
             
-            // Показываем модальное окно
             createModal({
                 title: 'Нельзя подписаться',
                 icon: 'block',
@@ -2203,7 +2247,6 @@ function toggleFollow() {
             return;
         }
         
-        // Если всё ок — выполняем подписку
         const userRef = db.collection('users').doc(profileUser.id);
         const currentRef = db.collection('users').doc(currentUser.uid);
         
@@ -2782,7 +2825,7 @@ function showFollowers(type) {
 }
 
 // ============================================================
-// EDIT MODAL (через ImageBB)
+// EDIT MODAL (через ImageBB) С ОБНОВЛЕНИЕМ АВАТАРКИ ВО ВСЕХ ПОСТАХ И КОММЕНТАРИЯХ
 // ============================================================
 function openEditModal() {
     if (!currentUser || !profileUser) return;
@@ -2949,6 +2992,7 @@ function saveProfileChanges() {
     let totalUploads = 0;
     let completedUploads = 0;
     let hasError = false;
+    let newAvatarUrl = null;
     
     function updateProgress() {
         completedUploads++;
@@ -2980,7 +3024,8 @@ function saveProfileChanges() {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                updates.avatar = data.data.url;
+                newAvatarUrl = data.data.url;
+                updates.avatar = newAvatarUrl;
                 updateProgress();
                 return data.data.url;
             } else {
@@ -3044,6 +3089,10 @@ function saveProfileChanges() {
             return currentUser.updateProfile({ displayName: displayName });
         })
         .then(() => {
+            // ===== КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: ОБНОВЛЯЕМ АВАТАРКУ ВО ВСЕХ ПОСТАХ И КОММЕНТАРИЯХ =====
+            if (newAvatarUrl) {
+                updateAvatarInAllContent(currentUser.uid, newAvatarUrl);
+            }
             progressText.textContent = 'Готово!';
             setTimeout(() => {
                 closeEditModal();
@@ -3060,7 +3109,7 @@ function saveProfileChanges() {
         });
 }
 
-console.log('👤 Profile page loaded with follow privacy check');
+console.log('👤 Profile page loaded with avatar sync across all posts and comments');
 </script>
 </body>
 </html>
