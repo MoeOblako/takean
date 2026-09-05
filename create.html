@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
-        /* ===== ВСЕ СТИЛИ ===== */
+        /* ===== ВСЕ СТИЛИ (без изменений) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -1350,8 +1350,8 @@ document.addEventListener('DOMContentLoaded', () => {
     communityToSelect = getCommunityFromURL();
     loadUserData();
     
-    // Загружаем сообщества после авторизации
-    if (currentUser) {
+    // Если пользователь уже загружен, загружаем сообщества
+    if (auth.currentUser) {
         loadUserCommunities();
     }
     
@@ -1410,6 +1410,9 @@ function setupEventListeners() {
     document.getElementById('publishBtn').addEventListener('click', publishPost);
 }
 
+// ============================================================
+// ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ (ИСПРАВЛЕННАЯ)
+// ============================================================
 function loadUserData() {
     const user = auth.currentUser;
     currentUser = user;
@@ -1418,16 +1421,23 @@ function loadUserData() {
     const dotEl = document.getElementById('userOnlineDot');
     
     if (user) {
-        avatarEl.innerHTML = user.photoURL 
-            ? `<img src="${user.photoURL}" alt="avatar">` 
-            : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
-        avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
-        dotEl.classList.add('show');
+        if (avatarEl) {
+            avatarEl.innerHTML = user.photoURL 
+                ? `<img src="${user.photoURL}" alt="avatar">` 
+                : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
+            avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+        }
+        if (dotEl) dotEl.classList.add('show');
         
-        document.getElementById('previewName').textContent = user.displayName || 'Аноним';
-        document.getElementById('previewAvatar').innerHTML = user.photoURL 
-            ? `<img src="${user.photoURL}" style="width:100%;height:100%;object-fit:cover;">` 
-            : (user.displayName || '?')[0].toUpperCase();
+        // Обновляем превью
+        const previewName = document.getElementById('previewName');
+        const previewAvatar = document.getElementById('previewAvatar');
+        if (previewName) previewName.textContent = user.displayName || 'Аноним';
+        if (previewAvatar) {
+            previewAvatar.innerHTML = user.photoURL 
+                ? `<img src="${user.photoURL}" style="width:100%;height:100%;object-fit:cover;">` 
+                : (user.displayName || '?')[0].toUpperCase();
+        }
         
         createUserInFirestore(user).then(() => startOnlineTracking())
             .catch(err => console.error('Error creating user:', err));
@@ -1435,11 +1445,17 @@ function loadUserData() {
         // Загружаем сообщества после авторизации
         loadUserCommunities();
     } else {
-        avatarEl.innerHTML = '<span>?</span>';
-        avatarEl.onclick = () => window.location.href = '/login.html';
-        dotEl.classList.remove('show');
+        if (avatarEl) {
+            avatarEl.innerHTML = '<span>?</span>';
+            avatarEl.onclick = () => window.location.href = '/login.html';
+        }
+        if (dotEl) dotEl.classList.remove('show');
         if (onlineCheckInterval) { clearInterval(onlineCheckInterval); onlineCheckInterval = null; }
-        document.getElementById('previewName').textContent = 'Аноним';
+        
+        const previewName = document.getElementById('previewName');
+        if (previewName) previewName.textContent = 'Аноним';
+        const previewAvatar = document.getElementById('previewAvatar');
+        if (previewAvatar) previewAvatar.textContent = '?';
     }
 }
 
@@ -1451,22 +1467,31 @@ auth.onAuthStateChanged(user => {
 // ЗАГРУЗКА СООБЩЕСТВ (ПЕРЕПИСАННАЯ)
 // ============================================================
 function loadUserCommunities() {
-    console.log('🔄 Загрузка сообществ...');
+    console.log('🔄 loadUserCommunities() вызвана');
     
     if (!currentUser) {
         console.log('❌ Пользователь не авторизован');
         const select = document.getElementById('communitySelect');
-        select.innerHTML = '<option value="">Без сообщества (опубликовать на главной)</option>';
+        if (select) {
+            select.innerHTML = '<option value="">Без сообщества (опубликовать на главной)</option>';
+        }
         return;
     }
+    
+    console.log(`👤 Текущий пользователь: ${currentUser.uid}`);
     
     db.collection('communities')
         .where('members', 'array-contains', currentUser.uid)
         .get()
         .then(snapshot => {
-            console.log(`✅ Найдено ${snapshot.size} сообществ`);
+            console.log(`✅ Найдено ${snapshot.size} сообществ, в которых состоит пользователь`);
             
             const select = document.getElementById('communitySelect');
+            if (!select) {
+                console.error('❌ Элемент #communitySelect не найден');
+                return;
+            }
+            
             // Сохраняем текущее выбранное значение
             const currentValue = select.value;
             
@@ -1478,10 +1503,12 @@ function loadUserCommunities() {
             if (snapshot.size === 0) {
                 console.log('ℹ️ Пользователь не состоит ни в одном сообществе');
                 const info = document.getElementById('communitySelectInfo');
-                info.style.display = 'block';
-                info.style.color = 'var(--text-muted)';
-                info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">info</span> 
-                    Вы ещё не вступили ни в одно сообщество. <a href="/communities.html" style="color:var(--accent);">Найти сообщества</a>`;
+                if (info) {
+                    info.style.display = 'block';
+                    info.style.color = 'var(--text-muted)';
+                    info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">info</span> 
+                        Вы ещё не вступили ни в одно сообщество. <a href="/communities.html" style="color:var(--accent);">Найти сообщества</a>`;
+                }
                 updatePreview();
                 return;
             }
@@ -1502,7 +1529,7 @@ function loadUserCommunities() {
                 if (communityToSelect && doc.id === communityToSelect) {
                     option.selected = true;
                     foundSelected = true;
-                    console.log(`✅ Автовыбор: ${displayName}`);
+                    console.log(`✅ Автовыбор: ${displayName} (из URL)`);
                 } else if (currentValue && doc.id === currentValue) {
                     option.selected = true;
                     foundSelected = true;
@@ -1512,27 +1539,29 @@ function loadUserCommunities() {
             
             // Обновляем информацию
             const info = document.getElementById('communitySelectInfo');
-            if (foundSelected) {
-                const selectedOption = select.options[select.selectedIndex];
-                if (selectedOption && selectedOption.value) {
+            if (info) {
+                if (foundSelected) {
+                    const selectedOption = select.options[select.selectedIndex];
+                    if (selectedOption && selectedOption.value) {
+                        info.style.display = 'block';
+                        info.style.color = 'var(--text-muted)';
+                        info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">check_circle</span> 
+                            Тейк будет опубликован в сообществе <strong>${selectedOption.text}</strong>`;
+                    }
+                } else if (communityToSelect) {
+                    // Сообщество из URL не найдено в списке участников
                     info.style.display = 'block';
-                    info.style.color = 'var(--text-muted)';
-                    info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">check_circle</span> 
-                        Тейк будет опубликован в сообществе <strong>${selectedOption.text}</strong>`;
+                    info.style.color = 'var(--red)';
+                    info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">warning</span> 
+                        Вы не являетесь участником этого сообщества. Тейк будет опубликован на главной.`;
+                    setTimeout(() => {
+                        info.style.color = 'var(--text-muted)';
+                        info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">info</span> 
+                            Тейк будет опубликован в выбранном сообществе`;
+                    }, 5000);
+                } else {
+                    info.style.display = 'none';
                 }
-            } else if (communityToSelect) {
-                // Сообщество из URL не найдено в списке участников
-                info.style.display = 'block';
-                info.style.color = 'var(--red)';
-                info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">warning</span> 
-                    Вы не являетесь участником этого сообщества. Тейк будет опубликован на главной.`;
-                setTimeout(() => {
-                    info.style.color = 'var(--text-muted)';
-                    info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">info</span> 
-                        Тейк будет опубликован в выбранном сообществе`;
-                }, 5000);
-            } else {
-                info.style.display = 'none';
             }
             
             updatePreview();
@@ -1540,7 +1569,7 @@ function loadUserCommunities() {
         .catch(err => {
             console.error('❌ Ошибка загрузки сообществ:', err);
             const select = document.getElementById('communitySelect');
-            if (!select.options.length) {
+            if (select && !select.options.length) {
                 select.innerHTML = '<option value="">Без сообщества (опубликовать на главной)</option>';
             }
         });
