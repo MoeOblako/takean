@@ -20,7 +20,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
-        /* ===== ВСЕ СТИЛИ БЕЗ ИЗМЕНЕНИЙ (такие же как в твоём файле) ===== */
+        /* ===== ВСЕ СТИЛИ (без изменений) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -1783,7 +1783,7 @@ function loadPost(id) {
                     const description = (currentPost.content || '').substring(0, 200) + '...';
                     const image = currentPost.images && currentPost.images.length > 0 
                         ? currentPost.images[0] 
-                        : 'https://takean.pages.dev/og-image.png';
+                        : 'https://takean.cl.is/og-image.png';
                     const url = window.location.href;
                     
                     document.title = `${title} | Takean`;
@@ -2076,12 +2076,12 @@ function votePost(direction) {
 }
 
 // ============================================================
-// ШЕРИНГ И КОПИРОВАНИЕ ССЫЛОК (С КОРОТКИМ ДОМЕНОМ) — ГЛАВНОЕ ИЗМЕНЕНИЕ!
+// ШЕРИНГ И КОПИРОВАНИЕ ССЫЛОК (С КОРОТКИМ ДОМЕНОМ ЧЕРЕЗ ID)
 // ============================================================
 function getShortUrl() {
-    // Если у поста есть shortId — используем короткую ссылку
+    // Если у поста есть shortId — используем короткую ссылку с ID
     if (currentPost && currentPost.shortId) {
-        return `https://t.cl.is/${currentPost.shortId}`;
+        return `https://t.cl.is/?id=${currentPost.shortId}`;
     }
     // Если shortId нет — используем обычную ссылку (запасной вариант)
     return window.location.href;
@@ -2659,7 +2659,7 @@ function applyFilter(filter) {
     window.location.href = `/search.html?q=${encodeURIComponent(filter)}`;
 }
 
-console.log('📄 Post page loaded with short links');
+console.log('📄 Post page loaded with short links via ?id=');
 </script>
 </body>
 </html>
