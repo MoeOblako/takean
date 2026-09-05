@@ -23,68 +23,89 @@ export default async (request: Request, context: Context) => {
   const url = new URL(request.url);
   const userAgent = (request.headers.get("user-agent") || "").toLowerCase();
 
-  // Извлекаем shortId из URL (поддерживает варианты /abc123xyz, /post/abc123xyz, /t/abc123xyz)
+  // 1. Извлекаем ID (сначала проверяем ?id=, затем конец пути /post/ID)
+  let postId = url.searchParams.get("id");
   const pathParts = url.pathname.split("/").filter(Boolean);
-  let shortId = url.searchParams.get("id");
 
-  if (!shortId && pathParts.length > 0) {
-    shortId = pathParts[pathParts.length - 1];
+  if (!postId && pathParts.length > 0) {
+    postId = pathParts[pathParts.length - 1];
   }
 
   const isBot = BOT_AGENTS.some((bot) => userAgent.includes(bot));
-  if (!shortId || !isBot) {
+  if (!postId || !isBot) {
     return context.next();
   }
 
   try {
-    const queryUrl = `${FIRESTORE_URL}:runQuery`;
-    const queryBody = {
-      structuredQuery: {
-        from: [{ collectionId: "posts" }],
-        where: {
-          fieldFilter: {
-            field: { fieldPath: "shortId" },
-            op: "EQUAL",
-            value: { stringValue: shortId }
-          }
-        },
-        limit: 1
+    let fields: Record<string, any> | null = null;
+
+    // 2. Если ID длинный (например, UquVT7t5t0ieUxgoIQol) — делаем прямой запрос по Document ID
+    if (postId.length > 15) {
+      const docUrl = `${FIRESTORE_URL}/posts/${postId}`;
+      const fsResponse = await fetch(docUrl);
+      if (fsResponse.ok) {
+        const docData = await fsResponse.json();
+        fields = docData.fields || {};
       }
-    };
+    }
 
-    const fsResponse = await fetch(queryUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(queryBody)
-    });
+    // 3. Если по Direct ID не нашлось или это короткий shortId — ищем через runQuery
+    if (!fields) {
+      const queryUrl = `${FIRESTORE_URL}:runQuery`;
+      const queryBody = {
+        structuredQuery: {
+          from: [{ collectionId: "posts" }],
+          where: {
+            fieldFilter: {
+              field: { fieldPath: "shortId" },
+              op: "EQUAL",
+              value: { stringValue: postId }
+            }
+          },
+          limit: 1
+        }
+      };
 
-    if (!fsResponse.ok) {
+      const fsResponse = await fetch(queryUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(queryBody)
+      });
+
+      if (fsResponse.ok) {
+        const fsData = await fsResponse.json();
+        if (fsData && fsData[0] && fsData[0].document) {
+          fields = fsData[0].document.fields || {};
+        }
+      }
+    }
+
+    // Если пост не найден в базе, отдаём стандартную страницу
+    if (!fields) {
       return context.next();
     }
 
-    const fsData = await fsResponse.json();
-
-    if (!fsData || !fsData[0] || !fsData[0].document) {
-      return context.next();
-    }
-
-    const fields = fsData[0].document.fields || {};
-
+    // 4. Формируем данные
     const title = fields.title?.stringValue || "Takean - Тейк";
-    const rawContent = fields.content?.stringValue || "Читайте тейк на платформе Takean";
+    const rawContent = fields.content?.stringValue || fields.text?.stringValue || "Читайте тейк на платформе Takean";
     
+    // Очищаем BB-коды [b], [img] и т.д.
     const cleanDescription = rawContent
       .replace(/\[.*?\]/g, "")
       .replace(/\s+/g, " ")
       .trim()
       .substring(0, 200);
 
+    // Достаём обложку/первую картинку
     let imageUrl = "https://takean.cl.is/og-image.png";
     if (fields.images && fields.images.arrayValue && fields.images.arrayValue.values) {
       const firstImg = fields.images.arrayValue.values[0]?.stringValue;
       if (firstImg) imageUrl = firstImg;
+    } else if (fields.photoURL?.stringValue) {
+      imageUrl = fields.photoURL.stringValue;
     }
 
+    // 5. Отдаём HTML для бота
     const html = `<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -131,5 +152,6 @@ function escapeXml(unsafe: string): string {
 }
 
 export const config = {
-  path: ["/*", "/post/*", "/t/*"],
+  path: ["/*", "/post.html", "/post/*", "/t/*"],
 };
+                  
