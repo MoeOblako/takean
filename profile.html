@@ -1872,7 +1872,7 @@ function checkUsernameAvailability(username) {
                 iconEl.className = 'status-icon taken material-icons';
                 iconEl.textContent = 'close';
                 textEl.className = 'status-text taken';
-                textEl.textContent = '❌ Этот username уже занят';
+                textEl.textContent = 'Этот username уже занят';
                 isUsernameValid = false;
                 usernameCheckResult = 'taken';
                 if (prefixEl) {
@@ -1895,7 +1895,7 @@ function checkUsernameAvailability(username) {
                         iconEl.className = 'status-icon taken material-icons';
                         iconEl.textContent = 'close';
                         textEl.className = 'status-text taken';
-                        textEl.textContent = '❌ Это имя занято сообществом';
+                        textEl.textContent = 'Это имя занято сообществом';
                         isUsernameValid = false;
                         usernameCheckResult = 'taken';
                         if (prefixEl) {
@@ -1910,7 +1910,7 @@ function checkUsernameAvailability(username) {
                     iconEl.className = 'status-icon available material-icons';
                     iconEl.textContent = 'check_circle';
                     textEl.className = 'status-text available';
-                    textEl.textContent = '✅ Username доступен!';
+                    textEl.textContent = 'Username доступен!';
                     isUsernameValid = true;
                     usernameCheckResult = 'available';
                     if (prefixEl) {
@@ -1926,7 +1926,7 @@ function checkUsernameAvailability(username) {
                     iconEl.textContent = 'error';
                     iconEl.style.color = 'var(--red)';
                     textEl.className = 'status-text taken';
-                    textEl.textContent = '⚠️ Ошибка проверки';
+                    textEl.textContent = 'Ошибка проверки';
                     isUsernameValid = false;
                     usernameCheckResult = 'taken';
                     if (prefixEl) {
@@ -1943,7 +1943,7 @@ function checkUsernameAvailability(username) {
             iconEl.textContent = 'error';
             iconEl.style.color = 'var(--red)';
             textEl.className = 'status-text taken';
-            textEl.textContent = '⚠️ Ошибка проверки';
+            textEl.textContent = 'Ошибка проверки';
             isUsernameValid = false;
             usernameCheckResult = 'taken';
             if (prefixEl) {
