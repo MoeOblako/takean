@@ -23,12 +23,19 @@ export default async (request: Request, context: Context) => {
   const url = new URL(request.url);
   const userAgent = (request.headers.get("user-agent") || "").toLowerCase();
 
-  // 1. Извлекаем ID (сначала проверяем ?id=, затем конец пути /post/ID)
+  // 1. Извлекаем postId из ?id=, либо из пути (/post/ID, /post.html/ID и т.д.)
   let postId = url.searchParams.get("id");
-  const pathParts = url.pathname.split("/").filter(Boolean);
+  
+  if (!postId) {
+    const pathParts = url.pathname.split("/").filter(Boolean);
+    if (pathParts.length > 0) {
+      postId = pathParts[pathParts.length - 1];
+    }
+  }
 
-  if (!postId && pathParts.length > 0) {
-    postId = pathParts[pathParts.length - 1];
+  // Очищаем ID от возможных расширений .html, если они прилипли к концу ID
+  if (postId) {
+    postId = postId.replace(/\.html$/i, "");
   }
 
   const isBot = BOT_AGENTS.some((bot) => userAgent.includes(bot));
@@ -39,7 +46,7 @@ export default async (request: Request, context: Context) => {
   try {
     let fields: Record<string, any> | null = null;
 
-    // 2. Если ID длинный (например, UquVT7t5t0ieUxgoIQol) — делаем прямой запрос по Document ID
+    // 2. Если ID длинный (Direct Document ID из Firestore)
     if (postId.length > 15) {
       const docUrl = `${FIRESTORE_URL}/posts/${postId}`;
       const fsResponse = await fetch(docUrl);
@@ -49,7 +56,7 @@ export default async (request: Request, context: Context) => {
       }
     }
 
-    // 3. Если по Direct ID не нашлось или это короткий shortId — ищем через runQuery
+    // 3. Если по Direct ID не нашли или это shortId — делаем запрос по полю shortId
     if (!fields) {
       const queryUrl = `${FIRESTORE_URL}:runQuery`;
       const queryBody = {
@@ -80,44 +87,81 @@ export default async (request: Request, context: Context) => {
       }
     }
 
-    // Если пост не найден в базе, отдаём стандартную страницу
     if (!fields) {
       return context.next();
     }
 
-    // 4. Формируем данные
+    // 4. Заголовок
     const title = fields.title?.stringValue || "Takean - Тейк";
-    const rawContent = fields.content?.stringValue || fields.text?.stringValue || "Читайте тейк на платформе Takean";
-    
-    // Очищаем BB-коды [b], [img] и т.д.
-    const cleanDescription = rawContent
-      .replace(/\[.*?\]/g, "")
-      .replace(/\s+/g, " ")
-      .trim()
-      .substring(0, 200);
 
-    // Достаём обложку/первую картинку
-    let imageUrl = "https://takean.cl.is/og-image.png";
-    if (fields.images && fields.images.arrayValue && fields.images.arrayValue.values) {
-      const firstImg = fields.images.arrayValue.values[0]?.stringValue;
-      if (firstImg) imageUrl = firstImg;
-    } else if (fields.photoURL?.stringValue) {
-      imageUrl = fields.photoURL.stringValue;
+    // 5. Текст (проверяем все популярные имена полей в Firestore)
+    const rawContent = 
+      fields.content?.stringValue || 
+      fields.text?.stringValue || 
+      fields.description?.stringValue || 
+      fields.body?.stringValue || 
+      "";
+
+    // Вырезаем BB-коды, маркдаун, лишние пробелы и переносы
+    let cleanDescription = rawContent
+      .replace(/\[.*?\]/g, "")           // [img]https://...[/img] или [b]text[/b]
+      .replace(/!\[.*?\]\(.*?\)/g, "")   // Markdown картинки
+      .replace(/#+/g, "")                // H1, H2 заголовки
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (!cleanDescription) {
+      cleanDescription = "Читайте тейк на платформе Takean";
+    } else if (cleanDescription.length > 250) {
+      cleanDescription = cleanDescription.substring(0, 247) + "...";
     }
 
-    // 5. Отдаём HTML для бота
+    // 6. Поиск обложки / изображения для баннера
+    let imageUrl = "";
+
+    // Сначала смотрим массив images
+    if (fields.images?.arrayValue?.values?.length > 0) {
+      imageUrl = fields.images.arrayValue.values[0]?.stringValue || "";
+    } 
+    // Если массива нет, ищем одиночные поля
+    if (!imageUrl) {
+      imageUrl = 
+        fields.coverURL?.stringValue || 
+        fields.cover?.stringValue || 
+        fields.photoURL?.stringValue || 
+        fields.imageUrl?.stringValue || 
+        fields.image?.stringValue || 
+        "";
+    }
+
+    // Вспомогательный поиск картинки прямо из BB-кодов [img]URL[/img], если поля были пустыми
+    if (!imageUrl && rawContent.includes("[img]")) {
+      const match = rawContent.match(/\[img\](.*?)\[\/img\]/i);
+      if (match && match[1]) imageUrl = match[1].trim();
+    }
+
+    // Fallback дефолтная картинка
+    if (!imageUrl) {
+      imageUrl = "https://takean.cl.is/og-image.png";
+    }
+
+    // 7. Генерация HTML с метатегами
     const html = `<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>${escapeXml(title)} | Takean</title>
+    
+    <!-- Open Graph (Telegram, VK, Facebook) -->
     <meta property="og:site_name" content="Takean">
     <meta property="og:type" content="article">
     <meta property="og:title" content="${escapeXml(title)}">
     <meta property="og:description" content="${escapeXml(cleanDescription)}">
     <meta property="og:image" content="${imageUrl}">
+    <meta property="og:image:secure_url" content="${imageUrl}">
     <meta property="og:url" content="${url.href}">
-    
+
+    <!-- Twitter / Telegram Large Banner -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="${escapeXml(title)}">
     <meta name="twitter:description" content="${escapeXml(cleanDescription)}">
@@ -152,6 +196,6 @@ function escapeXml(unsafe: string): string {
 }
 
 export const config = {
-  path: ["/*", "/post.html", "/post/*", "/t/*"],
+  path: ["/*"],
 };
-                  
+               
