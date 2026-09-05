@@ -1349,9 +1349,8 @@ function checkOnlineStatus() {
     if (!currentUser) return;
     
     const now = Date.now();
-    const inactiveTime = (now - lastActivityTime) / 1000; // в секундах
+    const inactiveTime = (now - lastActivityTime) / 1000;
     
-    // Если прошло больше 120 секунд (2 минуты) бездействия
     if (inactiveTime > 120 && isUserOnline) {
         isUserOnline = false;
         updateOnlineStatus(false);
@@ -1365,16 +1364,13 @@ function startOnlineTracking() {
     isUserOnline = true;
     updateOnlineStatus(true);
     
-    // Проверяем бездействие каждые 30 секунд
     onlineCheckInterval = setInterval(checkOnlineStatus, 30000);
     
-    // Отслеживаем активность пользователя
     const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click', 'input', 'focus'];
     events.forEach(event => {
         document.addEventListener(event, updateLastActivity);
     });
     
-    // При закрытии вкладки
     window.addEventListener('beforeunload', () => {
         if (currentUser) {
             db.collection('users').doc(currentUser.uid).update({
@@ -1384,7 +1380,6 @@ function startOnlineTracking() {
         }
     });
     
-    // При скрытии вкладки
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
             if (currentUser) {
@@ -1395,7 +1390,6 @@ function startOnlineTracking() {
                 }).catch(() => {});
             }
         } else {
-            // Вкладка снова активна — обновляем статус
             lastActivityTime = Date.now();
             isUserOnline = true;
             updateOnlineStatus(true);
@@ -1408,12 +1402,11 @@ function checkUserOnline(uid) {
         .then(doc => {
             if (doc.exists) {
                 const data = doc.data();
-                // Проверяем isOnline и lastSeen
                 if (data.isOnline === true) return true;
                 if (data.lastSeen) {
                     const lastSeen = data.lastSeen.seconds * 1000;
                     const now = Date.now();
-                    return (now - lastSeen) < 120000; // 2 минуты
+                    return (now - lastSeen) < 120000;
                 }
             }
             return false;
@@ -1937,6 +1930,26 @@ function createPostHTML(post, index) {
         }
     }
     
+    // ============================================================
+    // КОРОТКАЯ ССЫЛКА ДЛЯ ШЕРИНГА
+    // ============================================================
+    function getShortShareUrl(postId, shortId) {
+        if (shortId) {
+            return `t.cl.is/${shortId}`;
+        }
+        return window.location.origin + `/post.html?id=${postId}`;
+    }
+    
+    function getFullShareUrl(postId, shortId) {
+        if (shortId) {
+            return `https://t.cl.is/${shortId}`;
+        }
+        return window.location.origin + `/post.html?id=${postId}`;
+    }
+    
+    const shortUrl = getShortShareUrl(post.id, post.shortId);
+    const fullUrl = getFullShareUrl(post.id, post.shortId);
+    
     return `
         <div class="post-card" data-id="${post.id}">
             <div class="post-header">
@@ -1981,7 +1994,7 @@ function createPostHTML(post, index) {
                     <span class="material-icons">comment</span>
                     ${post.commentsCount || 0}
                 </button>
-                <button class="post-action-btn" onclick="sharePost('${post.id}')">
+                <button class="post-action-btn" onclick="sharePost('${post.id}', '${post.shortId || ''}')">
                     <span class="material-icons">share</span>
                 </button>
                 ${currentUser && post.authorId === currentUser.uid ? `
@@ -2058,6 +2071,38 @@ function votePost(postId, direction, btn) {
 }
 
 // ============================================================
+// ШЕРИНГ (КОРОТКИЕ ССЫЛКИ)
+// ============================================================
+function sharePost(postId, shortId) {
+    if (shortId) {
+        const shortUrl = `t.cl.is/${shortId}`;
+        const fullUrl = `https://t.cl.is/${shortId}`;
+        
+        if (navigator.share) {
+            navigator.share({ title: 'Тейк на Takean', url: fullUrl }).catch(() => {});
+        } else {
+            navigator.clipboard.writeText(shortUrl).then(() => {
+                alert('✅ Ссылка скопирована: ' + shortUrl);
+            }).catch(() => {
+                prompt('Скопируйте ссылку:', shortUrl);
+            });
+        }
+    } else {
+        // Если нет shortId — используем обычную ссылку
+        const url = window.location.origin + `/post.html?id=${postId}`;
+        if (navigator.share) {
+            navigator.share({ title: 'Тейк на Takean', url }).catch(() => {});
+        } else {
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Ссылка скопирована!');
+            }).catch(() => {
+                prompt('Скопируйте ссылку:', url);
+            });
+        }
+    }
+}
+
+// ============================================================
 // NAVIGATION HELPERS
 // ============================================================
 function openPost(postId) {
@@ -2089,19 +2134,6 @@ function applyFilter(filter) {
     document.querySelector(`#feedFilters .filter-btn[data-filter="${filter}"]`)?.classList.add('active');
     currentFilter = filter;
     loadFeed();
-}
-
-function sharePost(postId) {
-    const url = window.location.origin + `/post.html?id=${postId}`;
-    if (navigator.share) {
-        navigator.share({ title: 'Тейк на Takean', url });
-    } else {
-        navigator.clipboard.writeText(url).then(() => {
-            alert('Ссылка скопирована!');
-        }).catch(() => {
-            prompt('Скопируйте ссылку:', url);
-        });
-    }
 }
 
 function deletePost(postId) {
