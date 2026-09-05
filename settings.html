@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
+        /* ===== ВСЕ СТИЛИ (сокращены для читаемости) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -391,21 +392,6 @@
 
         .settings-select:focus { border-color: var(--accent); }
 
-        .settings-input {
-            padding: 8px 12px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            color: var(--text-primary);
-            font-family: var(--font);
-            font-size: 13px;
-            outline: none;
-            width: 200px;
-            max-width: 100%;
-        }
-
-        .settings-input:focus { border-color: var(--accent); }
-
         /* Toggle Switch */
         .toggle {
             position: relative;
@@ -677,7 +663,6 @@
             .settings-page h1 { font-size: 20px; }
             .settings-item { padding: 10px 14px; flex-wrap: wrap; }
             .settings-item .right { width: 100%; margin-top: 6px; }
-            .settings-item .right .settings-input { width: 100%; }
             .footer-inner { flex-direction: column; align-items: center; text-align: center; }
             .modal-box { padding: 20px; margin: 8px; }
             .topbar-actions .avatar-small .online-dot { width: 8px; height: 8px; bottom: 1px; right: 1px; }
@@ -1120,7 +1105,7 @@ function startOnlineTracking() {
 // МОДАЛЬНЫЕ ОКНА
 // ============================================================
 function createModal(options) {
-    const { title, icon, iconColor, text, fields, actions, onClose } = options;
+    const { title, icon, iconColor, text, fields, actions } = options;
     
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
@@ -1242,7 +1227,382 @@ function showLogoutModal() {
     });
 }
 
+// ============================================================
+// ПОВТОРНАЯ АВТОРИЗАЦИЯ (ДЛЯ ЧУВСТВИТЕЛЬНЫХ ДЕЙСТВИЙ)
+// ============================================================
+function reauthenticateUser(password) {
+    if (!currentUser) return Promise.reject('No user');
+    if (!currentUser.email) return Promise.reject('No email');
+    
+    const credential = firebase.auth.EmailAuthProvider.credential(
+        currentUser.email,
+        password
+    );
+    
+    return currentUser.reauthenticateWithCredential(credential);
+}
+
+function showReauthModal(actionCallback) {
+    createModal({
+        title: 'Подтверждение',
+        icon: 'verified',
+        iconColor: 'var(--accent)',
+        text: 'Для выполнения этого действия требуется повторный вход.<br>Введите ваш пароль для подтверждения.',
+        fields: [
+            { type: 'password', id: 'reauthPassword', label: 'Пароль', placeholder: 'Введите пароль', error: 'reauthError' }
+        ],
+        actions: [
+            { id: 'cancelReauth', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
+            { id: 'confirmReauth', text: 'Подтвердить', class: 'primary', onClick: (e, modal) => {
+                const password = document.getElementById('reauthPassword').value;
+                const errorEl = document.getElementById('reauthError');
+                
+                if (!password) {
+                    errorEl.textContent = 'Введите пароль';
+                    errorEl.style.display = 'block';
+                    return;
+                }
+                
+                const btn = document.getElementById('confirmReauth');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Проверка...';
+                errorEl.style.display = 'none';
+                
+                reauthenticateUser(password)
+                    .then(() => {
+                        modal.remove();
+                        // Выполняем действие после успешной реавторизации
+                        if (actionCallback) actionCallback();
+                    })
+                    .catch(err => {
+                        if (err.code === 'auth/wrong-password') {
+                            errorEl.textContent = 'Неверный пароль. Попробуйте снова.';
+                            errorEl.style.display = 'block';
+                        } else {
+                            errorEl.textContent = 'Ошибка: ' + err.message;
+                            errorEl.style.display = 'block';
+                        }
+                        btn.disabled = false;
+                        btn.innerHTML = 'Подтвердить';
+                    });
+            }}
+        ]
+    });
+}
+
+// ============================================================
+// ИЗМЕНЕНИЕ ПОЧТЫ
+// ============================================================
+function openChangeEmailModal() {
+    if (!currentUser) { 
+        showNotLoggedInModal();
+        return; 
+    }
+    
+    const hasPassword = currentUser.providerData.some(p => p.providerId === 'password');
+    
+    createModal({
+        title: 'Изменить Email',
+        icon: 'email',
+        iconColor: 'var(--accent)',
+        text: hasPassword ? 'Введите новый email и подтвердите пароль.' : 'Введите новый email.',
+        fields: [
+            { type: 'email', id: 'newEmailInput', label: 'Новый Email', placeholder: 'new@email.com' },
+            ...(hasPassword ? [{ type: 'password', id: 'emailPassword', label: 'Пароль', placeholder: 'Введите пароль', error: 'emailError' }] : [])
+        ],
+        actions: [
+            { id: 'cancelEmail', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
+            { id: 'saveEmail', text: 'Сохранить', class: 'primary', onClick: (e, modal) => {
+                const newEmail = document.getElementById('newEmailInput').value.trim();
+                if (!newEmail || !newEmail.includes('@')) {
+                    alert('Введите корректный email');
+                    return;
+                }
+                
+                const btn = document.getElementById('saveEmail');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
+                
+                const doUpdate = () => {
+                    currentUser.updateEmail(newEmail)
+                        .then(() => {
+                            alert('Email обновлён!');
+                            modal.remove();
+                            loadUserData();
+                        })
+                        .catch(err => {
+                            if (err.code === 'auth/requires-recent-login') {
+                                modal.remove();
+                                showReauthModal(() => {
+                                    openChangeEmailModal();
+                                });
+                            } else {
+                                alert('Ошибка: ' + err.message);
+                                btn.disabled = false;
+                                btn.innerHTML = 'Сохранить';
+                            }
+                        });
+                };
+                
+                if (hasPassword) {
+                    const password = document.getElementById('emailPassword').value;
+                    if (!password) {
+                        alert('Введите пароль');
+                        btn.disabled = false;
+                        btn.innerHTML = 'Сохранить';
+                        return;
+                    }
+                    reauthenticateUser(password)
+                        .then(doUpdate)
+                        .catch(err => {
+                            if (err.code === 'auth/wrong-password') {
+                                const errorEl = document.getElementById('emailError');
+                                errorEl.textContent = 'Неверный пароль';
+                                errorEl.style.display = 'block';
+                            } else {
+                                alert('Ошибка: ' + err.message);
+                            }
+                            btn.disabled = false;
+                            btn.innerHTML = 'Сохранить';
+                        });
+                } else {
+                    doUpdate();
+                }
+            }}
+        ]
+    });
+}
+
+// ============================================================
+// ИЗМЕНЕНИЕ ПАРОЛЯ (С ПРОВЕРКОЙ НАЛИЧИЯ ПАРОЛЯ)
+// ============================================================
+function openChangePasswordModal() {
+    if (!currentUser) { 
+        showNotLoggedInModal();
+        return; 
+    }
+    
+    const hasPassword = currentUser.providerData.some(provider => 
+        provider.providerId === 'password'
+    );
+    
+    if (!hasPassword) {
+        // Если пароля нет — предлагаем установить новый
+        createModal({
+            title: 'Установить пароль',
+            icon: 'lock_open',
+            iconColor: 'var(--accent)',
+            text: 'У вас ещё нет пароля, так как вы вошли через Google.<br>Установите новый пароль для входа через email.',
+            fields: [
+                { type: 'password', id: 'newPasswordOnly', label: 'Новый пароль', placeholder: '••••••••', hint: 'Минимум 6 символов' },
+                { type: 'password', id: 'confirmPasswordOnly', label: 'Повторите пароль', placeholder: '••••••••' }
+            ],
+            actions: [
+                { id: 'cancelPasswordOnly', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
+                { id: 'savePasswordOnly', text: 'Установить пароль', class: 'primary', onClick: (e, modal) => {
+                    const newPassword = document.getElementById('newPasswordOnly').value;
+                    const confirmPassword = document.getElementById('confirmPasswordOnly').value;
+                    
+                    if (!newPassword || !confirmPassword) {
+                        alert('Заполните все поля');
+                        return;
+                    }
+                    
+                    if (newPassword.length < 6) {
+                        alert('Пароль должен быть минимум 6 символов');
+                        return;
+                    }
+                    
+                    if (newPassword !== confirmPassword) {
+                        alert('Пароли не совпадают');
+                        return;
+                    }
+                    
+                    const btn = document.getElementById('savePasswordOnly');
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
+                    
+                    currentUser.updatePassword(newPassword)
+                        .then(() => {
+                            alert('Пароль успешно установлен!');
+                            modal.remove();
+                            loadUserData();
+                        })
+                        .catch(err => {
+                            if (err.code === 'auth/requires-recent-login') {
+                                modal.remove();
+                                showReauthModal(() => {
+                                    openChangePasswordModal();
+                                });
+                            } else {
+                                alert('Ошибка: ' + err.message);
+                                btn.disabled = false;
+                                btn.innerHTML = 'Установить пароль';
+                            }
+                        });
+                }}
+            ]
+        });
+        return;
+    }
+    
+    // Если пароль есть — стандартная смена пароля
+    createModal({
+        title: 'Изменить пароль',
+        icon: 'lock',
+        iconColor: 'var(--accent)',
+        fields: [
+            { type: 'password', id: 'oldPasswordInput', label: 'Текущий пароль', placeholder: '••••••••' },
+            { type: 'password', id: 'newPasswordInput', label: 'Новый пароль', placeholder: '••••••••', hint: 'Минимум 6 символов' },
+            { type: 'password', id: 'confirmPasswordInput', label: 'Повторите новый пароль', placeholder: '••••••••' }
+        ],
+        actions: [
+            { id: 'cancelPassword', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
+            { id: 'savePassword', text: 'Сохранить', class: 'primary', onClick: (e, modal) => {
+                const oldPassword = document.getElementById('oldPasswordInput').value;
+                const newPassword = document.getElementById('newPasswordInput').value;
+                const confirmPassword = document.getElementById('confirmPasswordInput').value;
+                
+                if (!oldPassword || !newPassword || !confirmPassword) {
+                    alert('Заполните все поля');
+                    return;
+                }
+                
+                if (newPassword.length < 6) {
+                    alert('Новый пароль должен быть минимум 6 символов');
+                    return;
+                }
+                
+                if (newPassword !== confirmPassword) {
+                    alert('Пароли не совпадают');
+                    return;
+                }
+                
+                const btn = document.getElementById('savePassword');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
+                
+                reauthenticateUser(oldPassword)
+                    .then(() => {
+                        return currentUser.updatePassword(newPassword);
+                    })
+                    .then(() => {
+                        alert('Пароль успешно изменён!');
+                        modal.remove();
+                    })
+                    .catch(err => {
+                        if (err.code === 'auth/wrong-password') {
+                            alert('Неверный текущий пароль');
+                        } else if (err.code === 'auth/requires-recent-login') {
+                            modal.remove();
+                            showReauthModal(() => {
+                                openChangePasswordModal();
+                            });
+                        } else {
+                            alert('Ошибка: ' + err.message);
+                        }
+                        btn.disabled = false;
+                        btn.innerHTML = 'Сохранить';
+                    });
+            }}
+        ]
+    });
+}
+
+// ============================================================
+// ИЗМЕНЕНИЕ ОТОБРАЖАЕМОГО ИМЕНИ
+// ============================================================
+function changeDisplayName() {
+    if (!currentUser) { 
+        showNotLoggedInModal();
+        return; 
+    }
+    
+    createModal({
+        title: 'Изменить отображаемое имя',
+        icon: 'person',
+        iconColor: 'var(--accent)',
+        fields: [
+            { type: 'text', id: 'newDisplayNameInput', label: 'Новое имя', placeholder: 'Ваше имя', hint: 'Можно использовать любые символы' }
+        ],
+        actions: [
+            { id: 'cancelName', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
+            { id: 'saveName', text: 'Сохранить', class: 'primary', onClick: (e, modal) => {
+                const newName = document.getElementById('newDisplayNameInput').value.trim();
+                if (!newName) {
+                    alert('Введите имя');
+                    return;
+                }
+                
+                const btn = document.getElementById('saveName');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
+                
+                currentUser.updateProfile({ displayName: newName })
+                    .then(() => {
+                        return db.collection('users').doc(currentUser.uid).update({ displayName: newName });
+                    })
+                    .then(() => {
+                        alert('Имя обновлено!');
+                        modal.remove();
+                        loadUserData();
+                    })
+                    .catch(err => {
+                        alert('Ошибка: ' + err.message);
+                        btn.disabled = false;
+                        btn.innerHTML = 'Сохранить';
+                    });
+            }}
+        ]
+    });
+}
+
+// ============================================================
+// ТОГГЛ СТАТУСА ОНЛАЙН
+// ============================================================
+function toggleStatus() {
+    const toggle = document.getElementById('statusToggle');
+    toggle.classList.toggle('active');
+    userSettings.showOnlineStatus = toggle.classList.contains('active');
+    saveSettingsToCache();
+    
+    if (currentUser) {
+        db.collection('users').doc(currentUser.uid).update({
+            showOnlineStatus: userSettings.showOnlineStatus,
+            isOnline: userSettings.showOnlineStatus ? isUserActive : false
+        }).catch(() => {});
+        
+        const dotEl = document.getElementById('userOnlineDot');
+        if (userSettings.showOnlineStatus && isUserActive) {
+            dotEl.classList.add('show');
+        } else {
+            dotEl.classList.remove('show');
+        }
+    }
+}
+
+function showNotLoggedInModal() {
+    createModal({
+        title: 'Не авторизован',
+        icon: 'person_off',
+        iconColor: 'var(--red)',
+        text: 'Войдите в аккаунт, чтобы изменить настройки.',
+        actions: [
+            { id: 'closeNotLogged', text: 'Закрыть', class: 'outline', onClick: (e, modal) => modal.remove() },
+            { id: 'goLogin', text: 'Войти', class: 'primary', onClick: (e, modal) => {
+                modal.remove();
+                window.location.href = '/login.html';
+            }}
+        ]
+    });
+}
+
 function showDeleteAccountModal() {
+    if (!currentUser) {
+        showNotLoggedInModal();
+        return;
+    }
+    
     createModal({
         title: 'Удалить аккаунт?',
         icon: 'delete_forever',
@@ -1274,12 +1634,7 @@ function showDeleteAccountModal() {
                 btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Проверка...';
                 errorEl.style.display = 'none';
                 
-                const credential = firebase.auth.EmailAuthProvider.credential(
-                    currentUser.email,
-                    password
-                );
-                
-                currentUser.reauthenticateWithCredential(credential)
+                reauthenticateUser(password)
                     .then(() => {
                         btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Удаление...';
                         return db.collection('users').doc(currentUser.uid).delete();
@@ -1436,7 +1791,6 @@ function loadUserData() {
         document.getElementById('userEmail').textContent = user.email || 'Не указан';
         document.getElementById('userDisplayName').textContent = user.displayName || 'Не указан';
         
-        // Проверяем, есть ли у пользователя пароль
         const hasPassword = user.providerData.some(provider => 
             provider.providerId === 'password'
         );
@@ -1525,270 +1879,7 @@ function loadUserData() {
 
 auth.onAuthStateChanged(user => { loadUserData(); });
 
-// ============================================================
-// ИЗМЕНЕНИЕ ПОЧТЫ
-// ============================================================
-function openChangeEmailModal() {
-    if (!currentUser) { 
-        showNotLoggedInModal();
-        return; 
-    }
-    
-    createModal({
-        title: 'Изменить Email',
-        icon: 'email',
-        iconColor: 'var(--accent)',
-        fields: [
-            { type: 'email', id: 'newEmailInput', label: 'Новый Email', placeholder: 'new@email.com' }
-        ],
-        actions: [
-            { id: 'cancelEmail', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
-            { id: 'saveEmail', text: 'Сохранить', class: 'primary', onClick: (e, modal) => {
-                const newEmail = document.getElementById('newEmailInput').value.trim();
-                if (!newEmail || !newEmail.includes('@')) {
-                    alert('Введите корректный email');
-                    return;
-                }
-                
-                const btn = document.getElementById('saveEmail');
-                btn.disabled = true;
-                btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
-                
-                currentUser.updateEmail(newEmail)
-                    .then(() => {
-                        alert('Email обновлён!');
-                        modal.remove();
-                        loadUserData();
-                    })
-                    .catch(err => {
-                        alert('Ошибка: ' + err.message);
-                        btn.disabled = false;
-                        btn.innerHTML = 'Сохранить';
-                    });
-            }}
-        ]
-    });
-}
-
-// ============================================================
-// ИЗМЕНЕНИЕ ПАРОЛЯ (С ПРОВЕРКОЙ НАЛИЧИЯ ПАРОЛЯ)
-// ============================================================
-function openChangePasswordModal() {
-    if (!currentUser) { 
-        showNotLoggedInModal();
-        return; 
-    }
-    
-    // Проверяем, есть ли у пользователя пароль
-    const hasPassword = currentUser.providerData.some(provider => 
-        provider.providerId === 'password'
-    );
-    
-    if (!hasPassword) {
-        // Если пароля нет — предлагаем установить новый
-        createModal({
-            title: 'Установить пароль',
-            icon: 'lock_open',
-            iconColor: 'var(--accent)',
-            text: 'У вас ещё нет пароля, так как вы вошли через Google.<br>Установите новый пароль для входа через email.',
-            fields: [
-                { type: 'password', id: 'newPasswordOnly', label: 'Новый пароль', placeholder: '••••••••', hint: 'Минимум 6 символов' },
-                { type: 'password', id: 'confirmPasswordOnly', label: 'Повторите пароль', placeholder: '••••••••' }
-            ],
-            actions: [
-                { id: 'cancelPasswordOnly', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
-                { id: 'savePasswordOnly', text: 'Установить пароль', class: 'primary', onClick: (e, modal) => {
-                    const newPassword = document.getElementById('newPasswordOnly').value;
-                    const confirmPassword = document.getElementById('confirmPasswordOnly').value;
-                    
-                    if (!newPassword || !confirmPassword) {
-                        alert('Заполните все поля');
-                        return;
-                    }
-                    
-                    if (newPassword.length < 6) {
-                        alert('Пароль должен быть минимум 6 символов');
-                        return;
-                    }
-                    
-                    if (newPassword !== confirmPassword) {
-                        alert('Пароли не совпадают');
-                        return;
-                    }
-                    
-                    const btn = document.getElementById('savePasswordOnly');
-                    btn.disabled = true;
-                    btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
-                    
-                    currentUser.updatePassword(newPassword)
-                        .then(() => {
-                            alert('Пароль успешно установлен!');
-                            modal.remove();
-                            loadUserData();
-                        })
-                        .catch(err => {
-                            alert('Ошибка: ' + err.message);
-                            btn.disabled = false;
-                            btn.innerHTML = 'Установить пароль';
-                        });
-                }}
-            ]
-        });
-        return;
-    }
-    
-    // Если пароль есть — стандартная смена пароля
-    createModal({
-        title: 'Изменить пароль',
-        icon: 'lock',
-        iconColor: 'var(--accent)',
-        fields: [
-            { type: 'password', id: 'oldPasswordInput', label: 'Текущий пароль', placeholder: '••••••••' },
-            { type: 'password', id: 'newPasswordInput', label: 'Новый пароль', placeholder: '••••••••', hint: 'Минимум 6 символов' },
-            { type: 'password', id: 'confirmPasswordInput', label: 'Повторите новый пароль', placeholder: '••••••••' }
-        ],
-        actions: [
-            { id: 'cancelPassword', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
-            { id: 'savePassword', text: 'Сохранить', class: 'primary', onClick: (e, modal) => {
-                const oldPassword = document.getElementById('oldPasswordInput').value;
-                const newPassword = document.getElementById('newPasswordInput').value;
-                const confirmPassword = document.getElementById('confirmPasswordInput').value;
-                
-                if (!oldPassword || !newPassword || !confirmPassword) {
-                    alert('Заполните все поля');
-                    return;
-                }
-                
-                if (newPassword.length < 6) {
-                    alert('Новый пароль должен быть минимум 6 символов');
-                    return;
-                }
-                
-                if (newPassword !== confirmPassword) {
-                    alert('Пароли не совпадают');
-                    return;
-                }
-                
-                const btn = document.getElementById('savePassword');
-                btn.disabled = true;
-                btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
-                
-                const credential = firebase.auth.EmailAuthProvider.credential(
-                    currentUser.email,
-                    oldPassword
-                );
-                
-                currentUser.reauthenticateWithCredential(credential)
-                    .then(() => {
-                        return currentUser.updatePassword(newPassword);
-                    })
-                    .then(() => {
-                        alert('Пароль успешно изменён!');
-                        modal.remove();
-                    })
-                    .catch(err => {
-                        if (err.code === 'auth/wrong-password') {
-                            alert('Неверный текущий пароль');
-                        } else {
-                            alert('Ошибка: ' + err.message);
-                        }
-                        btn.disabled = false;
-                        btn.innerHTML = 'Сохранить';
-                    });
-            }}
-        ]
-    });
-}
-
-// ============================================================
-// ИЗМЕНЕНИЕ ОТОБРАЖАЕМОГО ИМЕНИ
-// ============================================================
-function changeDisplayName() {
-    if (!currentUser) { 
-        showNotLoggedInModal();
-        return; 
-    }
-    
-    createModal({
-        title: 'Изменить отображаемое имя',
-        icon: 'person',
-        iconColor: 'var(--accent)',
-        fields: [
-            { type: 'text', id: 'newDisplayNameInput', label: 'Новое имя', placeholder: 'Ваше имя', hint: 'Можно использовать любые символы' }
-        ],
-        actions: [
-            { id: 'cancelName', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
-            { id: 'saveName', text: 'Сохранить', class: 'primary', onClick: (e, modal) => {
-                const newName = document.getElementById('newDisplayNameInput').value.trim();
-                if (!newName) {
-                    alert('Введите имя');
-                    return;
-                }
-                
-                const btn = document.getElementById('saveName');
-                btn.disabled = true;
-                btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
-                
-                currentUser.updateProfile({ displayName: newName })
-                    .then(() => {
-                        return db.collection('users').doc(currentUser.uid).update({ displayName: newName });
-                    })
-                    .then(() => {
-                        alert('Имя обновлено!');
-                        modal.remove();
-                        loadUserData();
-                    })
-                    .catch(err => {
-                        alert('Ошибка: ' + err.message);
-                        btn.disabled = false;
-                        btn.innerHTML = 'Сохранить';
-                    });
-            }}
-        ]
-    });
-}
-
-// ============================================================
-// ТОГГЛ СТАТУСА ОНЛАЙН
-// ============================================================
-function toggleStatus() {
-    const toggle = document.getElementById('statusToggle');
-    toggle.classList.toggle('active');
-    userSettings.showOnlineStatus = toggle.classList.contains('active');
-    saveSettingsToCache();
-    
-    if (currentUser) {
-        db.collection('users').doc(currentUser.uid).update({
-            showOnlineStatus: userSettings.showOnlineStatus,
-            isOnline: userSettings.showOnlineStatus ? isUserActive : false
-        }).catch(() => {});
-        
-        const dotEl = document.getElementById('userOnlineDot');
-        if (userSettings.showOnlineStatus && isUserActive) {
-            dotEl.classList.add('show');
-        } else {
-            dotEl.classList.remove('show');
-        }
-    }
-}
-
-function showNotLoggedInModal() {
-    createModal({
-        title: 'Не авторизован',
-        icon: 'person_off',
-        iconColor: 'var(--red)',
-        text: 'Войдите в аккаунт, чтобы изменить настройки.',
-        actions: [
-            { id: 'closeNotLogged', text: 'Закрыть', class: 'outline', onClick: (e, modal) => modal.remove() },
-            { id: 'goLogin', text: 'Войти', class: 'primary', onClick: (e, modal) => {
-                modal.remove();
-                window.location.href = '/login.html';
-            }}
-        ]
-    });
-}
-
-console.log('⚙️ Settings page loaded with password detection');
+console.log('⚙️ Settings page loaded with reauthentication');
 </script>
 </body>
 </html>
