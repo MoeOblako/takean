@@ -50,6 +50,7 @@
             color: var(--text-primary);
             transition: background 0.3s, color 0.3s;
             -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -139,6 +140,7 @@
             align-items: center;
             gap: 4px;
             white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .topbar-nav a:hover {
@@ -177,6 +179,7 @@
             transition: border-color 0.2s;
             overflow: hidden;
             flex-shrink: 0;
+            position: relative;
         }
 
         .topbar-actions .avatar-small:hover { border-color: var(--accent); }
@@ -184,6 +187,23 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .topbar-actions .avatar-small .online-dot {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-card);
+            background: #4caf50;
+            display: none;
+            z-index: 2;
+        }
+
+        .topbar-actions .avatar-small .online-dot.show {
+            display: block;
         }
 
         .search-bar {
@@ -243,6 +263,7 @@
             align-items: center;
             gap: 8px;
             -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
         }
 
         .ripple-btn .ripple-effect {
@@ -533,6 +554,7 @@
             .auth-box { padding: 24px; margin: 0 8px; }
             .auth-box .logo { font-size: 24px; }
             .footer-inner { flex-direction: column; align-items: center; text-align: center; }
+            .topbar-actions .avatar-small .online-dot { width: 8px; height: 8px; bottom: 1px; right: 1px; }
         }
 
         @media (max-width: 480px) {
@@ -548,6 +570,7 @@
             .auth-box .logo { font-size: 20px; }
             .auth-box .field input { font-size: 13px; padding: 8px 10px; }
             .auth-box .field .input-wrap .toggle-password .material-icons { font-size: 18px; }
+            .topbar-actions .avatar-small .online-dot { width: 6px; height: 6px; bottom: 0px; right: 0px; }
         }
     </style>
 </head>
@@ -571,6 +594,10 @@
                     <span class="material-icons">add_box</span>
                     <span>Создать</span>
                 </a>
+                <a href="/communities.html">
+                    <span class="material-icons">group</span>
+                    <span>Сообщества</span>
+                </a>
             </nav>
 
             <div class="topbar-actions">
@@ -585,6 +612,7 @@
 
                 <div class="avatar-small" id="userAvatar">
                     <span>?</span>
+                    <span class="online-dot" id="userOnlineDot"></span>
                 </div>
             </div>
         </div>
@@ -746,14 +774,18 @@ document.addEventListener('DOMContentLoaded', () => {
 function loadUserData() {
     const user = auth.currentUser;
     const avatarEl = document.getElementById('userAvatar');
+    const dotEl = document.getElementById('userOnlineDot');
+    
     if (user) {
         avatarEl.innerHTML = user.photoURL 
             ? `<img src="${user.photoURL}" alt="avatar">` 
             : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
         avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+        if (dotEl) dotEl.classList.add('show');
     } else {
         avatarEl.innerHTML = '<span>?</span>';
         avatarEl.onclick = () => window.location.href = '/login.html';
+        if (dotEl) dotEl.classList.remove('show');
     }
 }
 
@@ -806,7 +838,11 @@ function register() {
                     reputation: 0,
                     followers: [],
                     following: [],
-                    theme: currentTheme
+                    theme: currentTheme,
+                    isOnline: true,
+                    lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+                    showOnlineStatus: true,
+                    followPrivacy: 'all'
                 });
             });
         })
@@ -840,7 +876,11 @@ function googleRegister() {
                         reputation: 0,
                         followers: [],
                         following: [],
-                        theme: currentTheme
+                        theme: currentTheme,
+                        isOnline: true,
+                        lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+                        showOnlineStatus: true,
+                        followPrivacy: 'all'
                     });
                 }
             });
