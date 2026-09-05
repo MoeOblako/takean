@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
+        /* ===== ВСЕ СТИЛИ (БЕЗ ИЗМЕНЕНИЙ) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -642,6 +643,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            border-radius: 50%;
         }
 
         .community-members .avatar-stack .mini-avatar .online-dot {
@@ -714,6 +716,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            border-radius: 50%;
         }
 
         .post-avatar .online-dot {
@@ -926,6 +929,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            border-radius: 50%;
         }
 
         .modal-user-item .avatar .online-dot {
@@ -1797,30 +1801,52 @@ function loadCommunity(id) {
 }
 
 // ============================================================
-// ЗАГРУЗКА СТАТУСА УЧАСТНИКОВ
+// ЗАГРУЗКА СТАТУСА УЧАСТНИКОВ (С АВАТАРКАМИ)
 // ============================================================
 function loadMembersStatus(memberIds) {
-    if (!memberIds.length) return;
+    if (!memberIds || !memberIds.length) return;
+    
     memberIds.forEach(uid => {
-        db.collection('users').doc(uid).get().then(doc => {
-            if (doc.exists) {
-                const data = doc.data();
-                userOnlineStatus[uid] = data.isOnline || false;
-                allUsersCache[uid] = data;
-                updateMemberOnlineStatus(uid, data.isOnline || false);
-            }
-        }).catch(() => {});
+        db.collection('users').doc(uid).get()
+            .then(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    userOnlineStatus[uid] = data.isOnline || false;
+                    allUsersCache[uid] = {
+                        id: uid,
+                        username: data.username || 'anonymous',
+                        displayName: data.displayName || data.username || 'Аноним',
+                        avatar: data.avatar || null,
+                        isOnline: data.isOnline || false
+                    };
+                    updateMemberUI(uid);
+                }
+            })
+            .catch(() => {});
     });
 }
 
-function updateMemberOnlineStatus(uid, isOnline) {
-    const dots = document.querySelectorAll(`.mini-avatar[data-uid="${uid}"] .online-dot`);
-    dots.forEach(dot => {
-        if (isOnline) {
-            dot.classList.add('show');
+// ============================================================
+// ОБНОВЛЕНИЕ UI УЧАСТНИКОВ
+// ============================================================
+function updateMemberUI(uid) {
+    const userData = allUsersCache[uid];
+    if (!userData) return;
+    
+    // Обновляем стек аватаров
+    const miniAvatars = document.querySelectorAll(`.mini-avatar[data-uid="${uid}"]`);
+    miniAvatars.forEach(el => {
+        const avatar = userData.avatar || '';
+        const displayName = userData.displayName || userData.username || '?';
+        if (avatar) {
+            el.innerHTML = `<img src="${avatar}" alt="">`;
         } else {
-            dot.classList.remove('show');
+            el.innerHTML = `<span>${displayName[0].toUpperCase()}</span>`;
         }
+        // Добавляем онлайн-статус
+        const dot = document.createElement('span');
+        dot.className = `online-dot ${userData.isOnline ? 'show' : ''}`;
+        el.appendChild(dot);
     });
 }
 
@@ -1844,6 +1870,7 @@ function renderCommunity(community) {
     const memberCount = community.memberCount || displayMembers.length;
     const canManage = isOwner || isAdmin(currentUser?.uid);
     
+    // Строим стек аватаров с правильным отображением
     let membersStackHtml = '';
     const showMembers = displayMembers.slice(0, 5);
     showMembers.forEach((member) => {
@@ -1940,10 +1967,11 @@ function renderCommunity(community) {
         </div>
     `;
     
+    // Обновляем статусы
     if (displayMembers.length) {
         displayMembers.forEach(uid => {
             if (userOnlineStatus[uid] !== undefined) {
-                updateMemberOnlineStatus(uid, userOnlineStatus[uid]);
+                updateMemberUI(uid);
             }
         });
     }
@@ -2311,7 +2339,7 @@ function toggleJoinCommunity() {
 }
 
 // ============================================================
-// ПОКАЗ УЧАСТНИКОВ С УПРАВЛЕНИЕМ
+// ПОКАЗ УЧАСТНИКОВ С УПРАВЛЕНИЕМ (С АВАТАРКАМИ)
 // ============================================================
 function showMembers() {
     if (!communityData || !communityData.members || !communityData.members.length) {
@@ -2355,20 +2383,22 @@ function showMembers() {
             const isSelf = currentUser && r.id === currentUser.uid;
             const showControls = canManage && !isOwner && !isSelf;
             const avatar = r.data.avatar || '';
+            const displayName = r.data.displayName || r.data.username || 'Аноним';
+            const username = r.data.username || 'anonymous';
             
             return `
                 <div class="modal-user-item">
                     <div class="avatar" onclick="goToProfileWithContext('${r.id}')">
-                        ${avatar ? `<img src="${avatar}" alt="">` : `<span>${(r.data.username || '?')[0].toUpperCase()}</span>`}
+                        ${avatar ? `<img src="${avatar}" alt="">` : `<span>${displayName[0].toUpperCase()}</span>`}
                         <span class="online-dot ${isOnline ? 'show' : ''}"></span>
                     </div>
                     <div class="info" onclick="goToProfileWithContext('${r.id}')">
                         <div class="name">
-                            ${r.data.displayName || r.data.username || 'Аноним'}
+                            ${escapeHtml(displayName)}
                             ${isOwner ? '<span class="admin-badge">Создатель</span>' : ''}
                             ${isAdmin && !isOwner ? '<span class="admin-badge">Админ</span>' : ''}
                         </div>
-                        <div class="username">@${r.data.username || 'anonymous'}</div>
+                        <div class="username">@${escapeHtml(username)}</div>
                     </div>
                     ${showControls ? `
                         <div class="member-actions">
@@ -2551,7 +2581,6 @@ function confirmDeleteCommunity() {
         this.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Проверка...';
         errorEl.style.display = 'none';
         
-        // Проверяем пароль через повторную авторизацию
         const credential = firebase.auth.EmailAuthProvider.credential(
             currentUser.email,
             password
@@ -2559,7 +2588,6 @@ function confirmDeleteCommunity() {
         
         currentUser.reauthenticateWithCredential(credential)
             .then(() => {
-                // Пароль верный — удаляем сообщество
                 this.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Удаление...';
                 return db.collection('communities').doc(communityData.id).delete();
             })
@@ -2659,7 +2687,6 @@ function editCommunity() {
     `;
     document.body.appendChild(modal);
     
-    // Загрузка аватара
     document.getElementById('avatarInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -2675,7 +2702,6 @@ function editCommunity() {
         window._avatarFile = file;
     });
     
-    // Загрузка шапки
     document.getElementById('coverInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -2703,7 +2729,6 @@ function editCommunity() {
         this.disabled = true;
         this.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
         
-        // Сначала загружаем файлы, если есть
         const uploadPromises = [];
         const updates = {};
         
@@ -2757,14 +2782,13 @@ function editCommunity() {
 }
 
 // ============================================================
-// УДАЛЕНИЕ СООБЩЕСТВА (СТАРАЯ ФУНКЦИЯ — ЗАМЕНЕНА НА confirmDeleteCommunity)
+// УДАЛЕНИЕ СООБЩЕСТВА
 // ============================================================
 function deleteCommunity() {
-    // Заменено на confirmDeleteCommunity
     confirmDeleteCommunity();
 }
 
-console.log('👥 Community page loaded with full fixes');
+console.log('👥 Community page loaded with avatar fix');
 </script>
 </body>
 </html>
