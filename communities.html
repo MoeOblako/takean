@@ -694,6 +694,90 @@
             padding: 8px 24px;
         }
 
+        /* ===== JOIN COMMUNITY MODAL ===== */
+        .join-modal .modal-box {
+            max-width: 380px;
+            text-align: center;
+            padding: 32px 28px 28px;
+        }
+
+        .join-modal .community-avatar-large {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--radius);
+            background: var(--bg-hover);
+            margin: 0 auto 12px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border: 2px solid var(--border-color);
+        }
+
+        .join-modal .community-avatar-large img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .join-modal .community-name-large {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .join-modal .community-handle-large {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .join-modal .community-desc-large {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .join-modal .community-stats-large {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .join-modal .community-stats-large .num {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .join-modal .modal-actions {
+            justify-content: center;
+            border-top: none;
+            padding-top: 0;
+            gap: 12px;
+        }
+
+        .join-modal .modal-actions .ripple-btn {
+            min-width: 100px;
+            justify-content: center;
+        }
+
+        .join-modal .modal-actions .ripple-btn.cancel {
+            color: var(--text-secondary);
+        }
+
+        .join-modal .modal-actions .ripple-btn.cancel:hover {
+            background: var(--bg-hover);
+        }
+
         /* ===== FOOTER ===== */
         .footer {
             margin-top: auto;
@@ -816,6 +900,10 @@
             .topbar-actions .avatar-small .online-dot { width: 8px; height: 8px; bottom: 1px; right: 1px; }
             .edit-media-row { flex-direction: column; align-items: center; }
             .edit-cover-box { width: 100%; }
+            .join-modal .modal-box { padding: 24px 16px 20px; }
+            .join-modal .community-avatar-large { width: 64px; height: 64px; font-size: 28px; }
+            .join-modal .community-name-large { font-size: 18px; }
+            .join-modal .community-stats-large { gap: 16px; font-size: 12px; }
         }
 
         @media (max-width: 480px) {
@@ -835,6 +923,11 @@
             .modal-box .modal-header h2 { font-size: 18px; }
             .modal-box .field input { font-size: 13px; padding: 8px 10px; }
             .topbar-actions .avatar-small .online-dot { width: 6px; height: 6px; bottom: 0px; right: 0px; }
+            .join-modal .modal-box { padding: 16px 12px 16px; }
+            .join-modal .community-avatar-large { width: 56px; height: 56px; font-size: 24px; }
+            .join-modal .community-name-large { font-size: 16px; }
+            .join-modal .modal-actions { flex-direction: column; }
+            .join-modal .modal-actions .ripple-btn { width: 100%; }
         }
     </style>
 </head>
@@ -1068,6 +1161,9 @@ function setupEventListeners() {
     });
 }
 
+// ============================================================
+// ИСПРАВЛЕННАЯ loadUserData() — загружает аватарку из Firestore
+// ============================================================
 function loadUserData() {
     const user = auth.currentUser;
     currentUser = user;
@@ -1076,18 +1172,50 @@ function loadUserData() {
     const dotEl = document.getElementById('userOnlineDot');
     
     if (user) {
-        avatarEl.innerHTML = user.photoURL 
-            ? `<img src="${user.photoURL}" alt="avatar">` 
-            : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
-        avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
-        dotEl.classList.add('show');
+        // ===== ЗАГРУЖАЕМ АВАТАРКУ ИЗ FIRESTORE =====
+        db.collection('users').doc(user.uid).get()
+            .then(doc => {
+                let avatarUrl = user.photoURL || null;
+                let displayName = user.displayName || '?';
+                
+                if (doc.exists) {
+                    const data = doc.data();
+                    avatarUrl = data.avatar || user.photoURL || null;
+                    displayName = data.displayName || user.displayName || '?';
+                    
+                    // Если в Firestore есть аватарка, но в Auth нет — обновляем Auth
+                    if (data.avatar && !user.photoURL) {
+                        user.updateProfile({ photoURL: data.avatar }).catch(() => {});
+                    }
+                }
+                
+                if (avatarEl) {
+                    avatarEl.innerHTML = avatarUrl 
+                        ? `<img src="${avatarUrl}" alt="avatar">` 
+                        : `<span>${displayName[0].toUpperCase()}</span>`;
+                    avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+                }
+                if (dotEl) dotEl.classList.add('show');
+            })
+            .catch(() => {
+                if (avatarEl) {
+                    avatarEl.innerHTML = user.photoURL 
+                        ? `<img src="${user.photoURL}" alt="avatar">` 
+                        : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
+                    avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+                }
+                if (dotEl) dotEl.classList.add('show');
+            });
+        
         createUserInFirestore(user).then(() => {
             startOnlineTracking();
         }).catch(err => console.error('Error creating user:', err));
     } else {
-        avatarEl.innerHTML = '<span>?</span>';
-        avatarEl.onclick = () => window.location.href = '/login.html';
-        dotEl.classList.remove('show');
+        if (avatarEl) {
+            avatarEl.innerHTML = '<span>?</span>';
+            avatarEl.onclick = () => window.location.href = '/login.html';
+        }
+        if (dotEl) dotEl.classList.remove('show');
         if (onlineCheckInterval) {
             clearInterval(onlineCheckInterval);
             onlineCheckInterval = null;
@@ -1149,7 +1277,7 @@ function renderCommunities(communitiesList) {
         const displayName = community.name || community.id || 'Сообщество';
         
         return `
-            <div class="community-card" onclick="window.location.href='/community.html?id=${community.id}'">
+            <div class="community-card" onclick="goToCommunity('${community.id}')">
                 <div class="avatar">
                     ${community.avatar ? `<img src="${community.avatar}" alt="">` : `<span class="material-icons" style="font-size:28px;">group</span>`}
                 </div>
@@ -1164,11 +1292,11 @@ function renderCommunities(communitiesList) {
                 </div>
                 <div class="join-btn" onclick="event.stopPropagation();">
                     ${isMember ? `
-                        <button class="ripple-btn outline" onclick="toggleJoinCommunity('${community.id}')" style="font-size:12px;padding:4px 12px;">
+                        <button class="ripple-btn outline" onclick="leaveCommunity('${community.id}')" style="font-size:12px;padding:4px 12px;">
                             Выйти
                         </button>
                     ` : `
-                        <button class="ripple-btn primary" onclick="toggleJoinCommunity('${community.id}')" style="font-size:12px;padding:4px 12px;">
+                        <button class="ripple-btn primary" onclick="openJoinModal('${community.id}')" style="font-size:12px;padding:4px 12px;">
                             <span class="material-icons" style="font-size:16px;">add</span> Вступить
                         </button>
                     `}
@@ -1178,7 +1306,10 @@ function renderCommunities(communitiesList) {
     }).join('');
 }
 
-function toggleJoinCommunity(communityId) {
+// ============================================================
+// МОДАЛЬНОЕ ОКНО ВСТУПЛЕНИЯ В СООБЩЕСТВО (КАК В DISCORD)
+// ============================================================
+function openJoinModal(communityId) {
     if (!currentUser) {
         window.location.href = '/login.html';
         return;
@@ -1187,7 +1318,117 @@ function toggleJoinCommunity(communityId) {
     const community = communities.find(c => c.id === communityId);
     if (!community) return;
     
-    const isMember = community.members && community.members.includes(currentUser.uid);
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay join-modal';
+    modal.innerHTML = `
+        <div class="modal-box">
+            <div class="community-avatar-large">
+                ${community.avatar 
+                    ? `<img src="${community.avatar}" alt="">` 
+                    : `<span class="material-icons" style="font-size:40px;">group</span>`}
+            </div>
+            <div class="community-name-large">${escapeHtml(community.name || 'Сообщество')}</div>
+            <div class="community-handle-large">@${escapeHtml(community.handle || community.id)}</div>
+            <div class="community-desc-large">${escapeHtml(community.description || 'Нет описания')}</div>
+            <div class="community-stats-large">
+                <span><span class="num">${community.memberCount || 0}</span> участников</span>
+                <span><span class="num">${community.postsCount || 0}</span> тейков</span>
+            </div>
+            <div class="modal-actions">
+                <button class="ripple-btn cancel" id="cancelJoinBtn">Отмена</button>
+                <button class="ripple-btn primary" id="confirmJoinBtn">Вступить</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // Отмена — просто закрываем окно (без выхода из сообщества, т.к. пользователь ещё не вступил)
+    document.getElementById('cancelJoinBtn').addEventListener('click', function() {
+        modal.remove();
+    });
+    
+    // Подтверждение — вступаем в сообщество и перенаправляем на страницу сообщества
+    document.getElementById('confirmJoinBtn').addEventListener('click', function() {
+        const btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span>';
+        
+        performJoin(communityId).then(success => {
+            if (success) {
+                modal.remove();
+                window.location.href = `/community.html?id=${communityId}`;
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = 'Вступить';
+                alert('Не удалось вступить в сообщество. Попробуйте позже.');
+            }
+        });
+    });
+    
+    // Закрытие по клику на оверлей
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
+// ============================================================
+// ВСТУПЛЕНИЕ В СООБЩЕСТВО (без дублирования)
+// ============================================================
+function performJoin(communityId) {
+    return new Promise((resolve) => {
+        const ref = db.collection('communities').doc(communityId);
+        
+        db.runTransaction(transaction => {
+            return transaction.get(ref).then(doc => {
+                if (!doc.exists) {
+                    resolve(false);
+                    return;
+                }
+                
+                const data = doc.data();
+                let members = data.members || [];
+                
+                // Проверяем, не состоит ли уже пользователь
+                if (members.includes(currentUser.uid)) {
+                    resolve(true);
+                    return;
+                }
+                
+                // Добавляем пользователя
+                members.push(currentUser.uid);
+                
+                transaction.update(ref, {
+                    members: members,
+                    memberCount: members.length
+                });
+                
+                resolve(true);
+            });
+        }).then(() => {
+            // Обновляем локальные данные
+            const community = communities.find(c => c.id === communityId);
+            if (community) {
+                community.members = [...(community.members || []), currentUser.uid];
+                community.memberCount = community.members.length;
+                renderCommunities(communities);
+            }
+            resolve(true);
+        }).catch(err => {
+            console.error('Join error:', err);
+            resolve(false);
+        });
+    });
+}
+
+// ============================================================
+// ВЫХОД ИЗ СООБЩЕСТВА (сразу, без модалки)
+// ============================================================
+function leaveCommunity(communityId) {
+    if (!currentUser) return;
+    if (!confirm('Вы уверены, что хотите выйти из этого сообщества?')) return;
+    
     const ref = db.collection('communities').doc(communityId);
     
     db.runTransaction(transaction => {
@@ -1195,12 +1436,7 @@ function toggleJoinCommunity(communityId) {
             if (!doc.exists) return;
             const data = doc.data();
             let members = data.members || [];
-            
-            if (isMember) {
-                members = members.filter(id => id !== currentUser.uid);
-            } else {
-                members.push(currentUser.uid);
-            }
+            members = members.filter(id => id !== currentUser.uid);
             
             transaction.update(ref, {
                 members: members,
@@ -1208,14 +1444,20 @@ function toggleJoinCommunity(communityId) {
             });
         });
     }).then(() => {
-        if (isMember) {
+        const community = communities.find(c => c.id === communityId);
+        if (community) {
             community.members = (community.members || []).filter(id => id !== currentUser.uid);
-        } else {
-            community.members = [...(community.members || []), currentUser.uid];
+            community.memberCount = community.members.length;
+            renderCommunities(communities);
         }
-        community.memberCount = community.members.length;
-        renderCommunities(communities);
     }).catch(err => alert('Ошибка: ' + err.message));
+}
+
+// ============================================================
+// ПЕРЕХОД В СООБЩЕСТВО
+// ============================================================
+function goToCommunity(communityId) {
+    if (communityId) window.location.href = `/community.html?id=${communityId}`;
 }
 
 // ============================================================
@@ -1308,7 +1550,6 @@ function openCreateCommunityModal() {
         this.disabled = true;
         this.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Создание...';
         
-        // Сначала проверяем уникальность handle
         db.collection('communities').where('handle', '==', handle).get()
             .then(snapshot => {
                 if (!snapshot.empty) {
@@ -1423,7 +1664,7 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-console.log('👥 Communities page loaded with avatar/cover preview');
+console.log('👥 Communities page loaded with join modal');
 </script>
 </body>
 </html>
