@@ -443,7 +443,7 @@
             border: 1px solid var(--border-color);
             border-radius: var(--radius);
             padding: 28px 32px;
-            max-width: 460px;
+            max-width: 480px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
@@ -1228,7 +1228,7 @@ function showLogoutModal() {
 }
 
 // ============================================================
-// ПОВТОРНАЯ АВТОРИЗАЦИЯ (ДЛЯ ЧУВСТВИТЕЛЬНЫХ ДЕЙСТВИЙ)
+// ПОВТОРНАЯ АВТОРИЗАЦИЯ (ДЛЯ ПОЛЬЗОВАТЕЛЕЙ С ПАРОЛЕМ)
 // ============================================================
 function reauthenticateUser(password) {
     if (!currentUser) return Promise.reject('No user');
@@ -1242,52 +1242,121 @@ function reauthenticateUser(password) {
     return currentUser.reauthenticateWithCredential(credential);
 }
 
-function showReauthModal(actionCallback) {
-    createModal({
-        title: 'Подтверждение',
-        icon: 'verified',
-        iconColor: 'var(--accent)',
-        text: 'Для выполнения этого действия требуется повторный вход.<br>Введите ваш пароль для подтверждения.',
-        fields: [
-            { type: 'password', id: 'reauthPassword', label: 'Пароль', placeholder: 'Введите пароль', error: 'reauthError' }
-        ],
-        actions: [
-            { id: 'cancelReauth', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
-            { id: 'confirmReauth', text: 'Подтвердить', class: 'primary', onClick: (e, modal) => {
-                const password = document.getElementById('reauthPassword').value;
-                const errorEl = document.getElementById('reauthError');
-                
-                if (!password) {
-                    errorEl.textContent = 'Введите пароль';
-                    errorEl.style.display = 'block';
-                    return;
-                }
-                
-                const btn = document.getElementById('confirmReauth');
-                btn.disabled = true;
-                btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Проверка...';
-                errorEl.style.display = 'none';
-                
-                reauthenticateUser(password)
-                    .then(() => {
-                        modal.remove();
-                        // Выполняем действие после успешной реавторизации
-                        if (actionCallback) actionCallback();
-                    })
-                    .catch(err => {
-                        if (err.code === 'auth/wrong-password') {
-                            errorEl.textContent = 'Неверный пароль. Попробуйте снова.';
-                            errorEl.style.display = 'block';
-                        } else {
-                            errorEl.textContent = 'Ошибка: ' + err.message;
-                            errorEl.style.display = 'block';
-                        }
-                        btn.disabled = false;
-                        btn.innerHTML = 'Подтвердить';
-                    });
-            }}
-        ]
-    });
+// ============================================================
+// ПОВТОРНАЯ АВТОРИЗАЦИЯ ЧЕРЕЗ GOOGLE (ДЛЯ ПОЛЬЗОВАТЕЛЕЙ БЕЗ ПАРОЛЯ)
+// ============================================================
+function reauthenticateWithGoogle() {
+    if (!currentUser) return Promise.reject('No user');
+    
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    
+    return auth.signInWithPopup(provider)
+        .then(result => {
+            // После успешного входа, возвращаем пользователя
+            return result.user;
+        })
+        .catch(err => {
+            // Если пользователь закрыл окно
+            if (err.code === 'auth/popup-closed-by-user') {
+                return Promise.reject('Отменено пользователем');
+            }
+            return Promise.reject(err);
+        });
+}
+
+// ============================================================
+// УНИВЕРСАЛЬНАЯ ФУНКЦИЯ ДЛЯ ЧУВСТВИТЕЛЬНЫХ ДЕЙСТВИЙ
+// ============================================================
+function performSensitiveAction(actionCallback) {
+    if (!currentUser) {
+        showNotLoggedInModal();
+        return;
+    }
+    
+    const hasPassword = currentUser.providerData.some(provider => 
+        provider.providerId === 'password'
+    );
+    
+    if (hasPassword) {
+        // У пользователя есть пароль — запрашиваем его
+        createModal({
+            title: 'Подтверждение',
+            icon: 'verified',
+            iconColor: 'var(--accent)',
+            text: 'Для выполнения этого действия требуется повторный вход.<br>Введите ваш пароль для подтверждения.',
+            fields: [
+                { type: 'password', id: 'reauthPassword', label: 'Пароль', placeholder: 'Введите пароль', error: 'reauthError' }
+            ],
+            actions: [
+                { id: 'cancelReauth', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
+                { id: 'confirmReauth', text: 'Подтвердить', class: 'primary', onClick: (e, modal) => {
+                    const password = document.getElementById('reauthPassword').value;
+                    const errorEl = document.getElementById('reauthError');
+                    
+                    if (!password) {
+                        errorEl.textContent = 'Введите пароль';
+                        errorEl.style.display = 'block';
+                        return;
+                    }
+                    
+                    const btn = document.getElementById('confirmReauth');
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Проверка...';
+                    errorEl.style.display = 'none';
+                    
+                    reauthenticateUser(password)
+                        .then(() => {
+                            modal.remove();
+                            if (actionCallback) actionCallback();
+                        })
+                        .catch(err => {
+                            if (err.code === 'auth/wrong-password') {
+                                errorEl.textContent = 'Неверный пароль. Попробуйте снова.';
+                                errorEl.style.display = 'block';
+                            } else {
+                                errorEl.textContent = 'Ошибка: ' + err.message;
+                                errorEl.style.display = 'block';
+                            }
+                            btn.disabled = false;
+                            btn.innerHTML = 'Подтвердить';
+                        });
+                }}
+            ]
+        });
+    } else {
+        // У пользователя нет пароля — предлагаем войти через Google
+        createModal({
+            title: 'Подтверждение',
+            icon: 'verified',
+            iconColor: 'var(--accent)',
+            text: 'Для выполнения этого действия требуется повторный вход.<br>Нажмите "Войти через Google", чтобы подтвердить свою личность.',
+            actions: [
+                { id: 'cancelReauthGoogle', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
+                { id: 'confirmReauthGoogle', text: 'Войти через Google', class: 'primary', icon: 'login', onClick: (e, modal) => {
+                    const btn = document.getElementById('confirmReauthGoogle');
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Вход...';
+                    
+                    reauthenticateWithGoogle()
+                        .then(() => {
+                            modal.remove();
+                            if (actionCallback) actionCallback();
+                        })
+                        .catch(err => {
+                            if (err === 'Отменено пользователем') {
+                                // Просто закрываем
+                                modal.remove();
+                            } else {
+                                alert('Ошибка: ' + (err.message || err));
+                            }
+                            btn.disabled = false;
+                            btn.innerHTML = 'Войти через Google';
+                        });
+                }}
+            ]
+        });
+    }
 }
 
 // ============================================================
@@ -1333,7 +1402,7 @@ function openChangeEmailModal() {
                         .catch(err => {
                             if (err.code === 'auth/requires-recent-login') {
                                 modal.remove();
-                                showReauthModal(() => {
+                                performSensitiveAction(() => {
                                     openChangeEmailModal();
                                 });
                             } else {
@@ -1366,7 +1435,10 @@ function openChangeEmailModal() {
                             btn.innerHTML = 'Сохранить';
                         });
                 } else {
-                    doUpdate();
+                    // Для пользователей без пароля — используем универсальное подтверждение
+                    performSensitiveAction(() => {
+                        doUpdate();
+                    });
                 }
             }}
         ]
@@ -1422,24 +1494,20 @@ function openChangePasswordModal() {
                     btn.disabled = true;
                     btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
                     
-                    currentUser.updatePassword(newPassword)
-                        .then(() => {
-                            alert('Пароль успешно установлен!');
-                            modal.remove();
-                            loadUserData();
-                        })
-                        .catch(err => {
-                            if (err.code === 'auth/requires-recent-login') {
+                    // Для установки пароля тоже нужна свежая авторизация
+                    performSensitiveAction(() => {
+                        currentUser.updatePassword(newPassword)
+                            .then(() => {
+                                alert('Пароль успешно установлен!');
                                 modal.remove();
-                                showReauthModal(() => {
-                                    openChangePasswordModal();
-                                });
-                            } else {
+                                loadUserData();
+                            })
+                            .catch(err => {
                                 alert('Ошибка: ' + err.message);
                                 btn.disabled = false;
                                 btn.innerHTML = 'Установить пароль';
-                            }
-                        });
+                            });
+                    });
                 }}
             ]
         });
@@ -1495,7 +1563,7 @@ function openChangePasswordModal() {
                             alert('Неверный текущий пароль');
                         } else if (err.code === 'auth/requires-recent-login') {
                             modal.remove();
-                            showReauthModal(() => {
+                            performSensitiveAction(() => {
                                 openChangePasswordModal();
                             });
                         } else {
@@ -1603,6 +1671,8 @@ function showDeleteAccountModal() {
         return;
     }
     
+    const hasPassword = currentUser.providerData.some(p => p.providerId === 'password');
+    
     createModal({
         title: 'Удалить аккаунт?',
         icon: 'delete_forever',
@@ -1612,61 +1682,71 @@ function showDeleteAccountModal() {
             <br><br>
             Все ваши тейки, комментарии и данные будут удалены.
             <br><br>
-            Для подтверждения введите пароль.
+            ${hasPassword ? 'Для подтверждения введите пароль.' : 'Для подтверждения войдите через Google.'}
         `,
-        fields: [
+        fields: hasPassword ? [
             { type: 'password', id: 'deletePasswordInput', label: 'Пароль', placeholder: 'Введите пароль', error: 'deletePasswordError' }
-        ],
+        ] : [],
         actions: [
             { id: 'cancelDelete', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
             { id: 'confirmDelete', text: 'Удалить', class: 'danger', icon: 'delete', onClick: (e, modal) => {
-                const password = document.getElementById('deletePasswordInput').value;
-                const errorEl = document.getElementById('deletePasswordError');
-                
-                if (!password) {
-                    errorEl.textContent = 'Введите пароль';
-                    errorEl.style.display = 'block';
-                    return;
-                }
-                
                 const btn = document.getElementById('confirmDelete');
                 btn.disabled = true;
                 btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Проверка...';
-                errorEl.style.display = 'none';
                 
-                reauthenticateUser(password)
-                    .then(() => {
-                        btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Удаление...';
-                        return db.collection('users').doc(currentUser.uid).delete();
-                    })
-                    .then(() => {
-                        return db.collection('posts').where('authorId', '==', currentUser.uid).get();
-                    })
-                    .then(snapshot => {
-                        const batch = db.batch();
-                        snapshot.forEach(doc => { batch.delete(doc.ref); });
-                        return batch.commit();
-                    })
-                    .then(() => {
-                        return currentUser.delete();
-                    })
-                    .then(() => {
-                        alert('Аккаунт удалён');
-                        window.location.href = '/';
-                    })
-                    .catch(err => {
-                        if (err.code === 'auth/wrong-password') {
-                            errorEl.textContent = 'Неверный пароль. Попробуйте снова.';
-                            errorEl.style.display = 'block';
-                        } else if (err.code === 'auth/requires-recent-login') {
-                            errorEl.textContent = 'Требуется повторный вход. Выйдите и зайдите снова.';
-                            errorEl.style.display = 'block';
-                        } else {
+                const doDelete = () => {
+                    btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Удаление...';
+                    db.collection('users').doc(currentUser.uid).delete()
+                        .then(() => {
+                            return db.collection('posts').where('authorId', '==', currentUser.uid).get();
+                        })
+                        .then(snapshot => {
+                            const batch = db.batch();
+                            snapshot.forEach(doc => { batch.delete(doc.ref); });
+                            return batch.commit();
+                        })
+                        .then(() => {
+                            return currentUser.delete();
+                        })
+                        .then(() => {
+                            alert('Аккаунт удалён');
+                            window.location.href = '/';
+                        })
+                        .catch(err => {
                             alert('Ошибка: ' + err.message);
-                        }
+                            btn.disabled = false;
+                            btn.innerHTML = '<span class="material-icons">delete</span> Удалить';
+                        });
+                };
+                
+                if (hasPassword) {
+                    const password = document.getElementById('deletePasswordInput').value;
+                    const errorEl = document.getElementById('deletePasswordError');
+                    
+                    if (!password) {
+                        errorEl.textContent = 'Введите пароль';
+                        errorEl.style.display = 'block';
                         btn.disabled = false;
                         btn.innerHTML = '<span class="material-icons">delete</span> Удалить';
-                    });
+                        return;
+                    }
+                    
+                    reauthenticateUser(password)
+                        .then(doDelete)
+                        .catch(err => {
+                            if (err.code === 'auth/wrong-password') {
+                                const errorEl = document.getElementById('deletePasswordError');
+                                errorEl.textContent = 'Неверный пароль. Попробуйте снова.';
+                                errorEl.style.display = 'block';
+                            } else {
+                                alert('Ошибка: ' + err.message);
+                            }
+                            btn.disabled = false;
+                            btn.innerHTML = '<span class="material-icons">delete</span> Удалить';
+                        });
+                } else {
+                    performSensitiveAction(doDelete);
+                }
             }}
         ]
     });
@@ -1879,7 +1959,7 @@ function loadUserData() {
 
 auth.onAuthStateChanged(user => { loadUserData(); });
 
-console.log('⚙️ Settings page loaded with reauthentication');
+console.log('⚙️ Settings page loaded with Google reauthentication');
 </script>
 </body>
 </html>
