@@ -1826,7 +1826,6 @@ function loadPost(id) {
                                 authorName = data.displayName;
                                 currentPost.authorName = data.displayName;
                             }
-                            // Если есть username, сохраняем для ссылки
                             if (data.username) {
                                 currentPost._username = data.username;
                             }
@@ -2050,9 +2049,7 @@ function renderPost(post) {
             
             <div class="comment-input-area">
                 <div class="comment-avatar-small" id="commentAvatar">
-                    ${currentUser?.photoURL 
-                        ? `<img src="${currentUser.photoURL}" alt="">` 
-                        : `<span>${currentUser?.displayName?.[0] || '?'}</span>`}
+                    <span>?</span>
                     <span class="online-dot ${currentUser ? 'show' : ''}"></span>
                 </div>
                 <div class="comment-input-wrap">
@@ -2075,6 +2072,47 @@ function renderPost(post) {
             </div>
         </div>
     `;
+    
+    // ===== ЗАГРУЖАЕМ АВАТАРКУ ДЛЯ ПОЛЯ ВВОДА КОММЕНТАРИЯ =====
+    loadCommentAvatar();
+}
+
+// ============================================================
+// ЗАГРУЗКА АВАТАРКИ ДЛЯ ПОЛЯ ВВОДА КОММЕНТАРИЯ
+// ============================================================
+function loadCommentAvatar() {
+    const avatarEl = document.getElementById('commentAvatar');
+    if (!avatarEl) return;
+    
+    if (!currentUser) {
+        avatarEl.innerHTML = `<span>?</span><span class="online-dot"></span>`;
+        return;
+    }
+    
+    db.collection('users').doc(currentUser.uid).get()
+        .then(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                const avatarUrl = data.avatar || currentUser.photoURL || null;
+                const displayName = data.displayName || currentUser.displayName || '?';
+                
+                avatarEl.innerHTML = avatarUrl 
+                    ? `<img src="${avatarUrl}" alt="">` 
+                    : `<span>${displayName[0].toUpperCase()}</span>`;
+                avatarEl.innerHTML += `<span class="online-dot show"></span>`;
+            } else {
+                avatarEl.innerHTML = currentUser.photoURL 
+                    ? `<img src="${currentUser.photoURL}" alt="">` 
+                    : `<span>${(currentUser.displayName || '?')[0].toUpperCase()}</span>`;
+                avatarEl.innerHTML += `<span class="online-dot show"></span>`;
+            }
+        })
+        .catch(() => {
+            avatarEl.innerHTML = currentUser.photoURL 
+                ? `<img src="${currentUser.photoURL}" alt="">` 
+                : `<span>${(currentUser.displayName || '?')[0].toUpperCase()}</span>`;
+            avatarEl.innerHTML += `<span class="online-dot show"></span>`;
+        });
 }
 
 // ============================================================
@@ -2551,6 +2589,9 @@ function submitComment() {
         window.location.href = '/login.html';
         return;
     }
+    
+    // ===== ОБНОВЛЯЕМ АВАТАРКУ ПЕРЕД ОТПРАВКОЙ =====
+    loadCommentAvatar();
     
     const textarea = document.getElementById('commentInput');
     const text = textarea.value.trim();
