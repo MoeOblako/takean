@@ -23,9 +23,8 @@ export default async (request: Request, context: Context) => {
   const url = new URL(request.url);
   const userAgent = (request.headers.get("user-agent") || "").toLowerCase();
 
-  // 1. Извлекаем postId из ?id=, либо из пути (/post/ID, /post.html/ID и т.д.)
+  // 1. Извлекаем postId из ?id= или из пути (/post/ID, /post.html/ID)
   let postId = url.searchParams.get("id");
-  
   if (!postId) {
     const pathParts = url.pathname.split("/").filter(Boolean);
     if (pathParts.length > 0) {
@@ -33,7 +32,7 @@ export default async (request: Request, context: Context) => {
     }
   }
 
-  // Очищаем ID от возможных расширений .html, если они прилипли к концу ID
+  // Очищаем ID от .html
   if (postId) {
     postId = postId.replace(/\.html$/i, "");
   }
@@ -46,7 +45,7 @@ export default async (request: Request, context: Context) => {
   try {
     let fields: Record<string, any> | null = null;
 
-    // 2. Если ID длинный (Direct Document ID из Firestore)
+    // 2. Прямой запрос по Document ID
     if (postId.length > 15) {
       const docUrl = `${FIRESTORE_URL}/posts/${postId}`;
       const fsResponse = await fetch(docUrl);
@@ -56,7 +55,7 @@ export default async (request: Request, context: Context) => {
       }
     }
 
-    // 3. Если по Direct ID не нашли или это shortId — делаем запрос по полю shortId
+    // 3. Запрос по shortId
     if (!fields) {
       const queryUrl = `${FIRESTORE_URL}:runQuery`;
       const queryBody = {
@@ -94,7 +93,7 @@ export default async (request: Request, context: Context) => {
     // 4. Заголовок
     const title = fields.title?.stringValue || "Takean - Тейк";
 
-    // 5. Текст (проверяем все популярные имена полей в Firestore)
+    // 5. Текст поста
     const rawContent = 
       fields.content?.stringValue || 
       fields.text?.stringValue || 
@@ -102,28 +101,21 @@ export default async (request: Request, context: Context) => {
       fields.body?.stringValue || 
       "";
 
-    // Вырезаем BB-коды, маркдаун, лишние пробелы и переносы
-    let cleanDescription = rawContent
-      .replace(/\[.*?\]/g, "")           // [img]https://...[/img] или [b]text[/b]
-      .replace(/!\[.*?\]\(.*?\)/g, "")   // Markdown картинки
-      .replace(/#+/g, "")                // H1, H2 заголовки
-      .replace(/\s+/g, " ")
-      .trim();
-
-    if (!cleanDescription) {
-      cleanDescription = "Читайте тейк на платформе Takean";
-    } else if (cleanDescription.length > 250) {
-      cleanDescription = cleanDescription.substring(0, 247) + "...";
-    }
-
     // 6. Поиск обложки / изображения для баннера
     let imageUrl = "";
 
-    // Сначала смотрим массив images
-    if (fields.images?.arrayValue?.values?.length > 0) {
+    // 6.1 Вспомогательный поиск картинки прямо из BB-кода [img]URL[/img], пока не стерли BB-коды
+    if (rawContent.includes("[img]")) {
+      const match = rawContent.match(/\[img\](.*?)\[\/img\]/i);
+      if (match && match[1]) imageUrl = match[1].trim();
+    }
+
+    // 6.2 Массив images
+    if (!imageUrl && fields.images?.arrayValue?.values?.length > 0) {
       imageUrl = fields.images.arrayValue.values[0]?.stringValue || "";
     } 
-    // Если массива нет, ищем одиночные поля
+
+    // 6.3 Одиночные поля
     if (!imageUrl) {
       imageUrl = 
         fields.coverURL?.stringValue || 
@@ -134,18 +126,30 @@ export default async (request: Request, context: Context) => {
         "";
     }
 
-    // Вспомогательный поиск картинки прямо из BB-кодов [img]URL[/img], если поля были пустыми
-    if (!imageUrl && rawContent.includes("[img]")) {
-      const match = rawContent.match(/\[img\](.*?)\[\/img\]/i);
-      if (match && match[1]) imageUrl = match[1].trim();
-    }
-
     // Fallback дефолтная картинка
     if (!imageUrl) {
       imageUrl = "https://takean.cl.is/og-image.png";
     }
 
-    // 7. Генерация HTML с метатегами
+    // Нормализация URL изображения (гарантируем https://)
+    imageUrl = normalizeUrl(imageUrl);
+
+    // 7. Очистка текста от BB-кодов и Markdown
+    let cleanDescription = rawContent
+      .replace(/\[img\].*?\[\/img\]/gi, "") // Сначала удаляем картинки из текста
+      .replace(/\[.*?\]/g, "")               // Вырезаем оставшиеся BB-коды [b], [quote]
+      .replace(/!\[.*?\]\(.*?\)/g, "")       // Markdown картинки
+      .replace(/#+/g, "")                    // Заголовки
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (!cleanDescription) {
+      cleanDescription = "Читайте тейк на платформе Takean";
+    } else if (cleanDescription.length > 200) {
+      cleanDescription = cleanDescription.substring(0, 197) + "...";
+    }
+
+    // 8. Генерация HTML
     const html = `<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -159,6 +163,9 @@ export default async (request: Request, context: Context) => {
     <meta property="og:description" content="${escapeXml(cleanDescription)}">
     <meta property="og:image" content="${imageUrl}">
     <meta property="og:image:secure_url" content="${imageUrl}">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     <meta property="og:url" content="${url.href}">
 
     <!-- Twitter / Telegram Large Banner -->
@@ -176,7 +183,7 @@ export default async (request: Request, context: Context) => {
     return new Response(html, {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=300, s-maxage=600"
+        "Cache-Control": "public, max-age=3600, s-maxage=3600"
       }
     });
 
@@ -185,6 +192,15 @@ export default async (request: Request, context: Context) => {
     return context.next();
   }
 };
+
+function normalizeUrl(urlStr: string): string {
+  if (!urlStr) return "https://takean.cl.is/og-image.png";
+  if (urlStr.startsWith("//")) return `https:${urlStr}`;
+  if (!urlStr.startsWith("http://") && !urlStr.startsWith("https://")) {
+    return `https://${urlStr}`;
+  }
+  return urlStr;
+}
 
 function escapeXml(unsafe: string): string {
   return unsafe
@@ -198,4 +214,4 @@ function escapeXml(unsafe: string): string {
 export const config = {
   path: ["/*"],
 };
-               
+      
