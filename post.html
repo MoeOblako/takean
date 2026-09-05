@@ -2108,7 +2108,7 @@ function sharePost() {
 function copyLink() {
     const url = getShortUrl(); // БЕЗ https:// и без ?id=
     navigator.clipboard.writeText(url).then(() => {
-        alert('✅ Ссылка скопирована: ' + url);
+        alert('Ссылка скопирована: ' + url);
     }).catch(() => {
         prompt('Скопируйте ссылку:', url);
     });
