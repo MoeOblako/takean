@@ -1581,7 +1581,7 @@ function getUrlParams() {
 }
 
 // ============================================================
-// СОЗДАНИЕ МОДАЛЬНОГО ОКНА
+// УНИВЕРСАЛЬНАЯ ФУНКЦИЯ ДЛЯ МОДАЛЬНЫХ ОКОН
 // ============================================================
 function createModal(options) {
     const { title, icon, iconColor, text, actions } = options;
@@ -1629,34 +1629,81 @@ function createModal(options) {
 }
 
 // ============================================================
-// ФУНКЦИЯ ДЛЯ ПОКАЗА ИНФОРМАЦИИ О СКРЫТЫХ ДАННЫХ
+// МОДАЛЬНОЕ ОКНО "НЕТ ПОДПИСЧИКОВ / ПОДПИСОК"
 // ============================================================
-function showPrivacyInfoModal(type) {
+function showEmptyListModal(type) {
     const titles = {
-        followers: 'Список подписчиков скрыт',
-        following: 'Список подписок скрыт',
-        comments: 'Комментарии скрыты'
+        followers: 'Нет подписчиков',
+        following: 'Нет подписок'
     };
     
     const icons = {
         followers: 'people_outline',
-        following: 'people',
-        comments: 'chat'
+        following: 'people'
     };
     
     const texts = {
-        followers: 'Пользователь <strong>' + (profileUser?.displayName || 'этот пользователь') + '</strong> скрыл список своих подписчиков.',
-        following: 'Пользователь <strong>' + (profileUser?.displayName || 'этот пользователь') + '</strong> скрыл список своих подписок.',
-        comments: 'Пользователь <strong>' + (profileUser?.displayName || 'этот пользователь') + '</strong> скрыл свои комментарии.'
+        followers: 'У пользователя <strong>' + (profileUser?.displayName || 'этого пользователя') + '</strong> пока нет подписчиков.',
+        following: 'Пользователь <strong>' + (profileUser?.displayName || 'этого пользователя') + '</strong> пока ни на кого не подписан.'
     };
     
     createModal({
-        title: titles[type] || 'Информация скрыта',
+        title: titles[type] || 'Нет данных',
         icon: icons[type] || 'info',
         iconColor: 'var(--text-muted)',
-        text: texts[type] || 'Эта информация скрыта пользователем.',
+        text: texts[type] || 'Список пуст.',
         actions: [
-            { id: 'closePrivacyInfo', text: 'Закрыть', class: 'primary', onClick: (e, modal) => modal.remove() }
+            { id: 'closeEmpty', text: 'Понятно', class: 'primary', onClick: (e, modal) => modal.remove() }
+        ]
+    });
+}
+
+// ============================================================
+// ИСПРАВЛЕННАЯ ФУНКЦИЯ ПОКАЗА РЕПУТАЦИИ (с правильной иконкой)
+// ============================================================
+function showReputationModal() {
+    if (!profileUser) return;
+    
+    const rep = profileUser.reputation || 0;
+    const details = profileUser._repDetails || { postLikes: 0, postDislikes: 0, commentLikes: 0, commentDislikes: 0 };
+    
+    createModal({
+        title: 'Репутация',
+        icon: 'thumb_up',
+        iconColor: 'var(--accent)',
+        text: `
+            <div style="font-size:48px;font-weight:800;color:var(--text-primary);margin-bottom:4px;${rep > 0 ? 'color:var(--green);' : rep < 0 ? 'color:var(--red);' : ''}">${rep}</div>
+            <div style="font-size:14px;color:var(--text-muted);margin-bottom:16px;">${rep > 0 ? 'Положительная репутация' : rep < 0 ? 'Отрицательная репутация' : 'Нейтральная репутация'}</div>
+            
+            <div style="background:var(--bg-input);border-radius:var(--radius);padding:16px 20px;text-align:left;margin-bottom:16px;">
+                <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border-color);">
+                    <span style="color:var(--text-secondary);">Лайки на тейках</span>
+                    <span style="font-weight:600;color:var(--green);">+${details.postLikes || 0}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border-color);">
+                    <span style="color:var(--text-secondary);">Дизлайки на тейках</span>
+                    <span style="font-weight:600;color:var(--red);">-${details.postDislikes || 0}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border-color);">
+                    <span style="color:var(--text-secondary);">Лайки на комментариях</span>
+                    <span style="font-weight:600;color:var(--green);">+${details.commentLikes || 0}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border-color);">
+                    <span style="color:var(--text-secondary);">Дизлайки на комментариях</span>
+                    <span style="font-weight:600;color:var(--red);">-${details.commentDislikes || 0}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:8px 0 0;font-size:13px;font-weight:600;border-top:1px solid var(--border-color);margin-top:4px;">
+                    <span class="text-muted">Итого</span>
+                    <span style="${rep > 0 ? 'color:var(--green);' : rep < 0 ? 'color:var(--red);' : ''}">${rep > 0 ? '+' : ''}${rep}</span>
+                </div>
+            </div>
+            
+            <div style="font-size:12px;color:var(--text-muted);">
+                Репутация рассчитывается на основе лайков и дизлайков
+            </div>
+        `,
+        actions: [
+            { id: 'closeReputation', text: 'Закрыть', class: 'outline', onClick: (e, modal) => modal.remove() }
         ]
     });
 }
@@ -2358,8 +2405,10 @@ function showFollowers(type) {
     }
     
     const ids = type === 'followers' ? profileUser.followers : profileUser.following;
+    
+    // ===== ЕСЛИ СПИСОК ПУСТ — ПОКАЗЫВАЕМ КРАСИВОЕ МОДАЛЬНОЕ ОКНО =====
     if (!ids || !ids.length) {
-        alert('Нет пользователей');
+        showEmptyListModal(type);
         return;
     }
 
@@ -2395,6 +2444,39 @@ function showFollowers(type) {
                 </div>
             `;
         }).join('');
+    });
+}
+
+// ============================================================
+// ПОКАЗ ИНФОРМАЦИИ О СКРЫТЫХ ДАННЫХ
+// ============================================================
+function showPrivacyInfoModal(type) {
+    const titles = {
+        followers: 'Список подписчиков скрыт',
+        following: 'Список подписок скрыт',
+        comments: 'Комментарии скрыты'
+    };
+    
+    const icons = {
+        followers: 'people_outline',
+        following: 'people',
+        comments: 'chat'
+    };
+    
+    const texts = {
+        followers: 'Пользователь <strong>' + (profileUser?.displayName || 'этот пользователь') + '</strong> скрыл список своих подписчиков.',
+        following: 'Пользователь <strong>' + (profileUser?.displayName || 'этот пользователь') + '</strong> скрыл список своих подписок.',
+        comments: 'Пользователь <strong>' + (profileUser?.displayName || 'этот пользователь') + '</strong> скрыл свои комментарии.'
+    };
+    
+    createModal({
+        title: titles[type] || 'Информация скрыта',
+        icon: icons[type] || 'info',
+        iconColor: 'var(--text-muted)',
+        text: texts[type] || 'Эта информация скрыта пользователем.',
+        actions: [
+            { id: 'closePrivacyInfo', text: 'Закрыть', class: 'primary', onClick: (e, modal) => modal.remove() }
+        ]
     });
 }
 
@@ -2546,63 +2628,6 @@ function removeAdminFromProfile(uid) {
 }
 
 // ============================================================
-// МОДАЛЬНОЕ ОКНО РЕПУТАЦИИ
-// ============================================================
-function showReputationModal() {
-    if (!profileUser) return;
-    
-    const rep = profileUser.reputation || 0;
-    const details = profileUser._repDetails || { postLikes: 0, postDislikes: 0, commentLikes: 0, commentDislikes: 0 };
-    
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-        <div class="modal-box">
-            <div class="modal-header">
-                <h2 style="margin:0;">Репутация</h2>
-                <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
-            </div>
-            <div style="text-align:center;">
-                <span class="modal-icon" style="font-size:56px;color:var(--accent);display:block;margin-bottom:12px;">thumb_up</span>
-                <div style="font-size:48px;font-weight:800;color:var(--text-primary);margin-bottom:4px;${rep > 0 ? 'color:var(--green);' : rep < 0 ? 'color:var(--red);' : ''}">${rep}</div>
-                <div style="font-size:14px;color:var(--text-muted);margin-bottom:16px;">${rep > 0 ? 'Положительная репутация' : rep < 0 ? 'Отрицательная репутация' : 'Нейтральная репутация'}</div>
-                
-                <div style="background:var(--bg-input);border-radius:var(--radius);padding:16px 20px;text-align:left;margin-bottom:16px;">
-                    <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border-color);">
-                        <span style="color:var(--text-secondary);">Лайки на тейках</span>
-                        <span style="font-weight:600;color:var(--green);">+${details.postLikes || 0}</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border-color);">
-                        <span style="color:var(--text-secondary);">Дизлайки на тейках</span>
-                        <span style="font-weight:600;color:var(--red);">-${details.postDislikes || 0}</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border-color);">
-                        <span style="color:var(--text-secondary);">Лайки на комментариях</span>
-                        <span style="font-weight:600;color:var(--green);">+${details.commentLikes || 0}</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border-color);">
-                        <span style="color:var(--text-secondary);">Дизлайки на комментариях</span>
-                        <span style="font-weight:600;color:var(--red);">-${details.commentDislikes || 0}</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;padding:8px 0 0;font-size:13px;font-weight:600;border-top:1px solid var(--border-color);margin-top:4px;">
-                        <span class="text-muted">Итого</span>
-                        <span style="${rep > 0 ? 'color:var(--green);' : rep < 0 ? 'color:var(--red);' : ''}">${rep > 0 ? '+' : ''}${rep}</span>
-                    </div>
-                </div>
-                
-                <div style="font-size:12px;color:var(--text-muted);">
-                    Репутация рассчитывается на основе лайков и дизлайков
-                </div>
-            </div>
-            <div class="modal-actions" style="justify-content:center;border-top:none;padding-top:4px;">
-                <button class="ripple-btn outline" onclick="this.closest('.modal-overlay').remove()">Закрыть</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-}
-
-// ============================================================
 // LOAD USER POSTS (С АКТУАЛЬНЫМИ ИМЕНАМИ)
 // ============================================================
 function loadUserPosts(uid) {
@@ -2623,7 +2648,6 @@ function loadUserPosts(uid) {
                 userPosts.push({ id: doc.id, ...data });
             });
             
-            // ===== ЗАГРУЖАЕМ АКТУАЛЬНЫЕ ДАННЫЕ ДЛЯ КАЖДОГО АВТОРА =====
             userPosts.forEach(post => {
                 if (post.authorId) {
                     promises.push(
@@ -2769,7 +2793,6 @@ function loadUserComments(uid) {
     const container = document.getElementById('profilePosts');
     container.innerHTML = '<div class="loading-spinner"><span class="material-icons">refresh</span> Загрузка...</div>';
 
-    // ===== ПРОВЕРКА ПРИВАТНОСТИ =====
     const canView = userCommentsPrivacy === 'all' || 
                    (userCommentsPrivacy === 'followers' && currentUser && profileUser.followers && profileUser.followers.includes(currentUser.uid)) ||
                    (currentUser && profileUser.id === currentUser.uid);
@@ -2799,7 +2822,6 @@ function loadUserComments(uid) {
                 userComments.push({ id: doc.id, ...data });
             });
             
-            // ===== ЗАГРУЖАЕМ АКТУАЛЬНЫЕ ДАННЫЕ ДЛЯ КАЖДОГО АВТОРА =====
             userComments.forEach(comment => {
                 if (comment.authorId) {
                     promises.push(
