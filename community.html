@@ -1520,6 +1520,7 @@ let userOnlineStatus = {};
 let communityAdmins = [];
 let isCommunityOwner = false;
 let allUsersCache = {};
+let isUserMember = false;
 
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
@@ -1682,7 +1683,7 @@ function startOnlineTracking() {
 }
 
 // ============================================================
-// ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ
+// ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ (ИСПРАВЛЕНО)
 // ============================================================
 function loadUserData() {
     const user = auth.currentUser;
@@ -1692,19 +1693,49 @@ function loadUserData() {
     const dotEl = document.getElementById('userOnlineDot');
     
     if (user) {
-        avatarEl.innerHTML = user.photoURL 
-            ? `<img src="${user.photoURL}" alt="avatar">` 
-            : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
-        avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
-        dotEl.classList.add('show');
+        // ===== ЗАГРУЖАЕМ АВАТАРКУ ИЗ FIRESTORE =====
+        db.collection('users').doc(user.uid).get()
+            .then(doc => {
+                let avatarUrl = user.photoURL || null;
+                let displayName = user.displayName || '?';
+                
+                if (doc.exists) {
+                    const data = doc.data();
+                    avatarUrl = data.avatar || user.photoURL || null;
+                    displayName = data.displayName || user.displayName || '?';
+                    
+                    if (data.avatar && !user.photoURL) {
+                        user.updateProfile({ photoURL: data.avatar }).catch(() => {});
+                    }
+                }
+                
+                if (avatarEl) {
+                    avatarEl.innerHTML = avatarUrl 
+                        ? `<img src="${avatarUrl}" alt="avatar">` 
+                        : `<span>${displayName[0].toUpperCase()}</span>`;
+                    avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+                }
+                if (dotEl) dotEl.classList.add('show');
+            })
+            .catch(() => {
+                if (avatarEl) {
+                    avatarEl.innerHTML = user.photoURL 
+                        ? `<img src="${user.photoURL}" alt="avatar">` 
+                        : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
+                    avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+                }
+                if (dotEl) dotEl.classList.add('show');
+            });
         
         createUserInFirestore(user).then(() => {
             startOnlineTracking();
         }).catch(err => console.error('Error creating user:', err));
     } else {
-        avatarEl.innerHTML = '<span>?</span>';
-        avatarEl.onclick = () => window.location.href = '/login.html';
-        dotEl.classList.remove('show');
+        if (avatarEl) {
+            avatarEl.innerHTML = '<span>?</span>';
+            avatarEl.onclick = () => window.location.href = '/login.html';
+        }
+        if (dotEl) dotEl.classList.remove('show');
         if (onlineCheckInterval) {
             clearInterval(onlineCheckInterval);
             onlineCheckInterval = null;
@@ -1780,6 +1811,10 @@ function loadCommunity(id) {
             communityData = { id: doc.id, ...doc.data() };
             communityAdmins = communityData.admins || [];
             isCommunityOwner = currentUser && communityData.ownerId === currentUser.uid;
+            
+            // ===== ПРОВЕРЯЕМ, СОСТОИТ ЛИ ПОЛЬЗОВАТЕЛЬ В СООБЩЕСТВЕ =====
+            isUserMember = currentUser && communityData.members && communityData.members.includes(currentUser.uid);
+            
             document.title = `${communityData.name || 'Сообщество'} | Takean`;
             renderCommunity(communityData);
             loadCommunityPosts(id);
@@ -1833,7 +1868,6 @@ function updateMemberUI(uid) {
     const userData = allUsersCache[uid];
     if (!userData) return;
     
-    // Обновляем стек аватаров
     const miniAvatars = document.querySelectorAll(`.mini-avatar[data-uid="${uid}"]`);
     miniAvatars.forEach(el => {
         const avatar = userData.avatar || '';
@@ -1843,7 +1877,6 @@ function updateMemberUI(uid) {
         } else {
             el.innerHTML = `<span>${displayName[0].toUpperCase()}</span>`;
         }
-        // Добавляем онлайн-статус
         const dot = document.createElement('span');
         dot.className = `online-dot ${userData.isOnline ? 'show' : ''}`;
         el.appendChild(dot);
@@ -1864,13 +1897,19 @@ function isAdmin(uid) {
 // ============================================================
 function renderCommunity(community) {
     const container = document.getElementById('communityContainer');
-    const isMember = currentUser && community.members && community.members.includes(currentUser.uid);
+    
+    // ===== ОБНОВЛЯЕМ СТАТУС УЧАСТНИКА ПРИ КАЖДОМ РЕНДЕРЕ =====
+    if (currentUser) {
+        isUserMember = community.members && community.members.includes(currentUser.uid);
+        isCommunityOwner = community.ownerId === currentUser.uid;
+    }
+    
     const isOwner = currentUser && community.ownerId === currentUser.uid;
     const displayMembers = community.members || [];
     const memberCount = community.memberCount || displayMembers.length;
     const canManage = isOwner || isAdmin(currentUser?.uid);
+    const canPost = isUserMember || isOwner || isAdmin(currentUser?.uid);
     
-    // Строим стек аватаров с правильным отображением
     let membersStackHtml = '';
     const showMembers = displayMembers.slice(0, 5);
     showMembers.forEach((member) => {
@@ -1936,9 +1975,15 @@ function renderCommunity(community) {
                 
                 <div class="community-actions">
                     ${!isOwner ? `
-                        <button class="ripple-btn ${isMember ? 'outline' : 'primary'}" onclick="toggleJoinCommunity()">
-                            ${isMember ? 'Выйти' : 'Вступить'}
-                        </button>
+                        ${isUserMember ? `
+                            <button class="ripple-btn outline" onclick="showLeaveConfirmation()">
+                                Выйти
+                            </button>
+                        ` : `
+                            <button class="ripple-btn primary" onclick="toggleJoinCommunity()">
+                                Вступить
+                            </button>
+                        `}
                     ` : `
                         <button class="ripple-btn outline" onclick="editCommunity()">
                             <span class="material-icons">edit</span> Редактировать
@@ -1947,9 +1992,15 @@ function renderCommunity(community) {
                             <span class="material-icons">delete</span> Удалить
                         </button>
                     `}
-                    <button class="ripple-btn outline" onclick="createPostInCommunity()">
-                        <span class="material-icons">add</span> Создать тейк
-                    </button>
+                    ${canPost ? `
+                        <button class="ripple-btn outline" onclick="createPostInCommunity()">
+                            <span class="material-icons">add</span> Создать тейк
+                        </button>
+                    ` : `
+                        <button class="ripple-btn outline" disabled style="opacity:0.5;cursor:not-allowed;" title="Вступите в сообщество, чтобы создавать тейки">
+                            <span class="material-icons">add</span> Создать тейк
+                        </button>
+                    `}
                     <button class="ripple-btn outline" onclick="copyCommunityLink()">
                         <span class="material-icons">link</span> Скопировать ссылку
                     </button>
@@ -1967,7 +2018,6 @@ function renderCommunity(community) {
         </div>
     `;
     
-    // Обновляем статусы
     if (displayMembers.length) {
         displayMembers.forEach(uid => {
             if (userOnlineStatus[uid] !== undefined) {
@@ -1975,6 +2025,75 @@ function renderCommunity(community) {
             }
         });
     }
+}
+
+// ============================================================
+// МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ ВЫХОДА
+// ============================================================
+function showLeaveConfirmation() {
+    if (!currentUser) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2><span class="material-icons" style="color:var(--red);">logout</span> Выйти из сообщества?</h2>
+                <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
+            </div>
+            <div style="text-align:center;margin-bottom:16px;">
+                <div style="font-size:14px;color:var(--text-secondary);">
+                    Вы действительно хотите покинуть сообщество <strong>${escapeHtml(communityData.name || '')}</strong>?
+                </div>
+                <div style="font-size:13px;color:var(--text-muted);margin-top:8px;">
+                    Вы потеряете доступ к публикации тейков в этом сообществе.
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="ripple-btn outline" onclick="this.closest('.modal-overlay').remove()">Отмена</button>
+                <button class="ripple-btn danger" id="confirmLeaveBtn">
+                    <span class="material-icons">logout</span> Выйти
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    document.getElementById('confirmLeaveBtn').addEventListener('click', function() {
+        const btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span>';
+        
+        const ref = db.collection('communities').doc(communityData.id);
+        db.runTransaction(transaction => {
+            return transaction.get(ref).then(doc => {
+                if (!doc.exists) return;
+                const data = doc.data();
+                let members = data.members || [];
+                members = members.filter(id => id !== currentUser.uid);
+                
+                transaction.update(ref, {
+                    members: members,
+                    memberCount: members.length
+                });
+            });
+        }).then(() => {
+            communityData.members = (communityData.members || []).filter(id => id !== currentUser.uid);
+            communityData.memberCount = communityData.members.length;
+            isUserMember = false;
+            modal.remove();
+            renderCommunity(communityData);
+            alert('Вы вышли из сообщества');
+            window.location.href = '/communities.html';
+        }).catch(err => {
+            alert('Ошибка: ' + err.message);
+            btn.disabled = false;
+            btn.innerHTML = '<span class="material-icons">logout</span> Выйти';
+        });
+    });
 }
 
 // ============================================================
@@ -2009,7 +2128,7 @@ function loadCommunityPosts(id) {
             snapshot.forEach(doc => {
                 const data = doc.data();
                 communityPosts.push({ id: doc.id, ...data });
-                if (data.authorId && !data.authorName) {
+                if (data.authorId) {
                     promises.push(
                         db.collection('users').doc(data.authorId).get().then(userDoc => {
                             if (userDoc.exists) {
@@ -2053,9 +2172,13 @@ function renderPosts(posts) {
             <div class="empty-state">
                 <span class="material-icons">inbox</span>
                 <p>В сообществе пока нет тейков</p>
-                <button class="ripple-btn primary" style="margin-top:8px;" onclick="createPostInCommunity()">
-                    <span class="material-icons">add</span> Создать первый тейк
-                </button>
+                ${isUserMember ? `
+                    <button class="ripple-btn primary" style="margin-top:8px;" onclick="createPostInCommunity()">
+                        <span class="material-icons">add</span> Создать первый тейк
+                    </button>
+                ` : `
+                    <p style="font-size:13px;color:var(--text-muted);margin-top:8px;">Вступите в сообщество, чтобы создавать тейки</p>
+                `}
             </div>
         `;
         return;
@@ -2297,7 +2420,7 @@ function sharePost(postId) {
 }
 
 // ============================================================
-// ВСТУПЛЕНИЕ / ВЫХОД ИЗ СООБЩЕСТВА
+// ВСТУПЛЕНИЕ / ВЫХОД ИЗ СООБЩЕСТВА (С ПРОВЕРКОЙ)
 // ============================================================
 function toggleJoinCommunity() {
     if (!currentUser) {
@@ -2306,7 +2429,13 @@ function toggleJoinCommunity() {
     }
     if (!communityData) return;
 
-    const isMember = communityData.members && communityData.members.includes(currentUser.uid);
+    // ===== ПРОВЕРКА: ЕСЛИ УЖЕ УЧАСТНИК — НЕ ДОБАВЛЯЕМ =====
+    if (communityData.members && communityData.members.includes(currentUser.uid)) {
+        isUserMember = true;
+        renderCommunity(communityData);
+        return;
+    }
+
     const ref = db.collection('communities').doc(communityData.id);
 
     db.runTransaction(transaction => {
@@ -2315,11 +2444,12 @@ function toggleJoinCommunity() {
             const data = doc.data();
             let members = data.members || [];
             
-            if (isMember) {
-                members = members.filter(id => id !== currentUser.uid);
-            } else {
-                members.push(currentUser.uid);
+            // ===== ПРОВЕРКА ПЕРЕД ДОБАВЛЕНИЕМ =====
+            if (members.includes(currentUser.uid)) {
+                return;
             }
+            
+            members.push(currentUser.uid);
             
             transaction.update(ref, {
                 members: members,
@@ -2327,15 +2457,17 @@ function toggleJoinCommunity() {
             });
         });
     }).then(() => {
-        if (isMember) {
-            communityData.members = (communityData.members || []).filter(id => id !== currentUser.uid);
-        } else {
-            communityData.members = [...(communityData.members || []), currentUser.uid];
-        }
+        communityData.members = [...(communityData.members || []), currentUser.uid];
         communityData.memberCount = communityData.members.length;
+        isUserMember = true;
         renderCommunity(communityData);
         loadMembersStatus(communityData.members || []);
-    }).catch(err => alert('Ошибка: ' + err.message));
+        
+        // ===== ПЕРЕНОПРАВЛЯЕМ НА СТРАНИЦУ СООБЩЕСТВА (ОБНОВЛЁННУЮ) =====
+        window.location.href = `/community.html?id=${communityData.id}`;
+    }).catch(err => {
+        alert('Ошибка: ' + err.message);
+    });
 }
 
 // ============================================================
@@ -2615,13 +2747,20 @@ function confirmDeleteCommunity() {
 }
 
 // ============================================================
-// СОЗДАНИЕ ПОСТА В СООБЩЕСТВЕ
+// СОЗДАНИЕ ПОСТА В СООБЩЕСТВЕ (ТОЛЬКО ДЛЯ УЧАСТНИКОВ)
 // ============================================================
 function createPostInCommunity() {
     if (!currentUser) {
         window.location.href = '/login.html';
         return;
     }
+    
+    // ===== ПРОВЕРКА: ТОЛЬКО УЧАСТНИКИ МОГУТ СОЗДАВАТЬ ПОСТЫ =====
+    if (!isUserMember && !isCommunityOwner && !isAdmin(currentUser?.uid)) {
+        alert('Вы должны быть участником сообщества, чтобы создавать тейки');
+        return;
+    }
+    
     window.location.href = `/create.html?community=${communityData.id}`;
 }
 
@@ -2788,7 +2927,7 @@ function deleteCommunity() {
     confirmDeleteCommunity();
 }
 
-console.log('👥 Community page loaded with avatar fix');
+console.log('👥 Community page loaded with avatar fix and join protection');
 </script>
 </body>
 </html>
