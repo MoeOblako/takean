@@ -28,6 +28,7 @@
             --radius: 4px;
             --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             --topbar-height: 60px;
+            --online-color: #4caf50;
         }
 
         [data-theme="light"] {
@@ -186,7 +187,7 @@
             height: 10px;
             border-radius: 50%;
             border: 2px solid var(--bg-card);
-            background: #4caf50;
+            background: var(--online-color);
             display: none;
             z-index: 2;
         }
@@ -544,6 +545,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
 const firebaseConfig = {
@@ -558,12 +560,178 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
+const db = firebase.firestore();
 
 let currentUser = null;
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
+let onlineCheckInterval = null;
+let isUserActive = true;
+let inactivityTimer = null;
+
+// ============================================================
+// ОНЛАЙН СТАТУС
+// ============================================================
+function updateOnlineStatus() {
+    if (!currentUser) return;
+    db.collection('users').doc(currentUser.uid).update({
+        lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+        isOnline: isUserActive
+    }).catch(() => {});
+}
+
+function startOnlineTracking() {
+    if (onlineCheckInterval) clearInterval(onlineCheckInterval);
+    
+    isUserActive = true;
+    updateOnlineStatus();
+    
+    function resetInactivity() {
+        isUserActive = true;
+        updateOnlineStatus();
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+            isUserActive = false;
+            updateOnlineStatus();
+        }, 120000);
+    }
+    
+    const events = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    events.forEach(event => {
+        document.addEventListener(event, resetInactivity);
+    });
+    
+    resetInactivity();
+    
+    onlineCheckInterval = setInterval(() => {
+        if (currentUser) {
+            updateOnlineStatus();
+        }
+    }, 30000);
+    
+    window.addEventListener('beforeunload', () => {
+        if (currentUser) {
+            db.collection('users').doc(currentUser.uid).update({
+                isOnline: false,
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(() => {});
+        }
+    });
+    
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            isUserActive = false;
+            if (currentUser) {
+                db.collection('users').doc(currentUser.uid).update({
+                    isOnline: false,
+                    lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(() => {});
+            }
+        } else {
+            isUserActive = true;
+            updateOnlineStatus();
+            resetInactivity();
+        }
+    });
+}
+
+// ============================================================
+// СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ В FIRESTORE
+// ============================================================
+function createUserInFirestore(user) {
+    return db.collection('users').doc(user.uid).get().then(doc => {
+        if (!doc.exists) {
+            let username = user.displayName || 'user_' + Date.now().toString(36);
+            username = username.toLowerCase().replace(/[^a-z0-9_.-]/g, '');
+            if (!username || username.length < 2) {
+                username = 'user_' + Date.now().toString(36);
+            }
+            return db.collection('users').doc(user.uid).set({
+                username: username,
+                displayName: user.displayName || username,
+                email: user.email || '',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                avatar: user.photoURL || null,
+                cover: null,
+                bio: '',
+                reputation: 0,
+                followers: [],
+                following: [],
+                theme: currentTheme,
+                isOnline: true,
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+        return doc;
+    });
+}
+
+// ============================================================
+// ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ (С АВАТАРКОЙ ИЗ FIRESTORE)
+// ============================================================
+function loadUserData() {
+    const user = auth.currentUser;
+    currentUser = user;
+    
+    const avatarEl = document.getElementById('userAvatar');
+    const dotEl = document.getElementById('userOnlineDot');
+    
+    if (user) {
+        // ===== ЗАГРУЖАЕМ АВАТАРКУ ИЗ FIRESTORE =====
+        db.collection('users').doc(user.uid).get()
+            .then(doc => {
+                let avatarUrl = user.photoURL || null;
+                let displayName = user.displayName || '?';
+                
+                if (doc.exists) {
+                    const data = doc.data();
+                    avatarUrl = data.avatar || user.photoURL || null;
+                    displayName = data.displayName || user.displayName || '?';
+                    
+                    // Обновляем профиль пользователя, если avatar из Firestore отличается
+                    if (data.avatar && !user.photoURL) {
+                        user.updateProfile({ photoURL: data.avatar }).catch(() => {});
+                    }
+                }
+                
+                if (avatarEl) {
+                    avatarEl.innerHTML = avatarUrl 
+                        ? `<img src="${avatarUrl}" alt="avatar">` 
+                        : `<span>${displayName[0].toUpperCase()}</span>`;
+                    avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+                }
+                if (dotEl) dotEl.classList.add('show');
+            })
+            .catch(() => {
+                // Fallback: используем данные из auth
+                if (avatarEl) {
+                    avatarEl.innerHTML = user.photoURL 
+                        ? `<img src="${user.photoURL}" alt="avatar">` 
+                        : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
+                    avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+                }
+                if (dotEl) dotEl.classList.add('show');
+            });
+        
+        // Создаем пользователя в Firestore если его нет
+        createUserInFirestore(user).then(() => {
+            startOnlineTracking();
+        }).catch(err => console.error('Error creating user:', err));
+    } else {
+        if (avatarEl) {
+            avatarEl.innerHTML = '<span>?</span>';
+            avatarEl.onclick = () => window.location.href = '/login.html';
+        }
+        if (dotEl) dotEl.classList.remove('show');
+        if (onlineCheckInterval) {
+            clearInterval(onlineCheckInterval);
+            onlineCheckInterval = null;
+        }
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Тема
     document.getElementById('themeToggle').addEventListener('click', () => {
         currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', currentTheme);
@@ -572,6 +740,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `<span class="material-icons">${currentTheme === 'dark' ? 'dark_mode' : 'light_mode'}</span>`;
     });
 
+    // Глобальный поиск
     document.getElementById('globalSearch').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             const q = document.getElementById('globalSearch').value.trim();
@@ -582,43 +751,9 @@ document.addEventListener('DOMContentLoaded', () => {
     loadUserData();
 });
 
-function loadUserData() {
-    const user = auth.currentUser;
-    currentUser = user;
-    const avatarEl = document.getElementById('userAvatar');
-    const dotEl = document.getElementById('userOnlineDot');
-    
-    if (user) {
-        avatarEl.innerHTML = user.photoURL 
-            ? `<img src="${user.photoURL}" alt="avatar">` 
-            : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
-        avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
-        dotEl.classList.add('show');
-        
-        db.collection('users').doc(user.uid).get()
-            .then(doc => {
-                if (doc.exists) {
-                    const data = doc.data();
-                    const isOnline = data.isOnline || false;
-                    const showOnline = data.showOnlineStatus !== false;
-                    if (isOnline && showOnline) {
-                        dotEl.classList.add('show');
-                    } else {
-                        dotEl.classList.remove('show');
-                    }
-                }
-            })
-            .catch(() => {});
-    } else {
-        avatarEl.innerHTML = '<span>?</span>';
-        avatarEl.onclick = () => window.location.href = '/login.html';
-        dotEl.classList.remove('show');
-    }
-}
-
 auth.onAuthStateChanged(user => { loadUserData(); });
 
-console.log('❌ 404 page loaded');
+console.log('❌ 404 page loaded with avatar from Firestore');
 </script>
 </body>
 </html>
