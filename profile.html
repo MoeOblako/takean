@@ -1255,17 +1255,59 @@
             box-shadow: none;
         }
 
-        .modal-actions {
+        /* ===== КАСТОМНЫЙ СТАТУС ПРОВЕРКИ USERNAME ===== */
+        .username-status {
             display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 20px;
-            border-top: 1px solid var(--border-color);
-            padding-top: 16px;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            margin-top: 4px;
+            min-height: 20px;
         }
 
-        .modal-actions .ripple-btn {
-            padding: 8px 24px;
+        .username-status .status-icon {
+            font-size: 16px;
+        }
+
+        .username-status .status-icon.loading {
+            animation: spin 0.8s linear infinite;
+        }
+
+        .username-status .status-icon.available {
+            color: var(--green);
+        }
+
+        .username-status .status-icon.taken {
+            color: var(--red);
+        }
+
+        .username-status .status-text.available {
+            color: var(--green);
+        }
+
+        .username-status .status-text.taken {
+            color: var(--red);
+        }
+
+        .username-status .status-text.loading {
+            color: var(--text-muted);
+        }
+
+        .username-status .status-text.same {
+            color: var(--text-muted);
+        }
+
+        .username-input-wrap .input-prefix {
+            border-color: var(--border-color);
+            transition: border-color 0.3s;
+        }
+
+        .username-input-wrap .input-prefix.valid {
+            border-color: var(--green);
+        }
+
+        .username-input-wrap .input-prefix.invalid {
+            border-color: var(--red);
         }
 
         /* ===== BBC STYLES ===== */
@@ -1566,6 +1608,11 @@ let userCommentsPrivacy = 'all';
 
 let communityContext = null;
 
+// ===== ПЕРЕМЕННЫЕ ДЛЯ ПРОВЕРКИ USERNAME =====
+let usernameCheckTimeout = null;
+let isUsernameValid = false;
+let isUsernameChecking = false;
+
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
 
@@ -1706,6 +1753,113 @@ function showReputationModal() {
             { id: 'closeReputation', text: 'Закрыть', class: 'outline', onClick: (e, modal) => modal.remove() }
         ]
     });
+}
+
+// ============================================================
+// ПРОВЕРКА USERNAME (КАК В ТИКТОКЕ)
+// ============================================================
+function checkUsernameAvailability(username) {
+    const statusEl = document.getElementById('usernameStatus');
+    const iconEl = document.getElementById('usernameStatusIcon');
+    const textEl = document.getElementById('usernameStatusText');
+    const prefixEl = document.querySelector('.username-input-wrap .input-prefix');
+    
+    if (!statusEl || !iconEl || !textEl) return;
+    
+    // Если username пустой или меньше 2 символов
+    if (!username || username.length < 2) {
+        statusEl.style.display = 'none';
+        isUsernameValid = false;
+        if (prefixEl) {
+            prefixEl.classList.remove('valid', 'invalid');
+        }
+        return;
+    }
+    
+    // Показываем статус
+    statusEl.style.display = 'flex';
+    iconEl.className = 'status-icon loading material-icons';
+    iconEl.textContent = 'refresh';
+    textEl.className = 'status-text loading';
+    textEl.textContent = 'Проверка...';
+    if (prefixEl) {
+        prefixEl.classList.remove('valid', 'invalid');
+    }
+    
+    isUsernameChecking = true;
+    
+    // Проверяем, не совпадает ли с текущим username
+    if (profileUser && profileUser.username === username) {
+        iconEl.className = 'status-icon material-icons';
+        iconEl.textContent = 'check_circle';
+        iconEl.style.color = 'var(--text-muted)';
+        textEl.className = 'status-text same';
+        textEl.textContent = 'Ваш текущий username';
+        isUsernameValid = true;
+        isUsernameChecking = false;
+        if (prefixEl) {
+            prefixEl.classList.remove('valid', 'invalid');
+        }
+        return;
+    }
+    
+    // Делаем запрос к БД
+    db.collection('users')
+        .where('username', '==', username)
+        .limit(1)
+        .get()
+        .then(snapshot => {
+            isUsernameChecking = false;
+            
+            if (snapshot.empty) {
+                // Username свободен
+                iconEl.className = 'status-icon available material-icons';
+                iconEl.textContent = 'check_circle';
+                textEl.className = 'status-text available';
+                textEl.textContent = 'Username доступен! ✅';
+                isUsernameValid = true;
+                if (prefixEl) {
+                    prefixEl.classList.add('valid');
+                    prefixEl.classList.remove('invalid');
+                }
+            } else {
+                // Username занят
+                const existingDoc = snapshot.docs[0];
+                const existingData = existingDoc.data();
+                // Если это текущий пользователь — пропускаем
+                if (existingData.uid === currentUser?.uid) {
+                    iconEl.className = 'status-icon material-icons';
+                    iconEl.textContent = 'check_circle';
+                    iconEl.style.color = 'var(--text-muted)';
+                    textEl.className = 'status-text same';
+                    textEl.textContent = 'Ваш текущий username';
+                    isUsernameValid = true;
+                    if (prefixEl) {
+                        prefixEl.classList.remove('valid', 'invalid');
+                    }
+                    return;
+                }
+                iconEl.className = 'status-icon taken material-icons';
+                iconEl.textContent = 'close';
+                textEl.className = 'status-text taken';
+                textEl.textContent = '❌ Этот username уже занят';
+                isUsernameValid = false;
+                if (prefixEl) {
+                    prefixEl.classList.add('invalid');
+                    prefixEl.classList.remove('valid');
+                }
+            }
+        })
+        .catch(err => {
+            console.error('Username check error:', err);
+            isUsernameChecking = false;
+            iconEl.className = 'status-icon material-icons';
+            iconEl.textContent = 'error';
+            iconEl.style.color = 'var(--red)';
+            textEl.className = 'status-text taken';
+            textEl.textContent = '⚠️ Ошибка проверки';
+            isUsernameValid = false;
+        });
 }
 
 // ============================================================
@@ -2024,7 +2178,6 @@ function loadUserData() {
     const dotEl = document.getElementById('userOnlineDot');
     
     if (user) {
-        // ===== ЗАГРУЖАЕМ АВАТАРКУ ИЗ FIRESTORE =====
         db.collection('users').doc(user.uid).get()
             .then(doc => {
                 if (doc.exists) {
@@ -2406,7 +2559,6 @@ function showFollowers(type) {
     
     const ids = type === 'followers' ? profileUser.followers : profileUser.following;
     
-    // ===== ЕСЛИ СПИСОК ПУСТ — ПОКАЗЫВАЕМ КРАСИВОЕ МОДАЛЬНОЕ ОКНО =====
     if (!ids || !ids.length) {
         showEmptyListModal(type);
         return;
@@ -3004,7 +3156,7 @@ function loadUserLikes(uid) {
 }
 
 // ============================================================
-// EDIT MODAL (через ImageBB) С ОБНОВЛЕНИЕМ АВАТАРКИ ВО ВСЕХ ПОСТАХ И КОММЕНТАРИЯХ
+// EDIT MODAL (с проверкой username)
 // ============================================================
 function openEditModal() {
     if (!currentUser || !profileUser) return;
@@ -3063,13 +3215,17 @@ function openEditModal() {
                 <input type="text" id="editDisplayName" value="${escapeHtml(displayName)}" placeholder="Как вас называть">
             </div>
             
-            <div class="edit-field">
+            <div class="edit-field username-input-wrap">
                 <label>Имя пользователя (уникальное)</label>
                 <div class="input-prefix">
                     <span>@</span>
                     <input type="text" id="editUsername" value="${escapeHtml(username)}" 
                            placeholder="username" 
-                           oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9_.-]/g, '')">
+                           oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9_.-]/g, ''); handleUsernameInput()">
+                </div>
+                <div class="username-status" id="usernameStatus" style="display:none;">
+                    <span class="status-icon material-icons" id="usernameStatusIcon">check_circle</span>
+                    <span class="status-text" id="usernameStatusText">Готово</span>
                 </div>
                 <div class="input-hint">
                     <span class="material-icons">info</span> Только латиница, цифры, _ . -
@@ -3091,6 +3247,25 @@ function openEditModal() {
     `;
     
     document.body.appendChild(modal);
+    
+    // Если username уже есть — сразу проверяем
+    if (username) {
+        setTimeout(() => {
+            checkUsernameAvailability(username);
+        }, 100);
+    }
+}
+
+function handleUsernameInput() {
+    const input = document.getElementById('editUsername');
+    if (!input) return;
+    
+    const username = input.value.trim();
+    
+    clearTimeout(usernameCheckTimeout);
+    usernameCheckTimeout = setTimeout(() => {
+        checkUsernameAvailability(username);
+    }, 300);
 }
 
 function closeEditModal() {
@@ -3098,6 +3273,7 @@ function closeEditModal() {
     if (modal) modal.remove();
     window._avatarFile = null;
     window._coverFile = null;
+    isUsernameValid = false;
 }
 
 function handleAvatarUpload(event) {
@@ -3152,6 +3328,13 @@ function saveProfileChanges() {
     
     if (!/^[a-z0-9_.-]+$/.test(username)) {
         alert('Имя пользователя может содержать только латиницу, цифры, _ . -');
+        return;
+    }
+    
+    // ===== ПРОВЕРКА: если username не валидный и не равен текущему =====
+    const isCurrentUsername = profileUser && profileUser.username === username;
+    if (!isUsernameValid && !isUsernameChecking && !isCurrentUsername) {
+        alert('Этот username уже занят. Выберите другой.');
         return;
     }
     
@@ -3256,7 +3439,31 @@ function saveProfileChanges() {
         progressWrap.style.display = 'none';
     }
     
-    Promise.all(uploadPromises)
+    // ===== ПРОВЕРЯЕМ, НЕ ЗАНЯТ ЛИ USERNAME ПЕРЕД СОХРАНЕНИЕМ =====
+    // Если username изменился — проверяем ещё раз
+    const usernameChanged = profileUser && profileUser.username !== username;
+    
+    let usernameCheckPromise = Promise.resolve();
+    if (usernameChanged) {
+        usernameCheckPromise = db.collection('users')
+            .where('username', '==', username)
+            .limit(1)
+            .get()
+            .then(snapshot => {
+                if (!snapshot.empty) {
+                    const existingDoc = snapshot.docs[0];
+                    // Если это текущий пользователь — пропускаем
+                    if (existingDoc.data().uid !== currentUser.uid) {
+                        throw new Error('Этот username уже занят. Выберите другой.');
+                    }
+                }
+            });
+    }
+    
+    usernameCheckPromise
+        .then(() => {
+            return Promise.all(uploadPromises);
+        })
         .then(() => {
             if (totalUploads > 0) {
                 progressText.textContent = 'Сохранение данных...';
@@ -3291,7 +3498,7 @@ function saveProfileChanges() {
         });
 }
 
-console.log('👤 Profile page loaded with avatar sync and privacy settings');
+console.log('👤 Profile page loaded with username availability check');
 </script>
 </body>
 </html>
