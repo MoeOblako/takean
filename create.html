@@ -1349,7 +1349,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     communityToSelect = getCommunityFromURL();
     loadUserData();
-    loadUserCommunities();
+    
+    // Загружаем сообщества после авторизации
+    if (currentUser) {
+        loadUserCommunities();
+    }
+    
     setupEventListeners();
 });
 
@@ -1426,6 +1431,9 @@ function loadUserData() {
         
         createUserInFirestore(user).then(() => startOnlineTracking())
             .catch(err => console.error('Error creating user:', err));
+            
+        // Загружаем сообщества после авторизации
+        loadUserCommunities();
     } else {
         avatarEl.innerHTML = '<span>?</span>';
         avatarEl.onclick = () => window.location.href = '/login.html';
@@ -1437,14 +1445,16 @@ function loadUserData() {
 
 auth.onAuthStateChanged(user => { 
     loadUserData();
-    if (user) loadUserCommunities();
 });
 
 // ============================================================
-// ЗАГРУЗКА СООБЩЕСТВ (ИСПРАВЛЕННАЯ)
+// ЗАГРУЗКА СООБЩЕСТВ (ПЕРЕПИСАННАЯ)
 // ============================================================
 function loadUserCommunities() {
+    console.log('🔄 Загрузка сообществ...');
+    
     if (!currentUser) {
+        console.log('❌ Пользователь не авторизован');
         const select = document.getElementById('communitySelect');
         select.innerHTML = '<option value="">Без сообщества (опубликовать на главной)</option>';
         return;
@@ -1454,6 +1464,8 @@ function loadUserCommunities() {
         .where('members', 'array-contains', currentUser.uid)
         .get()
         .then(snapshot => {
+            console.log(`✅ Найдено ${snapshot.size} сообществ`);
+            
             const select = document.getElementById('communitySelect');
             // Сохраняем текущее выбранное значение
             const currentValue = select.value;
@@ -1462,6 +1474,17 @@ function loadUserCommunities() {
             select.innerHTML = '<option value="">Без сообщества (опубликовать на главной)</option>';
             
             let foundSelected = false;
+            
+            if (snapshot.size === 0) {
+                console.log('ℹ️ Пользователь не состоит ни в одном сообществе');
+                const info = document.getElementById('communitySelectInfo');
+                info.style.display = 'block';
+                info.style.color = 'var(--text-muted)';
+                info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">info</span> 
+                    Вы ещё не вступили ни в одно сообщество. <a href="/communities.html" style="color:var(--accent);">Найти сообщества</a>`;
+                updatePreview();
+                return;
+            }
             
             // Добавляем ВСЕ сообщества, в которых состоит пользователь
             snapshot.forEach(doc => {
@@ -1473,14 +1496,17 @@ function loadUserCommunities() {
                 option.dataset.avatar = data.avatar || '';
                 select.appendChild(option);
                 communityNameCache[doc.id] = displayName;
+                console.log(`📌 Добавлено сообщество: ${displayName} (${doc.id})`);
                 
                 // Проверяем, нужно ли выбрать это сообщество
                 if (communityToSelect && doc.id === communityToSelect) {
                     option.selected = true;
                     foundSelected = true;
+                    console.log(`✅ Автовыбор: ${displayName}`);
                 } else if (currentValue && doc.id === currentValue) {
                     option.selected = true;
                     foundSelected = true;
+                    console.log(`✅ Восстановлен выбор: ${displayName}`);
                 }
             });
             
@@ -1509,19 +1535,10 @@ function loadUserCommunities() {
                 info.style.display = 'none';
             }
             
-            // Проверяем, есть ли вообще сообщества
-            if (snapshot.size === 0) {
-                const info = document.getElementById('communitySelectInfo');
-                info.style.display = 'block';
-                info.style.color = 'var(--text-muted)';
-                info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">info</span> 
-                    Вы ещё не вступили ни в одно сообщество. <a href="/communities.html" style="color:var(--accent);">Найти сообщества</a>`;
-            }
-            
             updatePreview();
         })
         .catch(err => {
-            console.error('Load communities error:', err);
+            console.error('❌ Ошибка загрузки сообществ:', err);
             const select = document.getElementById('communitySelect');
             if (!select.options.length) {
                 select.innerHTML = '<option value="">Без сообщества (опубликовать на главной)</option>';
