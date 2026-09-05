@@ -20,6 +20,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
+        /* ===== ВСЕ СТИЛИ БЕЗ ИЗМЕНЕНИЙ (такие же как в твоём файле) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -2074,17 +2075,35 @@ function votePost(direction) {
     }).catch(err => console.error('Vote error:', err));
 }
 
+// ============================================================
+// ШЕРИНГ И КОПИРОВАНИЕ ССЫЛОК (С КОРОТКИМ ДОМЕНОМ) — ГЛАВНОЕ ИЗМЕНЕНИЕ!
+// ============================================================
+function getShortUrl() {
+    // Если у поста есть shortId — используем короткую ссылку
+    if (currentPost && currentPost.shortId) {
+        return `https://t.cl.is/${currentPost.shortId}`;
+    }
+    // Если shortId нет — используем обычную ссылку (запасной вариант)
+    return window.location.href;
+}
+
 function sharePost() {
-    const url = window.location.href;
+    const url = getShortUrl();
+    const title = currentPost?.title || 'Тейк на Takean';
+    
     if (navigator.share) {
-        navigator.share({ title: currentPost?.title || 'Тейк на Takean', url });
+        navigator.share({ title: title, url: url }).catch(() => {});
     } else {
-        copyLink();
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Ссылка скопирована!');
+        }).catch(() => {
+            prompt('Скопируйте ссылку:', url);
+        });
     }
 }
 
 function copyLink() {
-    const url = window.location.href;
+    const url = getShortUrl();
     navigator.clipboard.writeText(url).then(() => {
         alert('Ссылка скопирована!');
     }).catch(() => {
@@ -2123,7 +2142,6 @@ function loadComments(postId) {
                 allComments.push({ id: doc.id, ...doc.data() });
             });
             
-            // Строим дерево: корневые и их ответы рекурсивно
             const rootComments = [];
             const commentMap = {};
             
@@ -2139,7 +2157,6 @@ function loadComments(postId) {
                 }
             });
             
-            // Сортируем по дате рекурсивно
             const sortRecursive = (list) => {
                 list.sort((a, b) => {
                     const aTime = a.createdAt?.seconds || 0;
@@ -2154,7 +2171,6 @@ function loadComments(postId) {
             };
             sortRecursive(rootComments);
             
-            // Онлайн статус
             const userIds = new Set();
             allComments.forEach(c => {
                 if (c.authorId) userIds.add(c.authorId);
@@ -2214,7 +2230,6 @@ function renderComments() {
     
     container.innerHTML = comments.map(root => renderCommentTree(root, 0)).join('');
     
-    // Обновляем счётчик
     let total = 0;
     const countAll = (list) => {
         list.forEach(c => {
@@ -2240,7 +2255,6 @@ function renderCommentTree(comment, depth) {
         }).join('');
     }
     
-    // Первый уровень — корневой комментарий без палочки, ответы — с палочкой
     if (depth === 0) {
         return `
             <div class="comment-tree">
@@ -2249,7 +2263,6 @@ function renderCommentTree(comment, depth) {
             </div>
         `;
     } else {
-        // Вложенный ответ — уже внутри comment-reply
         return html + (repliesHtml ? `<div class="comment-reply">${repliesHtml}</div>` : '');
     }
 }
@@ -2280,7 +2293,6 @@ function createCommentHTML(comment, isReply, parentName) {
         `;
     }
     
-    // Показываем "Ответ для @username" только если это ответ (parentId существует)
     let replyToHtml = '';
     if (comment.parentId && parentName && comment.authorName !== parentName) {
         replyToHtml = `
@@ -2379,7 +2391,6 @@ function submitReply(parentId) {
     const text = input.value.trim();
     if (!text) return;
     
-    // Находим имя автора родительского комментария
     let parentAuthorName = null;
     const findParent = (list) => {
         for (const c of list) {
@@ -2467,7 +2478,6 @@ function voteComment(commentId, direction) {
         return;
     }
     
-    // Мгновенное обновление UI (рекурсивный поиск)
     const findAndUpdate = (list) => {
         for (const c of list) {
             if (c.id === commentId) {
@@ -2500,7 +2510,6 @@ function voteComment(commentId, direction) {
     findAndUpdate(comments);
     renderComments();
     
-    // Отправка в БД (фоном)
     const commentRef = db.collection('comments').doc(commentId);
     db.runTransaction(transaction => {
         return transaction.get(commentRef).then(doc => {
@@ -2650,7 +2659,7 @@ function applyFilter(filter) {
     window.location.href = `/search.html?q=${encodeURIComponent(filter)}`;
 }
 
-console.log('📄 Post page loaded');
+console.log('📄 Post page loaded with short links');
 </script>
 </body>
 </html>
