@@ -1350,7 +1350,6 @@ document.addEventListener('DOMContentLoaded', () => {
     communityToSelect = getCommunityFromURL();
     loadUserData();
     
-    // Если пользователь уже загружен, загружаем сообщества
     if (auth.currentUser) {
         loadUserCommunities();
     }
@@ -1410,9 +1409,6 @@ function setupEventListeners() {
     document.getElementById('publishBtn').addEventListener('click', publishPost);
 }
 
-// ============================================================
-// ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ (ИСПРАВЛЕННАЯ)
-// ============================================================
 function loadUserData() {
     const user = auth.currentUser;
     currentUser = user;
@@ -1429,7 +1425,6 @@ function loadUserData() {
         }
         if (dotEl) dotEl.classList.add('show');
         
-        // Обновляем превью
         const previewName = document.getElementById('previewName');
         const previewAvatar = document.getElementById('previewAvatar');
         if (previewName) previewName.textContent = user.displayName || 'Аноним';
@@ -1442,7 +1437,6 @@ function loadUserData() {
         createUserInFirestore(user).then(() => startOnlineTracking())
             .catch(err => console.error('Error creating user:', err));
             
-        // Загружаем сообщества после авторизации
         loadUserCommunities();
     } else {
         if (avatarEl) {
@@ -1463,9 +1457,6 @@ auth.onAuthStateChanged(user => {
     loadUserData();
 });
 
-// ============================================================
-// ЗАГРУЗКА СООБЩЕСТВ (ПЕРЕПИСАННАЯ)
-// ============================================================
 function loadUserCommunities() {
     console.log('🔄 loadUserCommunities() вызвана');
     
@@ -1492,10 +1483,7 @@ function loadUserCommunities() {
                 return;
             }
             
-            // Сохраняем текущее выбранное значение
             const currentValue = select.value;
-            
-            // Очищаем селект, но оставляем первый пункт
             select.innerHTML = '<option value="">Без сообщества (опубликовать на главной)</option>';
             
             let foundSelected = false;
@@ -1513,7 +1501,6 @@ function loadUserCommunities() {
                 return;
             }
             
-            // Добавляем ВСЕ сообщества, в которых состоит пользователь
             snapshot.forEach(doc => {
                 const data = doc.data();
                 const option = document.createElement('option');
@@ -1525,7 +1512,6 @@ function loadUserCommunities() {
                 communityNameCache[doc.id] = displayName;
                 console.log(`📌 Добавлено сообщество: ${displayName} (${doc.id})`);
                 
-                // Проверяем, нужно ли выбрать это сообщество
                 if (communityToSelect && doc.id === communityToSelect) {
                     option.selected = true;
                     foundSelected = true;
@@ -1537,7 +1523,6 @@ function loadUserCommunities() {
                 }
             });
             
-            // Обновляем информацию
             const info = document.getElementById('communitySelectInfo');
             if (info) {
                 if (foundSelected) {
@@ -1549,7 +1534,6 @@ function loadUserCommunities() {
                             Тейк будет опубликован в сообществе <strong>${selectedOption.text}</strong>`;
                     }
                 } else if (communityToSelect) {
-                    // Сообщество из URL не найдено в списке участников
                     info.style.display = 'block';
                     info.style.color = 'var(--red)';
                     info.innerHTML = `<span class="material-icons" style="font-size:14px;vertical-align:middle;">warning</span> 
@@ -2188,7 +2172,7 @@ function resetColors() {
 }
 
 // ============================================================
-// PUBLISH
+// PUBLISH (С ГЕНЕРАЦИЕЙ shortId)
 // ============================================================
 function publishPost() {
     if (!currentUser) {
@@ -2239,19 +2223,35 @@ function publishPost() {
 
     db.collection('posts').add(postData)
         .then(docRef => {
-            const shortId = generateShortId();
-            return docRef.update({
-                shortId: shortId,
-                url: `/post/${shortId}`
-            }).then(() => {
-                if (community) {
-                    db.collection('communities').doc(community).update({
-                        postsCount: firebase.firestore.FieldValue.increment(1)
-                    }).catch(() => {});
-                }
-                alert('Тейк успешно опубликован!');
-                window.location.href = `/post.html?id=${docRef.id}`;
-            });
+            // ===== ГЕНЕРАЦИЯ shortId =====
+            return db.collection('meta').doc('counters').get()
+                .then(doc => {
+                    let counter = 1;
+                    if (doc.exists) {
+                        counter = (doc.data().postCounter || 0) + 1;
+                    }
+                    // Обновляем счётчик
+                    return db.collection('meta').doc('counters').set(
+                        { postCounter: counter },
+                        { merge: true }
+                    ).then(() => {
+                        // Сохраняем shortId и order в посте
+                        return docRef.update({
+                            shortId: String(counter),
+                            order: counter
+                        });
+                    });
+                })
+                .then(() => {
+                    // Обновляем счётчик постов в сообществе
+                    if (community) {
+                        db.collection('communities').doc(community).update({
+                            postsCount: firebase.firestore.FieldValue.increment(1)
+                        }).catch(() => {});
+                    }
+                    alert('Тейк успешно опубликован!');
+                    window.location.href = `/post.html?id=${docRef.id}`;
+                });
         })
         .catch(err => {
             alert('Ошибка публикации: ' + err.message);
@@ -2260,16 +2260,7 @@ function publishPost() {
         });
 }
 
-function generateShortId() {
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 8; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-}
-
-console.log('📝 Create page loaded with community list fix');
+console.log('📝 Create page loaded with shortId generation');
 </script>
 </body>
 </html>
