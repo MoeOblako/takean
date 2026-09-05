@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
-        /* ===== ВСЕ СТИЛИ ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -811,11 +810,11 @@
                 <span class="material-icons">lock</span>
                 <div class="info">
                     <div class="label">Пароль</div>
-                    <div class="desc">Изменить пароль</div>
+                    <div class="desc" id="passwordDesc">Изменить пароль</div>
                 </div>
             </div>
             <div class="right">
-                <button class="ripple-btn outline" onclick="openChangePasswordModal()">Изменить</button>
+                <button class="ripple-btn outline" onclick="openChangePasswordModal()" id="changePasswordBtn">Изменить</button>
             </div>
         </div>
         <div class="settings-item">
@@ -1437,12 +1436,25 @@ function loadUserData() {
         document.getElementById('userEmail').textContent = user.email || 'Не указан';
         document.getElementById('userDisplayName').textContent = user.displayName || 'Не указан';
         
+        // Проверяем, есть ли у пользователя пароль
+        const hasPassword = user.providerData.some(provider => 
+            provider.providerId === 'password'
+        );
+        const passwordDesc = document.getElementById('passwordDesc');
+        const changeBtn = document.getElementById('changePasswordBtn');
+        if (!hasPassword) {
+            passwordDesc.textContent = 'Установить пароль (сейчас нет)';
+            changeBtn.textContent = 'Установить';
+        } else {
+            passwordDesc.textContent = 'Изменить пароль';
+            changeBtn.textContent = 'Изменить';
+        }
+        
         db.collection('users').doc(user.uid).get()
             .then(doc => {
                 if (doc.exists) {
                     userData = doc.data();
                     
-                    // Обновляем настройки из БД
                     if (userData.theme) {
                         document.getElementById('themeSelect').value = userData.theme;
                         document.documentElement.setAttribute('data-theme', userData.theme);
@@ -1483,7 +1495,6 @@ function loadUserData() {
                     
                     saveSettingsToCache();
                     
-                    // Обновляем онлайн-статус
                     if (userData.isOnline && userSettings.showOnlineStatus !== false) {
                         if (dotEl) dotEl.classList.add('show');
                     } else {
@@ -1503,6 +1514,8 @@ function loadUserData() {
         if (dotEl) dotEl.classList.remove('show');
         document.getElementById('userEmail').textContent = 'Не авторизован';
         document.getElementById('userDisplayName').textContent = 'Не авторизован';
+        document.getElementById('passwordDesc').textContent = 'Изменить пароль';
+        document.getElementById('changePasswordBtn').textContent = 'Изменить';
         if (onlineCheckInterval) {
             clearInterval(onlineCheckInterval);
             onlineCheckInterval = null;
@@ -1558,7 +1571,7 @@ function openChangeEmailModal() {
 }
 
 // ============================================================
-// ИЗМЕНЕНИЕ ПАРОЛЯ
+// ИЗМЕНЕНИЕ ПАРОЛЯ (С ПРОВЕРКОЙ НАЛИЧИЯ ПАРОЛЯ)
 // ============================================================
 function openChangePasswordModal() {
     if (!currentUser) { 
@@ -1566,6 +1579,65 @@ function openChangePasswordModal() {
         return; 
     }
     
+    // Проверяем, есть ли у пользователя пароль
+    const hasPassword = currentUser.providerData.some(provider => 
+        provider.providerId === 'password'
+    );
+    
+    if (!hasPassword) {
+        // Если пароля нет — предлагаем установить новый
+        createModal({
+            title: 'Установить пароль',
+            icon: 'lock_open',
+            iconColor: 'var(--accent)',
+            text: 'У вас ещё нет пароля, так как вы вошли через Google.<br>Установите новый пароль для входа через email.',
+            fields: [
+                { type: 'password', id: 'newPasswordOnly', label: 'Новый пароль', placeholder: '••••••••', hint: 'Минимум 6 символов' },
+                { type: 'password', id: 'confirmPasswordOnly', label: 'Повторите пароль', placeholder: '••••••••' }
+            ],
+            actions: [
+                { id: 'cancelPasswordOnly', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
+                { id: 'savePasswordOnly', text: 'Установить пароль', class: 'primary', onClick: (e, modal) => {
+                    const newPassword = document.getElementById('newPasswordOnly').value;
+                    const confirmPassword = document.getElementById('confirmPasswordOnly').value;
+                    
+                    if (!newPassword || !confirmPassword) {
+                        alert('Заполните все поля');
+                        return;
+                    }
+                    
+                    if (newPassword.length < 6) {
+                        alert('Пароль должен быть минимум 6 символов');
+                        return;
+                    }
+                    
+                    if (newPassword !== confirmPassword) {
+                        alert('Пароли не совпадают');
+                        return;
+                    }
+                    
+                    const btn = document.getElementById('savePasswordOnly');
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
+                    
+                    currentUser.updatePassword(newPassword)
+                        .then(() => {
+                            alert('Пароль успешно установлен!');
+                            modal.remove();
+                            loadUserData();
+                        })
+                        .catch(err => {
+                            alert('Ошибка: ' + err.message);
+                            btn.disabled = false;
+                            btn.innerHTML = 'Установить пароль';
+                        });
+                }}
+            ]
+        });
+        return;
+    }
+    
+    // Если пароль есть — стандартная смена пароля
     createModal({
         title: 'Изменить пароль',
         icon: 'lock',
@@ -1716,21 +1788,7 @@ function showNotLoggedInModal() {
     });
 }
 
-// ============================================================
-// ВЫХОД ИЗ АККАУНТА (старая функция — заменена на модальное окно)
-// ============================================================
-function logout() {
-    showLogoutModal();
-}
-
-// ============================================================
-// УДАЛЕНИЕ АККАУНТА (старая функция — заменена на модальное окно)
-// ============================================================
-function deleteAccount() {
-    showDeleteAccountModal();
-}
-
-console.log('⚙️ Settings page loaded with all modals and caching');
+console.log('⚙️ Settings page loaded with password detection');
 </script>
 </body>
 </html>
