@@ -50,6 +50,7 @@
             color: var(--text-primary);
             transition: background 0.3s, color 0.3s;
             -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -73,11 +74,11 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
+            from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .animate-fade { animation: fadeIn 0.3s ease-out; }
+        .animate-fade { animation: fadeIn 0.4s ease-out; }
 
         /* ===== TOP BAR ===== */
         .topbar {
@@ -128,6 +129,7 @@
             align-items: center;
             gap: 4px;
             white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .topbar-nav a:hover {
@@ -166,6 +168,7 @@
             transition: border-color 0.2s;
             overflow: hidden;
             flex-shrink: 0;
+            position: relative;
         }
 
         .topbar-actions .avatar-small:hover { border-color: var(--accent); }
@@ -173,6 +176,23 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .topbar-actions .avatar-small .online-dot {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-card);
+            background: #4caf50;
+            display: none;
+            z-index: 2;
+        }
+
+        .topbar-actions .avatar-small .online-dot.show {
+            display: block;
         }
 
         .search-bar {
@@ -221,17 +241,18 @@
             border: none;
             background: none;
             font-family: var(--font);
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
             color: var(--text-primary);
-            padding: 10px 24px;
+            padding: 8px 16px;
             border-radius: var(--radius);
             transition: background 0.2s, transform 0.1s;
             user-select: none;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
             text-decoration: none;
         }
 
@@ -249,7 +270,7 @@
         }
 
         .ripple-btn:hover { background: var(--bg-hover); }
-        .ripple-btn:active { transform: scale(0.97); }
+        .ripple-btn:active { transform: scale(0.96); }
 
         .ripple-btn.primary {
             background: var(--accent);
@@ -272,20 +293,27 @@
             text-align: center;
         }
 
-        .error-content { max-width: 500px; }
+        .error-content {
+            max-width: 480px;
+            padding: 32px 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
 
         .error-content .error-icon {
-            font-size: 80px;
-            color: var(--text-muted);
+            font-size: 64px;
+            color: var(--accent);
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             text-decoration: none;
         }
 
         .error-content h1 {
-            font-size: 56px;
+            font-size: 48px;
             font-weight: 900;
-            letter-spacing: -4px;
+            letter-spacing: -3px;
             background: linear-gradient(135deg, var(--accent), var(--accent-hover));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -295,32 +323,43 @@
         }
 
         .error-content h2 {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 700;
             margin: 8px 0 12px;
+            color: var(--text-primary);
             text-decoration: none;
         }
 
         .error-content p {
             color: var(--text-secondary);
-            font-size: 15px;
+            font-size: 14px;
             line-height: 1.6;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             text-decoration: none;
+        }
+
+        .error-content .divider {
+            width: 40px;
+            height: 2px;
+            background: var(--border-color);
+            margin: 0 auto 16px;
         }
 
         .error-content .actions {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             justify-content: center;
             flex-wrap: wrap;
         }
 
         .error-content .actions .ripple-btn {
+            font-size: 13px;
+            padding: 8px 18px;
             text-decoration: none;
         }
 
         .error-content .actions .ripple-btn .material-icons {
+            font-size: 18px;
             text-decoration: none;
         }
 
@@ -387,10 +426,13 @@
             .topbar-nav a .material-icons { font-size: 20px; }
             .search-bar { max-width: 100px; }
             .search-bar input { min-width: 40px; width: 40px; font-size: 11px; }
-            .error-content .error-icon { font-size: 60px; }
-            .error-content h1 { font-size: 40px; }
-            .error-content h2 { font-size: 20px; }
+            .error-content { padding: 24px 16px; }
+            .error-content .error-icon { font-size: 48px; }
+            .error-content h1 { font-size: 36px; letter-spacing: -2px; }
+            .error-content h2 { font-size: 18px; }
+            .error-content p { font-size: 13px; }
             .footer-inner { flex-direction: column; align-items: center; text-align: center; }
+            .topbar-actions .avatar-small .online-dot { width: 8px; height: 8px; bottom: 1px; right: 1px; }
         }
 
         @media (max-width: 480px) {
@@ -402,12 +444,14 @@
             .search-bar input { min-width: 30px; width: 30px; padding: 4px 4px; font-size: 10px; }
             .topbar-actions .avatar-small { width: 26px; height: 26px; font-size: 10px; }
             .topbar-actions .material-icons { font-size: 18px; }
-            .error-content .error-icon { font-size: 48px; }
-            .error-content h1 { font-size: 32px; letter-spacing: -2px; }
-            .error-content h2 { font-size: 17px; }
-            .error-content p { font-size: 14px; }
-            .error-content .actions { flex-direction: column; align-items: center; }
+            .error-content { padding: 20px 12px; }
+            .error-content .error-icon { font-size: 40px; }
+            .error-content h1 { font-size: 28px; letter-spacing: -1px; }
+            .error-content h2 { font-size: 16px; }
+            .error-content p { font-size: 12px; }
+            .error-content .actions { flex-direction: column; align-items: center; width: 100%; }
             .error-content .actions .ripple-btn { width: 100%; justify-content: center; }
+            .topbar-actions .avatar-small .online-dot { width: 6px; height: 6px; bottom: 0px; right: 0px; }
         }
     </style>
 </head>
@@ -431,6 +475,10 @@
                     <span class="material-icons">add_box</span>
                     <span>Создать</span>
                 </a>
+                <a href="/communities.html">
+                    <span class="material-icons">group</span>
+                    <span>Сообщества</span>
+                </a>
             </nav>
 
             <div class="topbar-actions">
@@ -445,6 +493,7 @@
 
                 <div class="avatar-small" id="userAvatar">
                     <span>?</span>
+                    <span class="online-dot" id="userOnlineDot"></span>
                 </div>
             </div>
         </div>
@@ -455,6 +504,7 @@
     <div class="error-content animate-fade">
         <span class="error-icon material-icons">error_outline</span>
         <h1>404</h1>
+        <div class="divider"></div>
         <h2>Страница не найдена</h2>
         <p>
             К сожалению, запрашиваемая страница не существует или была перемещена.
@@ -462,6 +512,9 @@
         <div class="actions">
             <a href="/" class="ripple-btn primary">
                 <span class="material-icons">home</span> На главную
+            </a>
+            <a href="/communities.html" class="ripple-btn outline">
+                <span class="material-icons">group</span> Сообщества
             </a>
         </div>
     </div>
@@ -506,6 +559,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
+let currentUser = null;
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
 
@@ -530,15 +584,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function loadUserData() {
     const user = auth.currentUser;
+    currentUser = user;
     const avatarEl = document.getElementById('userAvatar');
+    const dotEl = document.getElementById('userOnlineDot');
+    
     if (user) {
         avatarEl.innerHTML = user.photoURL 
             ? `<img src="${user.photoURL}" alt="avatar">` 
             : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
         avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+        dotEl.classList.add('show');
+        
+        db.collection('users').doc(user.uid).get()
+            .then(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    const isOnline = data.isOnline || false;
+                    const showOnline = data.showOnlineStatus !== false;
+                    if (isOnline && showOnline) {
+                        dotEl.classList.add('show');
+                    } else {
+                        dotEl.classList.remove('show');
+                    }
+                }
+            })
+            .catch(() => {});
     } else {
         avatarEl.innerHTML = '<span>?</span>';
         avatarEl.onclick = () => window.location.href = '/login.html';
+        dotEl.classList.remove('show');
     }
 }
 
