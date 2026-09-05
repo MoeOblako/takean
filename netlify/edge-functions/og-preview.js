@@ -1,50 +1,135 @@
-export default async (request, context) => {
+import { Context } from "@netlify/edge-functions";
+
+const FIREBASE_PROJECT_ID = "takean";
+const FIRESTORE_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
+
+const BOT_AGENTS = [
+  "facebookexternalhit",
+  "twitterbot",
+  "linkedinbot",
+  "whatsapp",
+  "telegrambot",
+  "discordbot",
+  "vkshare",
+  "yandexbot",
+  "googlebot",
+  "bingbot",
+  "applebot",
+  "slackbot",
+  "skypeuripreview"
+];
+
+export default async (request: Request, context: Context) => {
   const url = new URL(request.url);
-  const userAgent = request.headers.get("user-agent") || "";
+  const userAgent = (request.headers.get("user-agent") || "").toLowerCase();
 
-  // Проверяем, зашел ли бот соцсети
-  const isBot = /TelegramBot|Twitterbot|facebookexternalhit|vkShare|WhatsApp|LinkedInBot|Discordbot/i.test(userAgent);
+  // Извлекаем shortId из URL (поддерживает варианты /abc123xyz, /post/abc123xyz, /t/abc123xyz)
+  const pathParts = url.pathname.split("/").filter(Boolean);
+  let shortId = url.searchParams.get("id");
 
-  if (!isBot) {
-    return context.next();
+  if (!shortId && pathParts.length > 0) {
+    shortId = pathParts[pathParts.length - 1];
   }
 
-  const postId = url.searchParams.get("id");
-  if (!postId) {
+  const isBot = BOT_AGENTS.some((bot) => userAgent.includes(bot));
+  if (!shortId || !isBot) {
     return context.next();
   }
 
   try {
-    const firestoreUrl = `https://firestore.googleapis.com/v1/projects/takean/databases/(default)/documents/posts/${postId}`;
-    const res = await fetch(firestoreUrl);
+    const queryUrl = `${FIRESTORE_URL}:runQuery`;
+    const queryBody = {
+      structuredQuery: {
+        from: [{ collectionId: "posts" }],
+        where: {
+          fieldFilter: {
+            field: { fieldPath: "shortId" },
+            op: "EQUAL",
+            value: { stringValue: shortId }
+          }
+        },
+        limit: 1
+      }
+    };
 
-    if (!res.ok) return context.next();
+    const fsResponse = await fetch(queryUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(queryBody)
+    });
 
-    const data = await res.json();
-    const fields = data.fields || {};
+    if (!fsResponse.ok) {
+      return context.next();
+    }
 
-    const title = fields.title?.stringValue || "Пост на Takean";
-    const description = fields.description?.stringValue || fields.text?.stringValue || "Смотрите подробнее на Takean";
-    const image = fields.image?.stringValue || fields.imageUrl?.stringValue || "";
+    const fsData = await fsResponse.json();
+
+    if (!fsData || !fsData[0] || !fsData[0].document) {
+      return context.next();
+    }
+
+    const fields = fsData[0].document.fields || {};
+
+    const title = fields.title?.stringValue || "Takean - Тейк";
+    const rawContent = fields.content?.stringValue || "Читайте тейк на платформе Takean";
+    
+    const cleanDescription = rawContent
+      .replace(/\[.*?\]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .substring(0, 200);
+
+    let imageUrl = "https://takean.cl.is/og-image.png";
+    if (fields.images && fields.images.arrayValue && fields.images.arrayValue.values) {
+      const firstImg = fields.images.arrayValue.values[0]?.stringValue;
+      if (firstImg) imageUrl = firstImg;
+    }
 
     const html = `<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>${title}</title>
-  <meta property="og:title" content="${title}" />
-  <meta property="og:description" content="${description}" />
-  ${image ? `<meta property="og:image" content="${image}" />` : ''}
-  <meta property="og:type" content="article" />
-  <meta property="og:url" content="${url.href}" />
+    <meta charset="UTF-8">
+    <title>${escapeXml(title)} | Takean</title>
+    <meta property="og:site_name" content="Takean">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="${escapeXml(title)}">
+    <meta property="og:description" content="${escapeXml(cleanDescription)}">
+    <meta property="og:image" content="${imageUrl}">
+    <meta property="og:url" content="${url.href}">
+    
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="${escapeXml(title)}">
+    <meta name="twitter:description" content="${escapeXml(cleanDescription)}">
+    <meta name="twitter:image" content="${imageUrl}">
 </head>
-<body></body>
+<body>
+    <h1>${escapeXml(title)}</h1>
+    <p>${escapeXml(cleanDescription)}</p>
+</body>
 </html>`;
 
     return new Response(html, {
-      headers: { "content-type": "text/html; charset=utf-8" },
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "public, max-age=300, s-maxage=600"
+      }
     });
-  } catch (e) {
+
+  } catch (error) {
+    console.error("Edge function error:", error);
     return context.next();
   }
+};
+
+function escapeXml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+export const config = {
+  path: ["/*", "/post/*", "/t/*"],
 };
