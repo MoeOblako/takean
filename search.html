@@ -53,6 +53,7 @@
             color: var(--text-primary);
             transition: background 0.3s, color 0.3s;
             -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -153,6 +154,7 @@
             align-items: center;
             gap: 4px;
             white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .topbar-nav a:hover {
@@ -283,6 +285,7 @@
             align-items: center;
             gap: 6px;
             -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
         }
 
         .ripple-btn .ripple-effect {
@@ -944,9 +947,78 @@ const db = firebase.firestore();
 let currentUser = null;
 let currentFilter = 'all';
 let searchQuery = '';
+let onlineCheckInterval = null;
+let isUserActive = true;
+let inactivityTimer = null;
 
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
+
+// ============================================================
+// ОНЛАЙН СТАТУС
+// ============================================================
+function updateOnlineStatus() {
+    if (!currentUser) return;
+    db.collection('users').doc(currentUser.uid).update({
+        lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+        isOnline: isUserActive
+    }).catch(() => {});
+}
+
+function startOnlineTracking() {
+    if (onlineCheckInterval) clearInterval(onlineCheckInterval);
+    
+    isUserActive = true;
+    updateOnlineStatus();
+    
+    function resetInactivity() {
+        isUserActive = true;
+        updateOnlineStatus();
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+            isUserActive = false;
+            updateOnlineStatus();
+        }, 120000);
+    }
+    
+    const events = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    events.forEach(event => {
+        document.addEventListener(event, resetInactivity);
+    });
+    
+    resetInactivity();
+    
+    onlineCheckInterval = setInterval(() => {
+        if (currentUser) {
+            updateOnlineStatus();
+        }
+    }, 30000);
+    
+    window.addEventListener('beforeunload', () => {
+        if (currentUser) {
+            db.collection('users').doc(currentUser.uid).update({
+                isOnline: false,
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(() => {});
+        }
+    });
+    
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            isUserActive = false;
+            if (currentUser) {
+                db.collection('users').doc(currentUser.uid).update({
+                    isOnline: false,
+                    lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(() => {});
+            }
+        } else {
+            isUserActive = true;
+            updateOnlineStatus();
+            resetInactivity();
+        }
+    });
+}
 
 // ============================================================
 // BBC ПАРСЕР
@@ -1007,73 +1079,14 @@ function createUserInFirestore(user) {
                 followers: [],
                 following: [],
                 theme: currentTheme,
-                showOnlineStatus: true,
-                followPrivacy: 'all'
+                isOnline: true,
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
             });
         }
         return doc;
     });
 }
 
-// ============================================================
-// ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ (С АВАТАРКОЙ ИЗ FIRESTORE)
-// ============================================================
-function loadUserData() {
-    const user = auth.currentUser;
-    currentUser = user;
-    
-    const avatarEl = document.getElementById('userAvatar');
-    const dotEl = document.getElementById('userOnlineDot');
-    
-    if (user) {
-        // ===== ЗАГРУЖАЕМ АВАТАРКУ ИЗ FIRESTORE =====
-        db.collection('users').doc(user.uid).get()
-            .then(doc => {
-                let avatarUrl = user.photoURL || null;
-                let displayName = user.displayName || '?';
-                
-                if (doc.exists) {
-                    const data = doc.data();
-                    avatarUrl = data.avatar || user.photoURL || null;
-                    displayName = data.displayName || user.displayName || '?';
-                    
-                    if (data.avatar && !user.photoURL) {
-                        user.updateProfile({ photoURL: data.avatar }).catch(() => {});
-                    }
-                    
-                    // Проверяем онлайн-статус
-                    if (data.isOnline && data.showOnlineStatus !== false) {
-                        dotEl.classList.add('show');
-                    } else {
-                        dotEl.classList.remove('show');
-                    }
-                }
-                
-                avatarEl.innerHTML = avatarUrl 
-                    ? `<img src="${avatarUrl}" alt="avatar">` 
-                    : `<span>${displayName[0].toUpperCase()}</span>`;
-                avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
-            })
-            .catch(() => {
-                avatarEl.innerHTML = user.photoURL 
-                    ? `<img src="${user.photoURL}" alt="avatar">` 
-                    : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
-                avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
-            });
-        
-        createUserInFirestore(user).catch(err => console.error('Error creating user:', err));
-    } else {
-        avatarEl.innerHTML = '<span>?</span>';
-        avatarEl.onclick = () => window.location.href = '/login.html';
-        dotEl.classList.remove('show');
-    }
-}
-
-auth.onAuthStateChanged(user => { loadUserData(); });
-
-// ============================================================
-// ПОИСК
-// ============================================================
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('themeToggle').addEventListener('click', () => {
         currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -1134,6 +1147,69 @@ function setupEventListeners() {
     });
 }
 
+// ============================================================
+// ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ (С АВАТАРКОЙ ИЗ FIRESTORE)
+// ============================================================
+function loadUserData() {
+    const user = auth.currentUser;
+    currentUser = user;
+    
+    const avatarEl = document.getElementById('userAvatar');
+    const dotEl = document.getElementById('userOnlineDot');
+    
+    if (user) {
+        // ===== ЗАГРУЖАЕМ АВАТАРКУ ИЗ FIRESTORE =====
+        db.collection('users').doc(user.uid).get()
+            .then(doc => {
+                let avatarUrl = user.photoURL || null;
+                let displayName = user.displayName || '?';
+                
+                if (doc.exists) {
+                    const data = doc.data();
+                    avatarUrl = data.avatar || user.photoURL || null;
+                    displayName = data.displayName || user.displayName || '?';
+                    
+                    if (data.avatar && !user.photoURL) {
+                        user.updateProfile({ photoURL: data.avatar }).catch(() => {});
+                    }
+                }
+                
+                if (avatarEl) {
+                    avatarEl.innerHTML = avatarUrl 
+                        ? `<img src="${avatarUrl}" alt="avatar">` 
+                        : `<span>${displayName[0].toUpperCase()}</span>`;
+                    avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+                }
+                if (dotEl) dotEl.classList.add('show');
+            })
+            .catch(() => {
+                if (avatarEl) {
+                    avatarEl.innerHTML = user.photoURL 
+                        ? `<img src="${user.photoURL}" alt="avatar">` 
+                        : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
+                    avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+                }
+                if (dotEl) dotEl.classList.add('show');
+            });
+        
+        createUserInFirestore(user).then(() => {
+            startOnlineTracking();
+        }).catch(err => console.error('Error creating user:', err));
+    } else {
+        if (avatarEl) {
+            avatarEl.innerHTML = '<span>?</span>';
+            avatarEl.onclick = () => window.location.href = '/login.html';
+        }
+        if (dotEl) dotEl.classList.remove('show');
+        if (onlineCheckInterval) {
+            clearInterval(onlineCheckInterval);
+            onlineCheckInterval = null;
+        }
+    }
+}
+
+auth.onAuthStateChanged(user => { loadUserData(); });
+
 function performSearch(query) {
     const results = document.getElementById('searchResults');
     const count = document.getElementById('resultCount');
@@ -1157,7 +1233,6 @@ function performSearch(query) {
                 .then(snapshot => {
                     const posts = [];
                     const userPromises = [];
-                    
                     snapshot.forEach(doc => {
                         const data = doc.data();
                         if ((data.title && data.title.toLowerCase().includes(q)) ||
@@ -1166,7 +1241,7 @@ function performSearch(query) {
                         }
                     });
                     
-                    // Загружаем актуальные имена для постов
+                    // Загружаем актуальные данные авторов
                     posts.forEach(post => {
                         if (post.authorId) {
                             userPromises.push(
