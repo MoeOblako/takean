@@ -1481,6 +1481,9 @@ function setupEventListeners() {
     });
 }
 
+// ============================================================
+// ИСПРАВЛЕННАЯ loadUserData() — загружает аватарку из Firestore
+// ============================================================
 function loadUserData() {
     const user = auth.currentUser;
     currentUser = user;
@@ -1489,17 +1492,50 @@ function loadUserData() {
     const dotEl = document.getElementById('userOnlineDot');
     
     if (user) {
-        avatarEl.innerHTML = user.photoURL 
-            ? `<img src="${user.photoURL}" alt="avatar">` 
-            : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
-        avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
-        
-        createUserInFirestore(user).then(() => {
-            startOnlineTracking();
-        }).catch(err => console.error('Error creating user:', err));
+        // ===== ЗАГРУЖАЕМ АВАТАРКУ ИЗ FIRESTORE =====
+        db.collection('users').doc(user.uid).get()
+            .then(doc => {
+                let avatarUrl = user.photoURL || null;
+                let displayName = user.displayName || '?';
+                
+                if (doc.exists) {
+                    const data = doc.data();
+                    avatarUrl = data.avatar || user.photoURL || null;
+                    displayName = data.displayName || user.displayName || '?';
+                    
+                    // Если в Firestore есть аватарка, но в Auth нет — обновляем Auth
+                    if (data.avatar && !user.photoURL) {
+                        user.updateProfile({ photoURL: data.avatar }).catch(() => {});
+                    }
+                }
+                
+                if (avatarEl) {
+                    avatarEl.innerHTML = avatarUrl 
+                        ? `<img src="${avatarUrl}" alt="avatar">` 
+                        : `<span>${displayName[0].toUpperCase()}</span>`;
+                    avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+                }
+                if (dotEl) dotEl.classList.add('show');
+                
+                createUserInFirestore(user).then(() => {
+                    startOnlineTracking();
+                }).catch(err => console.error('Error creating user:', err));
+            })
+            .catch(() => {
+                if (avatarEl) {
+                    avatarEl.innerHTML = user.photoURL 
+                        ? `<img src="${user.photoURL}" alt="avatar">` 
+                        : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
+                    avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+                }
+                if (dotEl) dotEl.classList.add('show');
+            });
     } else {
-        avatarEl.innerHTML = '<span>?</span>';
-        avatarEl.onclick = () => openAuthModal();
+        if (avatarEl) {
+            avatarEl.innerHTML = '<span>?</span>';
+            avatarEl.onclick = () => openAuthModal();
+        }
+        if (dotEl) dotEl.classList.remove('show');
         if (onlineCheckInterval) {
             clearInterval(onlineCheckInterval);
             onlineCheckInterval = null;
@@ -1734,6 +1770,7 @@ function loadFeed() {
             });
             feedPosts = posts;
             
+            // ===== ЗАГРУЖАЕМ АКТУАЛЬНЫЕ ДАННЫЕ ДЛЯ КАЖДОГО АВТОРА =====
             posts.forEach(post => {
                 if (post.communityId) {
                     promises.push(
@@ -1747,6 +1784,31 @@ function loadFeed() {
                     );
                 }
                 if (post.authorId) {
+                    promises.push(
+                        db.collection('users').doc(post.authorId).get()
+                            .then(doc => {
+                                if (doc.exists) {
+                                    const data = doc.data();
+                                    if (data.avatar) {
+                                        post._authorAvatar = data.avatar;
+                                    } else {
+                                        post._authorAvatar = post.authorAvatar || null;
+                                    }
+                                    if (data.displayName) {
+                                        post._authorName = data.displayName;
+                                    } else {
+                                        post._authorName = post.authorName || 'Аноним';
+                                    }
+                                } else {
+                                    post._authorAvatar = post.authorAvatar || null;
+                                    post._authorName = post.authorName || 'Аноним';
+                                }
+                            })
+                            .catch(() => {
+                                post._authorAvatar = post.authorAvatar || null;
+                                post._authorName = post.authorName || 'Аноним';
+                            })
+                    );
                     promises.push(
                         checkUserOnline(post.authorId).then(isOnline => {
                             post._authorOnline = isOnline;
@@ -1841,6 +1903,8 @@ function createPostHTML(post, index) {
     const isOnline = post._authorOnline || false;
     const communityName = post._communityData?.name || post.community || '';
     const communityAvatar = post._communityData?.avatar || '';
+    const authorAvatar = post._authorAvatar || post.authorAvatar || null;
+    const authorName = post._authorName || post.authorName || 'Аноним';
     
     const timeStr = post.createdAt 
         ? new Date(post.createdAt.seconds * 1000).toLocaleString('ru-RU', { 
@@ -1930,38 +1994,18 @@ function createPostHTML(post, index) {
         }
     }
     
-    // ============================================================
-    // КОРОТКАЯ ССЫЛКА ДЛЯ ШЕРИНГА
-    // ============================================================
-    function getShortShareUrl(postId, shortId) {
-        if (shortId) {
-            return `t.cl.is/${shortId}`;
-        }
-        return window.location.origin + `/post.html?id=${postId}`;
-    }
-    
-    function getFullShareUrl(postId, shortId) {
-        if (shortId) {
-            return `https://t.cl.is/${shortId}`;
-        }
-        return window.location.origin + `/post.html?id=${postId}`;
-    }
-    
-    const shortUrl = getShortShareUrl(post.id, post.shortId);
-    const fullUrl = getFullShareUrl(post.id, post.shortId);
-    
     return `
         <div class="post-card" data-id="${post.id}">
             <div class="post-header">
                 <div class="post-avatar" onclick="goToProfile('${post.authorId}')">
-                    ${post.authorAvatar 
-                        ? `<img src="${post.authorAvatar}" alt="">` 
-                        : `<span>${(post.authorName || '?')[0].toUpperCase()}</span>`}
+                    ${authorAvatar 
+                        ? `<img src="${authorAvatar}" alt="">` 
+                        : `<span>${(authorName || '?')[0].toUpperCase()}</span>`}
                     <span class="online-dot ${isOnline ? 'show' : ''}"></span>
                 </div>
                 <div class="post-user">
                     <div class="post-username" onclick="goToProfile('${post.authorId}')">
-                        ${escapeHtml(post.authorName || 'Аноним')}
+                        ${escapeHtml(authorName)}
                         ${post.authorBadge ? `<span class="post-badge">${escapeHtml(post.authorBadge)}</span>` : ''}
                     </div>
                     <div class="post-meta">
@@ -2088,7 +2132,6 @@ function sharePost(postId, shortId) {
             });
         }
     } else {
-        // Если нет shortId — используем обычную ссылку
         const url = window.location.origin + `/post.html?id=${postId}`;
         if (navigator.share) {
             navigator.share({ title: 'Тейк на Takean', url }).catch(() => {});
