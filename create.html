@@ -1417,27 +1417,58 @@ function loadUserData() {
     const dotEl = document.getElementById('userOnlineDot');
     
     if (user) {
-        if (avatarEl) {
-            avatarEl.innerHTML = user.photoURL 
-                ? `<img src="${user.photoURL}" alt="avatar">` 
-                : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
-            avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
-        }
-        if (dotEl) dotEl.classList.add('show');
-        
-        const previewName = document.getElementById('previewName');
-        const previewAvatar = document.getElementById('previewAvatar');
-        if (previewName) previewName.textContent = user.displayName || 'Аноним';
-        if (previewAvatar) {
-            previewAvatar.innerHTML = user.photoURL 
-                ? `<img src="${user.photoURL}" style="width:100%;height:100%;object-fit:cover;">` 
-                : (user.displayName || '?')[0].toUpperCase();
-        }
+        // ===== ЗАГРУЖАЕМ АВАТАРКУ ИЗ FIRESTORE =====
+        db.collection('users').doc(user.uid).get()
+            .then(doc => {
+                let avatarUrl = user.photoURL || null;
+                let displayName = user.displayName || '?';
+                
+                if (doc.exists) {
+                    const data = doc.data();
+                    avatarUrl = data.avatar || user.photoURL || null;
+                    displayName = data.displayName || user.displayName || '?';
+                    
+                    // Если в Firestore есть аватарка, но в Auth нет — обновляем Auth
+                    if (data.avatar && !user.photoURL) {
+                        user.updateProfile({ photoURL: data.avatar }).catch(() => {});
+                    }
+                }
+                
+                if (avatarEl) {
+                    avatarEl.innerHTML = avatarUrl 
+                        ? `<img src="${avatarUrl}" alt="avatar">` 
+                        : `<span>${displayName[0].toUpperCase()}</span>`;
+                    avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+                }
+                
+                if (dotEl) dotEl.classList.add('show');
+                
+                const previewName = document.getElementById('previewName');
+                const previewAvatar = document.getElementById('previewAvatar');
+                if (previewName) previewName.textContent = displayName;
+                if (previewAvatar) {
+                    previewAvatar.innerHTML = avatarUrl 
+                        ? `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;">` 
+                        : displayName[0].toUpperCase();
+                }
+            })
+            .catch(() => {
+                // Если ошибка — используем данные из Auth
+                if (avatarEl) {
+                    avatarEl.innerHTML = user.photoURL 
+                        ? `<img src="${user.photoURL}" alt="avatar">` 
+                        : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
+                    avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+                }
+                if (dotEl) dotEl.classList.add('show');
+            });
         
         createUserInFirestore(user).then(() => startOnlineTracking())
             .catch(err => console.error('Error creating user:', err));
             
-        loadUserCommunities();
+        if (typeof loadUserCommunities === 'function') {
+            loadUserCommunities();
+        }
     } else {
         if (avatarEl) {
             avatarEl.innerHTML = '<span>?</span>';
