@@ -438,7 +438,7 @@
 
         .toggle.active .thumb { transform: translateX(18px); }
 
-        /* ===== MODAL ===== */
+        /* ===== МОДАЛЬНОЕ ОКНО ===== */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -458,7 +458,7 @@
             border: 1px solid var(--border-color);
             border-radius: var(--radius);
             padding: 28px 32px;
-            max-width: 440px;
+            max-width: 460px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
@@ -475,6 +475,9 @@
         .modal-box .modal-header h2 {
             font-size: 20px;
             font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .modal-box .modal-header .close-btn {
@@ -556,9 +559,11 @@
             margin-top: 4px;
         }
 
-        .modal-box .field .input-hint .material-icons {
-            font-size: 14px;
-            vertical-align: middle;
+        .modal-box .field .input-error {
+            font-size: 12px;
+            color: var(--red);
+            margin-top: 4px;
+            display: none;
         }
 
         .modal-box .modal-actions {
@@ -572,6 +577,41 @@
 
         .modal-box .modal-actions .ripple-btn {
             padding: 8px 24px;
+        }
+
+        .modal-box .modal-actions .ripple-btn.danger {
+            color: var(--red);
+        }
+        .modal-box .modal-actions .ripple-btn.danger:hover {
+            background: rgba(244, 67, 54, 0.1);
+        }
+
+        .modal-box .modal-icon {
+            font-size: 48px;
+            display: block;
+            margin: 0 auto 12px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .modal-box .modal-icon.danger {
+            color: var(--red);
+        }
+
+        .modal-box .modal-icon.success {
+            color: var(--green);
+        }
+
+        .modal-box .modal-text {
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .modal-box .modal-text strong {
+            color: var(--text-primary);
         }
 
         /* ===== FOOTER ===== */
@@ -839,7 +879,7 @@
                 </div>
             </div>
             <div class="right">
-                <button class="ripple-btn outline" onclick="alert('В разработке')">Настроить</button>
+                <button class="ripple-btn outline" onclick="showComingSoonModal('Двухфакторная аутентификация')">Настроить</button>
             </div>
         </div>
         <div class="settings-item">
@@ -851,7 +891,7 @@
                 </div>
             </div>
             <div class="right">
-                <button class="ripple-btn outline" onclick="alert('В разработке')">Просмотр</button>
+                <button class="ripple-btn outline" onclick="showComingSoonModal('Активные сессии')">Просмотр</button>
             </div>
         </div>
     </div>
@@ -868,7 +908,7 @@
                 </div>
             </div>
             <div class="right">
-                <button class="ripple-btn outline" onclick="alert('Страница в разработке')">Открыть</button>
+                <button class="ripple-btn outline" onclick="showPrivacyPolicyModal()">Открыть</button>
             </div>
         </div>
         <div class="settings-item">
@@ -880,7 +920,7 @@
                 </div>
             </div>
             <div class="right">
-                <button class="ripple-btn outline" onclick="alert('Страница в разработке')">Написать</button>
+                <button class="ripple-btn outline" onclick="showComingSoonModal('Поддержка')">Написать</button>
             </div>
         </div>
         <div class="settings-item">
@@ -909,7 +949,7 @@
                 </div>
             </div>
             <div class="right">
-                <button class="ripple-btn danger" onclick="logout()">
+                <button class="ripple-btn danger" onclick="showLogoutModal()">
                     <span class="material-icons">logout</span> Выйти
                 </button>
             </div>
@@ -923,7 +963,7 @@
                 </div>
             </div>
             <div class="right">
-                <button class="ripple-btn danger" onclick="deleteAccount()">
+                <button class="ripple-btn danger" onclick="showDeleteAccountModal()">
                     <span class="material-icons">delete</span> Удалить
                 </button>
             </div>
@@ -981,7 +1021,16 @@ let userSettings = {
     followPrivacy: 'all'
 };
 
-let currentTheme = localStorage.getItem('takean-theme') || 'dark';
+// Загружаем из localStorage
+const savedSettings = localStorage.getItem('takean-settings');
+if (savedSettings) {
+    try {
+        const parsed = JSON.parse(savedSettings);
+        userSettings = { ...userSettings, ...parsed };
+    } catch (e) {}
+}
+
+let currentTheme = localStorage.getItem('takean-theme') || userSettings.theme || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
 
 function togglePasswordVisibility(inputId, btn) {
@@ -998,7 +1047,7 @@ function togglePasswordVisibility(inputId, btn) {
 }
 
 // ============================================================
-// ОНЛАЙН СТАТУС (умная система)
+// ОНЛАЙН СТАТУС
 // ============================================================
 let onlineCheckInterval = null;
 let isUserActive = true;
@@ -1069,6 +1118,207 @@ function startOnlineTracking() {
 }
 
 // ============================================================
+// МОДАЛЬНЫЕ ОКНА
+// ============================================================
+function createModal(options) {
+    const { title, icon, iconColor, text, fields, actions, onClose } = options;
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    
+    let fieldsHtml = '';
+    if (fields) {
+        fieldsHtml = fields.map(f => `
+            <div class="field">
+                <label>${f.label}</label>
+                <div class="input-wrap">
+                    ${f.type === 'password' ? `
+                        <input type="${f.type}" id="${f.id}" placeholder="${f.placeholder || ''}">
+                        <button class="toggle-password" type="button" onclick="togglePasswordVisibility('${f.id}', this)">
+                            <span class="material-icons">visibility</span>
+                        </button>
+                    ` : `
+                        <input type="${f.type}" id="${f.id}" placeholder="${f.placeholder || ''}">
+                    `}
+                </div>
+                ${f.hint ? `<div class="input-hint">${f.hint}</div>` : ''}
+                ${f.error ? `<div class="input-error" id="${f.error}"></div>` : ''}
+            </div>
+        `).join('');
+    }
+    
+    let actionsHtml = '';
+    if (actions) {
+        actionsHtml = actions.map(a => `
+            <button class="ripple-btn ${a.class || 'outline'}" id="${a.id}" ${a.danger ? 'style="color:var(--red);"' : ''}>
+                ${a.icon ? `<span class="material-icons">${a.icon}</span>` : ''}
+                ${a.text}
+            </button>
+        `).join('');
+    }
+    
+    modal.innerHTML = `
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>${icon ? `<span class="material-icons" style="${iconColor ? 'color:' + iconColor + ';' : ''}">${icon}</span>` : ''} ${title}</h2>
+                <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
+            </div>
+            ${text ? `<div class="modal-text">${text}</div>` : ''}
+            ${fieldsHtml}
+            <div class="modal-actions">
+                ${actionsHtml}
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    if (actions) {
+        actions.forEach(a => {
+            const btn = document.getElementById(a.id);
+            if (btn && a.onClick) {
+                btn.addEventListener('click', (e) => {
+                    a.onClick(e, modal);
+                });
+            }
+        });
+    }
+    
+    return modal;
+}
+
+function showComingSoonModal(feature) {
+    createModal({
+        title: 'В разработке',
+        icon: 'construction',
+        iconColor: 'var(--text-muted)',
+        text: `Функция <strong>${feature}</strong> находится в разработке. Скоро она будет доступна!`,
+        actions: [
+            { id: 'closeComingSoon', text: 'Закрыть', class: 'primary', onClick: (e, modal) => modal.remove() }
+        ]
+    });
+}
+
+function showPrivacyPolicyModal() {
+    createModal({
+        title: 'Политика конфиденциальности',
+        icon: 'description',
+        iconColor: 'var(--accent)',
+        text: `
+            <strong>Takean</strong> — платформа для тейков.
+            <br><br>
+            Мы собираем только ту информацию, которая необходима для работы сервиса:
+            <br><br>
+            • Имя пользователя и email<br>
+            • Аватар и информация профиля<br>
+            • Тейки, комментарии и лайки<br>
+            • Данные о сессиях
+            <br><br>
+            Ваши данные не передаются третьим лицам.
+            Вы можете удалить свой аккаунт в любое время.
+        `,
+        actions: [
+            { id: 'closePolicy', text: 'Закрыть', class: 'primary', onClick: (e, modal) => modal.remove() }
+        ]
+    });
+}
+
+function showLogoutModal() {
+    createModal({
+        title: 'Выйти из аккаунта?',
+        icon: 'exit_to_app',
+        iconColor: 'var(--red)',
+        text: 'Вы уверены, что хотите завершить сессию?<br>Вы сможете войти снова в любой момент.',
+        actions: [
+            { id: 'cancelLogout', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
+            { id: 'confirmLogout', text: 'Выйти', class: 'danger', icon: 'logout', onClick: (e, modal) => {
+                modal.remove();
+                if (onlineCheckInterval) {
+                    clearInterval(onlineCheckInterval);
+                    onlineCheckInterval = null;
+                }
+                auth.signOut().then(() => { window.location.href = '/'; });
+            }}
+        ]
+    });
+}
+
+function showDeleteAccountModal() {
+    createModal({
+        title: 'Удалить аккаунт?',
+        icon: 'delete_forever',
+        iconColor: 'var(--red)',
+        text: `
+            <strong>Это действие необратимо!</strong>
+            <br><br>
+            Все ваши тейки, комментарии и данные будут удалены.
+            <br><br>
+            Для подтверждения введите пароль.
+        `,
+        fields: [
+            { type: 'password', id: 'deletePasswordInput', label: 'Пароль', placeholder: 'Введите пароль', error: 'deletePasswordError' }
+        ],
+        actions: [
+            { id: 'cancelDelete', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
+            { id: 'confirmDelete', text: 'Удалить', class: 'danger', icon: 'delete', onClick: (e, modal) => {
+                const password = document.getElementById('deletePasswordInput').value;
+                const errorEl = document.getElementById('deletePasswordError');
+                
+                if (!password) {
+                    errorEl.textContent = 'Введите пароль';
+                    errorEl.style.display = 'block';
+                    return;
+                }
+                
+                const btn = document.getElementById('confirmDelete');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Проверка...';
+                errorEl.style.display = 'none';
+                
+                const credential = firebase.auth.EmailAuthProvider.credential(
+                    currentUser.email,
+                    password
+                );
+                
+                currentUser.reauthenticateWithCredential(credential)
+                    .then(() => {
+                        btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Удаление...';
+                        return db.collection('users').doc(currentUser.uid).delete();
+                    })
+                    .then(() => {
+                        return db.collection('posts').where('authorId', '==', currentUser.uid).get();
+                    })
+                    .then(snapshot => {
+                        const batch = db.batch();
+                        snapshot.forEach(doc => { batch.delete(doc.ref); });
+                        return batch.commit();
+                    })
+                    .then(() => {
+                        return currentUser.delete();
+                    })
+                    .then(() => {
+                        alert('Аккаунт удалён');
+                        window.location.href = '/';
+                    })
+                    .catch(err => {
+                        if (err.code === 'auth/wrong-password') {
+                            errorEl.textContent = 'Неверный пароль. Попробуйте снова.';
+                            errorEl.style.display = 'block';
+                        } else if (err.code === 'auth/requires-recent-login') {
+                            errorEl.textContent = 'Требуется повторный вход. Выйдите и зайдите снова.';
+                            errorEl.style.display = 'block';
+                        } else {
+                            alert('Ошибка: ' + err.message);
+                        }
+                        btn.disabled = false;
+                        btn.innerHTML = '<span class="material-icons">delete</span> Удалить';
+                    });
+            }}
+        ]
+    });
+}
+
+// ============================================================
 // DOM CONTENT LOADED
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -1079,11 +1329,16 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('themeToggle').innerHTML = 
             `<span class="material-icons">${currentTheme === 'dark' ? 'dark_mode' : 'light_mode'}</span>`;
         document.getElementById('themeSelect').value = currentTheme;
+        saveSettingsToCache();
     });
 
     loadUserData();
     setupEventListeners();
 });
+
+function saveSettingsToCache() {
+    localStorage.setItem('takean-settings', JSON.stringify(userSettings));
+}
 
 function setupEventListeners() {
     document.getElementById('globalSearch').addEventListener('keydown', (e) => {
@@ -1093,7 +1348,6 @@ function setupEventListeners() {
         }
     });
 
-    // Сохранение темы
     document.getElementById('themeSelect').addEventListener('change', function() {
         const theme = this.value;
         if (theme === 'system') {
@@ -1109,23 +1363,24 @@ function setupEventListeners() {
         }
         document.getElementById('themeToggle').innerHTML = 
             `<span class="material-icons">${currentTheme === 'dark' ? 'dark_mode' : 'light_mode'}</span>`;
-        
+        userSettings.theme = currentTheme;
+        saveSettingsToCache();
         if (currentUser) {
             db.collection('users').doc(currentUser.uid).update({ theme: currentTheme }).catch(() => {});
         }
     });
 
-    // Сохранение размера шрифта
     document.getElementById('fontSizeSelect').addEventListener('change', function() {
         const size = this.value;
         const sizes = { small: '14px', medium: '16px', large: '20px' };
         document.documentElement.style.fontSize = sizes[size] || '16px';
+        userSettings.fontSize = size;
+        saveSettingsToCache();
         if (currentUser) {
             db.collection('users').doc(currentUser.uid).update({ fontSize: size }).catch(() => {});
         }
     });
 
-    // Сохранение приватности подписок
     document.getElementById('followPrivacy').addEventListener('change', function() {
         const value = this.value;
         userSettings.followPrivacy = value;
@@ -1135,7 +1390,7 @@ function setupEventListeners() {
             'none': 'Никто'
         };
         document.getElementById('followPrivacyDesc').textContent = descMap[value] || 'Все пользователи';
-        
+        saveSettingsToCache();
         if (currentUser) {
             db.collection('users').doc(currentUser.uid).update({ followPrivacy: value }).catch(() => {});
         }
@@ -1152,11 +1407,32 @@ function loadUserData() {
     const avatarEl = document.getElementById('userAvatar');
     const dotEl = document.getElementById('userOnlineDot');
     
+    // Сначала применяем кэшированные настройки
+    const sizes = { small: '14px', medium: '16px', large: '20px' };
+    document.documentElement.style.fontSize = sizes[userSettings.fontSize] || '16px';
+    document.getElementById('fontSizeSelect').value = userSettings.fontSize;
+    document.getElementById('followPrivacy').value = userSettings.followPrivacy;
+    const descMap = {
+        'all': 'Все пользователи',
+        'followers': 'Только подписчики',
+        'none': 'Никто'
+    };
+    document.getElementById('followPrivacyDesc').textContent = descMap[userSettings.followPrivacy] || 'Все пользователи';
+    
+    if (userSettings.showOnlineStatus === false) {
+        document.getElementById('statusToggle').classList.remove('active');
+        if (dotEl) dotEl.classList.remove('show');
+    } else {
+        document.getElementById('statusToggle').classList.add('active');
+    }
+    
     if (user) {
-        avatarEl.innerHTML = user.photoURL 
-            ? `<img src="${user.photoURL}" alt="avatar">` 
-            : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
-        avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+        if (avatarEl) {
+            avatarEl.innerHTML = user.photoURL 
+                ? `<img src="${user.photoURL}" alt="avatar">` 
+                : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
+            avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+        }
         
         document.getElementById('userEmail').textContent = user.email || 'Не указан';
         document.getElementById('userDisplayName').textContent = user.displayName || 'Не указан';
@@ -1166,6 +1442,7 @@ function loadUserData() {
                 if (doc.exists) {
                     userData = doc.data();
                     
+                    // Обновляем настройки из БД
                     if (userData.theme) {
                         document.getElementById('themeSelect').value = userData.theme;
                         document.documentElement.setAttribute('data-theme', userData.theme);
@@ -1173,12 +1450,14 @@ function loadUserData() {
                         localStorage.setItem('takean-theme', userData.theme);
                         document.getElementById('themeToggle').innerHTML = 
                             `<span class="material-icons">${currentTheme === 'dark' ? 'dark_mode' : 'light_mode'}</span>`;
+                        userSettings.theme = userData.theme;
                     }
                     
                     if (userData.fontSize) {
                         document.getElementById('fontSizeSelect').value = userData.fontSize;
                         const sizes = { small: '14px', medium: '16px', large: '20px' };
                         document.documentElement.style.fontSize = sizes[userData.fontSize] || '16px';
+                        userSettings.fontSize = userData.fontSize;
                     }
                     
                     if (userData.showOnlineStatus !== undefined) {
@@ -1202,10 +1481,13 @@ function loadUserData() {
                         document.getElementById('followPrivacyDesc').textContent = descMap[userData.followPrivacy] || 'Все пользователи';
                     }
                     
+                    saveSettingsToCache();
+                    
+                    // Обновляем онлайн-статус
                     if (userData.isOnline && userSettings.showOnlineStatus !== false) {
-                        dotEl.classList.add('show');
+                        if (dotEl) dotEl.classList.add('show');
                     } else {
-                        dotEl.classList.remove('show');
+                        if (dotEl) dotEl.classList.remove('show');
                     }
                 }
             })
@@ -1214,9 +1496,11 @@ function loadUserData() {
         startOnlineTracking();
         
     } else {
-        avatarEl.innerHTML = '<span>?</span>';
-        avatarEl.onclick = () => window.location.href = '/login.html';
-        dotEl.classList.remove('show');
+        if (avatarEl) {
+            avatarEl.innerHTML = '<span>?</span>';
+            avatarEl.onclick = () => window.location.href = '/login.html';
+        }
+        if (dotEl) dotEl.classList.remove('show');
         document.getElementById('userEmail').textContent = 'Не авторизован';
         document.getElementById('userDisplayName').textContent = 'Не авторизован';
         if (onlineCheckInterval) {
@@ -1232,51 +1516,44 @@ auth.onAuthStateChanged(user => { loadUserData(); });
 // ИЗМЕНЕНИЕ ПОЧТЫ
 // ============================================================
 function openChangeEmailModal() {
-    if (!currentUser) { alert('Войдите в аккаунт'); return; }
+    if (!currentUser) { 
+        showNotLoggedInModal();
+        return; 
+    }
     
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-        <div class="modal-box">
-            <div class="modal-header">
-                <h2>Изменить Email</h2>
-                <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
-            </div>
-            <div class="field">
-                <label>Новый Email</label>
-                <div class="input-wrap">
-                    <input type="email" id="newEmailInput" placeholder="new@email.com" value="${currentUser.email || ''}">
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button class="ripple-btn outline" onclick="this.closest('.modal-overlay').remove()">Отмена</button>
-                <button class="ripple-btn primary" id="saveEmailBtn">Сохранить</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    
-    document.getElementById('saveEmailBtn').addEventListener('click', function() {
-        const newEmail = document.getElementById('newEmailInput').value.trim();
-        if (!newEmail || !newEmail.includes('@')) {
-            alert('Введите корректный email');
-            return;
-        }
-        
-        this.disabled = true;
-        this.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
-        
-        currentUser.updateEmail(newEmail)
-            .then(() => {
-                alert('Email обновлён!');
-                modal.remove();
-                loadUserData();
-            })
-            .catch(err => {
-                alert('Ошибка: ' + err.message);
-                this.disabled = false;
-                this.innerHTML = 'Сохранить';
-            });
+    createModal({
+        title: 'Изменить Email',
+        icon: 'email',
+        iconColor: 'var(--accent)',
+        fields: [
+            { type: 'email', id: 'newEmailInput', label: 'Новый Email', placeholder: 'new@email.com' }
+        ],
+        actions: [
+            { id: 'cancelEmail', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
+            { id: 'saveEmail', text: 'Сохранить', class: 'primary', onClick: (e, modal) => {
+                const newEmail = document.getElementById('newEmailInput').value.trim();
+                if (!newEmail || !newEmail.includes('@')) {
+                    alert('Введите корректный email');
+                    return;
+                }
+                
+                const btn = document.getElementById('saveEmail');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
+                
+                currentUser.updateEmail(newEmail)
+                    .then(() => {
+                        alert('Email обновлён!');
+                        modal.remove();
+                        loadUserData();
+                    })
+                    .catch(err => {
+                        alert('Ошибка: ' + err.message);
+                        btn.disabled = false;
+                        btn.innerHTML = 'Сохранить';
+                    });
+            }}
+        ]
     });
 }
 
@@ -1284,99 +1561,70 @@ function openChangeEmailModal() {
 // ИЗМЕНЕНИЕ ПАРОЛЯ
 // ============================================================
 function openChangePasswordModal() {
-    if (!currentUser) { alert('Войдите в аккаунт'); return; }
+    if (!currentUser) { 
+        showNotLoggedInModal();
+        return; 
+    }
     
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-        <div class="modal-box">
-            <div class="modal-header">
-                <h2>Изменить пароль</h2>
-                <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
-            </div>
-            <div class="field">
-                <label>Текущий пароль</label>
-                <div class="input-wrap">
-                    <input type="password" id="oldPasswordInput" placeholder="••••••••">
-                    <button class="toggle-password" type="button" onclick="togglePasswordVisibility('oldPasswordInput', this)">
-                        <span class="material-icons">visibility</span>
-                    </button>
-                </div>
-            </div>
-            <div class="field">
-                <label>Новый пароль</label>
-                <div class="input-wrap">
-                    <input type="password" id="newPasswordInput" placeholder="••••••••">
-                    <button class="toggle-password" type="button" onclick="togglePasswordVisibility('newPasswordInput', this)">
-                        <span class="material-icons">visibility</span>
-                    </button>
-                </div>
-                <div class="input-hint">
-                    <span class="material-icons">info</span> Минимум 6 символов
-                </div>
-            </div>
-            <div class="field">
-                <label>Повторите новый пароль</label>
-                <div class="input-wrap">
-                    <input type="password" id="confirmPasswordInput" placeholder="••••••••">
-                    <button class="toggle-password" type="button" onclick="togglePasswordVisibility('confirmPasswordInput', this)">
-                        <span class="material-icons">visibility</span>
-                    </button>
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button class="ripple-btn outline" onclick="this.closest('.modal-overlay').remove()">Отмена</button>
-                <button class="ripple-btn primary" id="savePasswordBtn">Сохранить</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    
-    document.getElementById('savePasswordBtn').addEventListener('click', function() {
-        const oldPassword = document.getElementById('oldPasswordInput').value;
-        const newPassword = document.getElementById('newPasswordInput').value;
-        const confirmPassword = document.getElementById('confirmPasswordInput').value;
-        
-        if (!oldPassword || !newPassword || !confirmPassword) {
-            alert('Заполните все поля');
-            return;
-        }
-        
-        if (newPassword.length < 6) {
-            alert('Новый пароль должен быть минимум 6 символов');
-            return;
-        }
-        
-        if (newPassword !== confirmPassword) {
-            alert('Пароли не совпадают');
-            return;
-        }
-        
-        this.disabled = true;
-        this.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
-        
-        const credential = firebase.auth.EmailAuthProvider.credential(
-            currentUser.email,
-            oldPassword
-        );
-        
-        currentUser.reauthenticateWithCredential(credential)
-            .then(() => {
-                return currentUser.updatePassword(newPassword);
-            })
-            .then(() => {
-                alert('Пароль успешно изменён!');
-                modal.remove();
-            })
-            .catch(err => {
-                if (err.code === 'auth/wrong-password') {
-                    alert('Неверный текущий пароль');
-                } else {
-                    alert('Ошибка: ' + err.message);
+    createModal({
+        title: 'Изменить пароль',
+        icon: 'lock',
+        iconColor: 'var(--accent)',
+        fields: [
+            { type: 'password', id: 'oldPasswordInput', label: 'Текущий пароль', placeholder: '••••••••' },
+            { type: 'password', id: 'newPasswordInput', label: 'Новый пароль', placeholder: '••••••••', hint: 'Минимум 6 символов' },
+            { type: 'password', id: 'confirmPasswordInput', label: 'Повторите новый пароль', placeholder: '••••••••' }
+        ],
+        actions: [
+            { id: 'cancelPassword', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
+            { id: 'savePassword', text: 'Сохранить', class: 'primary', onClick: (e, modal) => {
+                const oldPassword = document.getElementById('oldPasswordInput').value;
+                const newPassword = document.getElementById('newPasswordInput').value;
+                const confirmPassword = document.getElementById('confirmPasswordInput').value;
+                
+                if (!oldPassword || !newPassword || !confirmPassword) {
+                    alert('Заполните все поля');
+                    return;
                 }
-                this.disabled = false;
-                this.innerHTML = 'Сохранить';
-            });
+                
+                if (newPassword.length < 6) {
+                    alert('Новый пароль должен быть минимум 6 символов');
+                    return;
+                }
+                
+                if (newPassword !== confirmPassword) {
+                    alert('Пароли не совпадают');
+                    return;
+                }
+                
+                const btn = document.getElementById('savePassword');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
+                
+                const credential = firebase.auth.EmailAuthProvider.credential(
+                    currentUser.email,
+                    oldPassword
+                );
+                
+                currentUser.reauthenticateWithCredential(credential)
+                    .then(() => {
+                        return currentUser.updatePassword(newPassword);
+                    })
+                    .then(() => {
+                        alert('Пароль успешно изменён!');
+                        modal.remove();
+                    })
+                    .catch(err => {
+                        if (err.code === 'auth/wrong-password') {
+                            alert('Неверный текущий пароль');
+                        } else {
+                            alert('Ошибка: ' + err.message);
+                        }
+                        btn.disabled = false;
+                        btn.innerHTML = 'Сохранить';
+                    });
+            }}
+        ]
     });
 }
 
@@ -1384,57 +1632,47 @@ function openChangePasswordModal() {
 // ИЗМЕНЕНИЕ ОТОБРАЖАЕМОГО ИМЕНИ
 // ============================================================
 function changeDisplayName() {
-    if (!currentUser) { alert('Войдите в аккаунт'); return; }
+    if (!currentUser) { 
+        showNotLoggedInModal();
+        return; 
+    }
     
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-        <div class="modal-box">
-            <div class="modal-header">
-                <h2>Изменить отображаемое имя</h2>
-                <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
-            </div>
-            <div class="field">
-                <label>Новое имя</label>
-                <div class="input-wrap">
-                    <input type="text" id="newDisplayNameInput" placeholder="Ваше имя" value="${currentUser.displayName || ''}">
-                </div>
-                <div class="input-hint">
-                    <span class="material-icons">info</span> Можно использовать любые символы
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button class="ripple-btn outline" onclick="this.closest('.modal-overlay').remove()">Отмена</button>
-                <button class="ripple-btn primary" id="saveDisplayNameBtn">Сохранить</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    
-    document.getElementById('saveDisplayNameBtn').addEventListener('click', function() {
-        const newName = document.getElementById('newDisplayNameInput').value.trim();
-        if (!newName) {
-            alert('Введите имя');
-            return;
-        }
-        
-        this.disabled = true;
-        this.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
-        
-        currentUser.updateProfile({ displayName: newName })
-            .then(() => {
-                return db.collection('users').doc(currentUser.uid).update({ displayName: newName });
-            })
-            .then(() => {
-                alert('Имя обновлено!');
-                modal.remove();
-                loadUserData();
-            })
-            .catch(err => {
-                alert('Ошибка: ' + err.message);
-                this.disabled = false;
-                this.innerHTML = 'Сохранить';
-            });
+    createModal({
+        title: 'Изменить отображаемое имя',
+        icon: 'person',
+        iconColor: 'var(--accent)',
+        fields: [
+            { type: 'text', id: 'newDisplayNameInput', label: 'Новое имя', placeholder: 'Ваше имя', hint: 'Можно использовать любые символы' }
+        ],
+        actions: [
+            { id: 'cancelName', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
+            { id: 'saveName', text: 'Сохранить', class: 'primary', onClick: (e, modal) => {
+                const newName = document.getElementById('newDisplayNameInput').value.trim();
+                if (!newName) {
+                    alert('Введите имя');
+                    return;
+                }
+                
+                const btn = document.getElementById('saveName');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
+                
+                currentUser.updateProfile({ displayName: newName })
+                    .then(() => {
+                        return db.collection('users').doc(currentUser.uid).update({ displayName: newName });
+                    })
+                    .then(() => {
+                        alert('Имя обновлено!');
+                        modal.remove();
+                        loadUserData();
+                    })
+                    .catch(err => {
+                        alert('Ошибка: ' + err.message);
+                        btn.disabled = false;
+                        btn.innerHTML = 'Сохранить';
+                    });
+            }}
+        ]
     });
 }
 
@@ -1445,6 +1683,7 @@ function toggleStatus() {
     const toggle = document.getElementById('statusToggle');
     toggle.classList.toggle('active');
     userSettings.showOnlineStatus = toggle.classList.contains('active');
+    saveSettingsToCache();
     
     if (currentUser) {
         db.collection('users').doc(currentUser.uid).update({
@@ -1461,54 +1700,37 @@ function toggleStatus() {
     }
 }
 
+function showNotLoggedInModal() {
+    createModal({
+        title: 'Не авторизован',
+        icon: 'person_off',
+        iconColor: 'var(--red)',
+        text: 'Войдите в аккаунт, чтобы изменить настройки.',
+        actions: [
+            { id: 'closeNotLogged', text: 'Закрыть', class: 'outline', onClick: (e, modal) => modal.remove() },
+            { id: 'goLogin', text: 'Войти', class: 'primary', onClick: (e, modal) => {
+                modal.remove();
+                window.location.href = '/login.html';
+            }}
+        ]
+    });
+}
+
 // ============================================================
-// ВЫХОД ИЗ АККАУНТА
+// ВЫХОД ИЗ АККАУНТА (старая функция — заменена на модальное окно)
 // ============================================================
 function logout() {
-    if (confirm('Вы уверены, что хотите выйти?')) {
-        if (onlineCheckInterval) {
-            clearInterval(onlineCheckInterval);
-            onlineCheckInterval = null;
-        }
-        auth.signOut().then(() => { window.location.href = '/'; });
-    }
+    showLogoutModal();
 }
 
 // ============================================================
-// УДАЛЕНИЕ АККАУНТА
+// УДАЛЕНИЕ АККАУНТА (старая функция — заменена на модальное окно)
 // ============================================================
 function deleteAccount() {
-    if (!currentUser) return;
-    if (confirm('Вы уверены, что хотите удалить аккаунт? Это действие необратимо!')) {
-        if (confirm('Пожалуйста, подтвердите ещё раз: удалить аккаунт?')) {
-            db.collection('users').doc(currentUser.uid).delete()
-                .then(() => {
-                    return db.collection('posts').where('authorId', '==', currentUser.uid).get();
-                })
-                .then(snapshot => {
-                    const batch = db.batch();
-                    snapshot.forEach(doc => { batch.delete(doc.ref); });
-                    return batch.commit();
-                })
-                .then(() => {
-                    return currentUser.delete();
-                })
-                .then(() => {
-                    alert('Аккаунт удалён');
-                    window.location.href = '/';
-                })
-                .catch(err => {
-                    if (err.code === 'auth/requires-recent-login') {
-                        alert('Для удаления аккаунта требуется повторный вход. Пожалуйста, выйдите и зайдите снова.');
-                    } else {
-                        alert('Ошибка: ' + err.message);
-                    }
-                });
-        }
-    }
+    showDeleteAccountModal();
 }
 
-console.log('⚙️ Settings page loaded');
+console.log('⚙️ Settings page loaded with all modals and caching');
 </script>
 </body>
 </html>
