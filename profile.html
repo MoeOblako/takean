@@ -19,7 +19,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
-        /* ===== ВСЕ СТИЛИ ИЗ ПРЕДЫДУЩЕЙ ВЕРСИИ ===== */
+        /* ===== ВСЕ СТИЛИ ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -663,52 +663,11 @@
             color: var(--text-secondary);
             margin-bottom: 8px;
             word-wrap: break-word;
-            max-height: 120px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
             overflow: hidden;
-            position: relative;
         }
-
-        .post-content::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 40px;
-            background: linear-gradient(transparent, var(--bg-card));
-            pointer-events: none;
-        }
-
-        .post-content .mention {
-            color: var(--accent);
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        /* BBC STYLES */
-        .bbc-bold { font-weight: 700; }
-        .bbc-italic { font-style: italic; }
-        .bbc-underline { text-decoration: underline; }
-        .bbc-strike { text-decoration: line-through; }
-        .bbc-code { font-family: monospace; background: var(--bg-input); padding: 2px 6px; border-radius: var(--radius); }
-        .bbc-quote { border-left: 3px solid var(--accent); padding-left: 12px; margin: 4px 0; color: var(--text-secondary); }
-        .bbc-spoiler { 
-            background: var(--bg-hover); 
-            color: var(--bg-hover); 
-            cursor: pointer; 
-            padding: 2px 6px; 
-            border-radius: var(--radius); 
-            transition: color 0.3s;
-            user-select: none;
-        }
-        .bbc-spoiler:hover { color: var(--text-primary); }
-        .bbc-spoiler.revealed { color: var(--text-primary); background: var(--bg-input); }
-        .bbc-size-small { font-size: 12px; }
-        .bbc-size-normal { font-size: 15px; }
-        .bbc-size-large { font-size: 20px; }
-        .bbc-size-huge { font-size: 26px; }
-        .bbc-color { transition: color 0.2s; }
-        .bbc-bg { transition: background 0.2s; }
 
         .post-images {
             display: grid;
@@ -767,145 +726,6 @@
         .post-action-btn:hover { background: var(--bg-hover); }
         .post-action-btn .material-icons { font-size: 18px; }
 
-        /* ===== COMMENT CARD ===== */
-        .comment-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            padding: 14px 16px;
-            margin-bottom: 10px;
-            transition: all 0.2s;
-        }
-
-        .comment-card:hover {
-            border-color: var(--border-light);
-        }
-
-        .comment-card .comment-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 4px;
-        }
-
-        .comment-card .comment-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: var(--bg-hover);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 12px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            flex-shrink: 0;
-            overflow: hidden;
-        }
-
-        .comment-card .comment-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .comment-card .comment-username {
-            font-weight: 600;
-            font-size: 13px;
-            color: var(--text-primary);
-            cursor: pointer;
-        }
-
-        .comment-card .comment-username:hover { color: var(--accent); }
-
-        .comment-card .comment-time {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-left: auto;
-        }
-
-        .comment-card .comment-text {
-            font-size: 14px;
-            line-height: 1.5;
-            color: var(--text-secondary);
-            margin: 4px 0 0 42px;
-            word-wrap: break-word;
-        }
-
-        .comment-card .comment-text .mention {
-            color: var(--accent);
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        .comment-card .comment-on {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-left: 42px;
-            margin-top: 4px;
-        }
-
-        .comment-card .comment-on a {
-            color: var(--accent);
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .comment-card .comment-on a:hover {
-            text-decoration: underline;
-        }
-
-        .comment-card .comment-image {
-            max-width: 150px;
-            max-height: 150px;
-            border-radius: var(--radius);
-            margin-top: 4px;
-            cursor: pointer;
-        }
-
-        .comment-card .comment-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-left: 42px;
-            margin-top: 4px;
-        }
-
-        .comment-card .comment-actions button {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            font-family: var(--font);
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            padding: 3px 6px;
-            border-radius: var(--radius);
-            transition: all 0.2s;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .comment-card .comment-actions button:hover {
-            background: var(--bg-hover);
-            color: var(--text-primary);
-        }
-
-        .comment-card .comment-actions .comment-score {
-            font-weight: 600;
-            min-width: 18px;
-            text-align: center;
-        }
-
-        .comment-card .comment-actions .comment-score.positive { color: var(--green); }
-        .comment-card .comment-actions .comment-score.negative { color: var(--red); }
-
-        .comment-card .comment-actions button.liked { color: var(--green); }
-        .comment-card .comment-actions button.disliked { color: var(--red); }
-
         /* ===== MODAL ===== */
         .modal-overlay {
             position: fixed;
@@ -926,7 +746,7 @@
             border: 1px solid var(--border-color);
             border-radius: var(--radius);
             padding: 28px 32px;
-            max-width: 520px;
+            max-width: 440px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
@@ -941,8 +761,11 @@
         }
 
         .modal-box .modal-header h2 {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .modal-box .modal-header .close-btn {
@@ -959,52 +782,43 @@
             color: var(--text-primary);
         }
 
-        .modal-user-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .modal-user-item:hover {
-            background: var(--bg-hover);
-            margin: 0 -8px;
-            padding: 10px 8px;
-        }
-
-        .modal-user-item:last-child { border-bottom: none; }
-
-        .modal-user-item .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--bg-hover);
-            overflow: hidden;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-
-        .modal-user-item .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .modal-user-item .name {
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .modal-user-item .username {
-            font-size: 12px;
+        .modal-box .modal-icon {
+            font-size: 48px;
+            display: block;
+            margin: 0 auto 12px;
+            text-align: center;
             color: var(--text-muted);
+        }
+
+        .modal-box .modal-icon.danger {
+            color: var(--red);
+        }
+
+        .modal-box .modal-icon.success {
+            color: var(--green);
+        }
+
+        .modal-box .modal-text {
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .modal-box .modal-text strong {
+            color: var(--text-primary);
+        }
+
+        .modal-box .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 4px;
+        }
+
+        .modal-box .modal-actions .ripple-btn {
+            padding: 8px 24px;
         }
 
         /* ===== REPUTATION MODAL ===== */
@@ -1339,6 +1153,30 @@
             padding: 8px 24px;
         }
 
+        /* ===== BBC STYLES ===== */
+        .bbc-bold { font-weight: 700; }
+        .bbc-italic { font-style: italic; }
+        .bbc-underline { text-decoration: underline; }
+        .bbc-strike { text-decoration: line-through; }
+        .bbc-code { font-family: monospace; background: var(--bg-input); padding: 2px 6px; border-radius: var(--radius); }
+        .bbc-quote { border-left: 3px solid var(--accent); padding-left: 12px; margin: 4px 0; color: var(--text-secondary); }
+        .bbc-spoiler { 
+            background: var(--bg-hover); 
+            color: var(--bg-hover); 
+            cursor: pointer; 
+            padding: 2px 6px; 
+            border-radius: var(--radius); 
+            transition: color 0.3s;
+            user-select: none;
+        }
+        .bbc-spoiler:hover { color: var(--text-primary); }
+        .bbc-size-small { font-size: 12px; }
+        .bbc-size-normal { font-size: 15px; }
+        .bbc-size-large { font-size: 20px; }
+        .bbc-size-huge { font-size: 26px; }
+        .bbc-color { transition: color 0.2s; }
+        .bbc-bg { transition: background 0.2s; }
+
         /* ===== FOOTER ===== */
         .footer {
             margin-top: auto;
@@ -1464,14 +1302,9 @@
             .modal-box { padding: 20px; margin: 8px; }
             .edit-media-row { flex-direction: column; align-items: center; }
             .edit-cover-box { width: 100%; }
-            .comment-card { padding: 12px; }
-            .comment-card .comment-text { margin-left: 0; }
-            .comment-card .comment-actions { margin-left: 0; }
-            .comment-card .comment-on { margin-left: 0; }
             .topbar-actions .avatar-small .online-dot { width: 8px; height: 8px; bottom: 1px; right: 1px; }
             .profile-avatar .online-dot { width: 8px; height: 8px; bottom: 1px; right: 1px; }
             .profile-actions .ripple-btn { font-size: 12px; padding: 6px 12px; }
-            .post-content { max-height: 100px; }
         }
 
         @media (max-width: 480px) {
@@ -1492,16 +1325,15 @@
             .profile-stats .stat .num { font-size: 14px; }
             .post-card { padding: 10px; }
             .post-title { font-size: 14px; }
-            .post-content { font-size: 13px; max-height: 80px; }
+            .post-content { font-size: 13px; }
             .post-avatar { width: 30px; height: 30px; font-size: 12px; }
             .modal-box { padding: 16px; }
             .modal-box .modal-header h2 { font-size: 18px; }
-            .comment-card { padding: 10px; }
-            .comment-card .comment-text { font-size: 13px; }
-            .topbar-actions .avatar-small .online-dot { width: 6px; height: 6px; bottom: 0px; right: 0px; }
             .profile-actions .ripple-btn { font-size: 11px; padding: 4px 10px; }
             .reputation-modal .reputation-number { font-size: 36px; }
             .reputation-modal .reputation-icon { font-size: 40px; }
+            .topbar-actions .avatar-small .online-dot { width: 6px; height: 6px; bottom: 0px; right: 0px; }
+            .profile-avatar .online-dot { width: 6px; height: 6px; bottom: 0px; right: 0px; }
         }
     </style>
 </head>
@@ -1616,7 +1448,7 @@ let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
 
 // ============================================================
-// ПАРСИНГ BBC (ГЛАВНАЯ ФУНКЦИЯ)
+// ПАРСИНГ BBC
 // ============================================================
 function parseBBC(text) {
     if (!text) return '';
@@ -1629,7 +1461,7 @@ function parseBBC(text) {
     html = html.replace(/\[s\](.*?)\[\/s\]/g, '<span class="bbc-strike">$1</span>');
     html = html.replace(/\[code\](.*?)\[\/code\]/g, '<span class="bbc-code">$1</span>');
     html = html.replace(/\[quote\](.*?)\[\/quote\]/g, '<div class="bbc-quote">$1</div>');
-    html = html.replace(/\[spoiler\](.*?)\[\/spoiler\]/g, '<span class="bbc-spoiler" onclick="event.stopPropagation();this.classList.toggle(\'revealed\')">$1</span>');
+    html = html.replace(/\[spoiler\](.*?)\[\/spoiler\]/g, '<span class="bbc-spoiler" onclick="event.stopPropagation();this.style.color=\'var(--text-primary)\';">$1</span>');
     html = html.replace(/\[size=small\](.*?)\[\/size\]/g, '<span class="bbc-size-small">$1</span>');
     html = html.replace(/\[size=normal\](.*?)\[\/size\]/g, '<span class="bbc-size-normal">$1</span>');
     html = html.replace(/\[size=large\](.*?)\[\/size\]/g, '<span class="bbc-size-large">$1</span>');
@@ -1639,11 +1471,8 @@ function parseBBC(text) {
     html = html.replace(/\[url\](.*?)\[\/url\]/g, '<a href="$1" target="_blank" style="color:var(--accent);">$1</a>');
     html = html.replace(/\[url=(.*?)\](.*?)\[\/url\]/g, '<a href="$1" target="_blank" style="color:var(--accent);">$2</a>');
     html = html.replace(/\[img\](.*?)\[\/img\]/g, '<img src="$1" style="max-width:100%;max-height:300px;border-radius:var(--radius);margin:4px 0;" loading="lazy">');
-    
     html = html.replace(/@([a-zA-Z0-9_.-]+)/g, '<span class="mention" onclick="goToProfileByUsername(\'$1\')">@$1</span>');
-    
     html = html.replace(/\n/g, '<br>');
-    
     return html;
 }
 
@@ -1666,6 +1495,54 @@ function goToProfileByUsername(username) {
             }
         })
         .catch(() => {});
+}
+
+// ============================================================
+// МОДАЛЬНОЕ ОКНО
+// ============================================================
+function createModal(options) {
+    const { title, icon, iconColor, text, actions } = options;
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    
+    let actionsHtml = '';
+    if (actions) {
+        actionsHtml = actions.map(a => `
+            <button class="ripple-btn ${a.class || 'outline'}" id="${a.id}" ${a.danger ? 'style="color:var(--red);"' : ''}>
+                ${a.icon ? `<span class="material-icons">${a.icon}</span>` : ''}
+                ${a.text}
+            </button>
+        `).join('');
+    }
+    
+    modal.innerHTML = `
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>${icon ? `<span class="material-icons" style="${iconColor ? 'color:' + iconColor + ';' : ''}">${icon}</span>` : ''} ${title}</h2>
+                <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
+            </div>
+            ${text ? `<div class="modal-text">${text}</div>` : ''}
+            <div class="modal-actions">
+                ${actionsHtml}
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    if (actions) {
+        actions.forEach(a => {
+            const btn = document.getElementById(a.id);
+            if (btn && a.onClick) {
+                btn.addEventListener('click', (e) => {
+                    a.onClick(e, modal);
+                });
+            }
+        });
+    }
+    
+    return modal;
 }
 
 // ============================================================
@@ -1748,6 +1625,8 @@ function checkUserOnline(uid) {
         .then(doc => {
             if (doc.exists) {
                 const data = doc.data();
+                // Проверяем, включён ли показ статуса
+                if (data.showOnlineStatus === false) return false;
                 if (data.isOnline === true) return true;
                 if (data.lastSeen) {
                     const lastSeen = data.lastSeen.seconds * 1000;
@@ -1781,7 +1660,9 @@ function createUserInFirestore(user) {
                 following: [],
                 theme: currentTheme,
                 isOnline: true,
-                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+                showOnlineStatus: true,
+                followPrivacy: 'all'
             });
         }
         return doc;
@@ -2112,7 +1993,123 @@ function renderProfile(user) {
 }
 
 // ============================================================
-// ПОКАЗ ДЕЙСТВИЙ В СООБЩЕСТВЕ
+// ПОДПИСКА С ПРОВЕРКОЙ ПРИВАТНОСТИ
+// ============================================================
+function toggleFollow() {
+    if (!currentUser) {
+        window.location.href = '/login.html';
+        return;
+    }
+    if (!profileUser) return;
+    
+    // Проверяем, не пытается ли пользователь подписаться на себя
+    if (currentUser.uid === profileUser.id) return;
+
+    const isFollowing = profileUser.followers && profileUser.followers.includes(currentUser.uid);
+    
+    // Если уже подписан — отписываемся без проверок
+    if (isFollowing) {
+        const userRef = db.collection('users').doc(profileUser.id);
+        const currentRef = db.collection('users').doc(currentUser.uid);
+        
+        db.runTransaction(transaction => {
+            return transaction.get(userRef).then(doc => {
+                const data = doc.data();
+                let followers = data.followers || [];
+                let following = [];
+                
+                return transaction.get(currentRef).then(doc2 => {
+                    const data2 = doc2.data();
+                    following = data2.following || [];
+                    
+                    followers = followers.filter(id => id !== currentUser.uid);
+                    following = following.filter(id => id !== profileUser.id);
+                    
+                    transaction.update(userRef, { followers: followers });
+                    transaction.update(currentRef, { following: following });
+                });
+            });
+        }).then(() => {
+            profileUser.followers = (profileUser.followers || []).filter(id => id !== currentUser.uid);
+            renderProfile(profileUser);
+        }).catch(err => alert('Ошибка: ' + err.message));
+        return;
+    }
+    
+    // Проверяем настройки приватности
+    const followPrivacy = profileUser.followPrivacy || 'all';
+    
+    if (followPrivacy === 'none') {
+        // Показываем модальное окно "Пользователь закрыл подписки"
+        createModal({
+            title: 'Подписки закрыты',
+            icon: 'lock',
+            iconColor: 'var(--red)',
+            text: `<strong>${escapeHtml(profileUser.displayName || profileUser.username || 'Пользователь')}</strong> закрыл возможность подписываться.`,
+            actions: [
+                { id: 'closeFollowBlocked', text: 'Закрыть', class: 'primary', onClick: (e, modal) => modal.remove() }
+            ]
+        });
+        return;
+    }
+    
+    if (followPrivacy === 'followers') {
+        // Проверяем, подписан ли текущий пользователь на этого пользователя
+        const userRef = db.collection('users').doc(currentUser.uid);
+        let isFollower = false;
+        
+        await db.collection('users').doc(profileUser.id).get()
+            .then(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    isFollower = data.followers && data.followers.includes(currentUser.uid);
+                }
+            })
+            .catch(() => {});
+        
+        if (!isFollower) {
+            createModal({
+                title: 'Подписка ограничена',
+                icon: 'person_add_disabled',
+                iconColor: 'var(--text-muted)',
+                text: `<strong>${escapeHtml(profileUser.displayName || profileUser.username || 'Пользователь')}</strong> разрешает подписываться только своим подписчикам.`,
+                actions: [
+                    { id: 'closeFollowRestricted', text: 'Закрыть', class: 'primary', onClick: (e, modal) => modal.remove() }
+                ]
+            });
+            return;
+        }
+    }
+    
+    // Если все проверки пройдены — подписываемся
+    const userRef = db.collection('users').doc(profileUser.id);
+    const currentRef = db.collection('users').doc(currentUser.uid);
+    
+    db.runTransaction(transaction => {
+        return transaction.get(userRef).then(doc => {
+            const data = doc.data();
+            let followers = data.followers || [];
+            let following = [];
+            
+            return transaction.get(currentRef).then(doc2 => {
+                const data2 = doc2.data();
+                following = data2.following || [];
+                
+                followers.push(currentUser.uid);
+                following.push(profileUser.id);
+                
+                transaction.update(userRef, { followers: followers });
+                transaction.update(currentRef, { following: following });
+            });
+        });
+    }).then(() => {
+        profileUser.followers = [...(profileUser.followers || []), currentUser.uid];
+        renderProfile(profileUser);
+    }).catch(err => alert('Ошибка: ' + err.message));
+}
+
+// ============================================================
+// showCommunityActions (без изменений)
 // ============================================================
 function showCommunityActions() {
     if (!communityContext || !communityContext.communityId) {
@@ -2316,7 +2313,7 @@ function showReputationModal() {
 }
 
 // ============================================================
-// LOAD USER POSTS (С ПАРСИНГОМ BBC)
+// LOAD USER POSTS
 // ============================================================
 function loadUserPosts(uid) {
     const container = document.getElementById('profilePosts');
@@ -2362,13 +2359,7 @@ function renderPosts(posts) {
     }
 
     container.innerHTML = posts.map(post => {
-        const timeStr = post.createdAt 
-            ? new Date(post.createdAt.seconds * 1000).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
-            : 'недавно';
-        
-        // Парсим BBC для содержимого поста
         const parsedContent = parseBBC(post.content || '');
-        
         return `
             <div class="post-card" onclick="window.location.href='/post.html?id=${post.id}'" style="cursor:pointer;">
                 <div class="post-header">
@@ -2377,7 +2368,7 @@ function renderPosts(posts) {
                     </div>
                     <div class="post-user">
                         <div class="post-username">${escapeHtml(post.authorName || 'Аноним')}</div>
-                        <div class="post-time">${timeStr}</div>
+                        <div class="post-time">${post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleDateString('ru-RU') : 'недавно'}</div>
                     </div>
                 </div>
                 <div class="post-title">${escapeHtml(post.title || 'Без заголовка')}</div>
@@ -2399,7 +2390,7 @@ function renderPosts(posts) {
 }
 
 // ============================================================
-// LOAD USER COMMENTS (С ПАРСИНГОМ BBC)
+// LOAD USER COMMENTS
 // ============================================================
 function loadUserComments(uid) {
     const container = document.getElementById('profilePosts');
@@ -2565,53 +2556,6 @@ function loadUserLikes(uid) {
             <p style="font-size:13px;">В разработке</p>
         </div>
     `;
-}
-
-// ============================================================
-// FOLLOW
-// ============================================================
-function toggleFollow() {
-    if (!currentUser) {
-        window.location.href = '/login.html';
-        return;
-    }
-    if (!profileUser) return;
-
-    const userRef = db.collection('users').doc(profileUser.id);
-    const currentRef = db.collection('users').doc(currentUser.uid);
-
-    const isFollowing = profileUser.followers && profileUser.followers.includes(currentUser.uid);
-
-    db.runTransaction(transaction => {
-        return transaction.get(userRef).then(doc => {
-            const data = doc.data();
-            let followers = data.followers || [];
-            let following = [];
-            
-            return transaction.get(currentRef).then(doc2 => {
-                const data2 = doc2.data();
-                following = data2.following || [];
-                
-                if (isFollowing) {
-                    followers = followers.filter(id => id !== currentUser.uid);
-                    following = following.filter(id => id !== profileUser.id);
-                } else {
-                    followers.push(currentUser.uid);
-                    following.push(profileUser.id);
-                }
-                
-                transaction.update(userRef, { followers: followers });
-                transaction.update(currentRef, { following: following });
-            });
-        });
-    }).then(() => {
-        if (isFollowing) {
-            profileUser.followers = (profileUser.followers || []).filter(id => id !== currentUser.uid);
-        } else {
-            profileUser.followers = [...(profileUser.followers || []), currentUser.uid];
-        }
-        renderProfile(profileUser);
-    }).catch(err => alert('Ошибка: ' + err.message));
 }
 
 function showFollowers(type) {
@@ -2932,7 +2876,7 @@ function saveProfileChanges() {
         });
 }
 
-console.log('👤 Profile page loaded with BBC parsing');
+console.log('👤 Profile page loaded with follow privacy check');
 </script>
 </body>
 </html>
