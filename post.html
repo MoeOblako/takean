@@ -1705,6 +1705,9 @@ function setupEventListeners() {
     });
 }
 
+// ============================================================
+// ИСПРАВЛЕННАЯ loadUserData() — загружает аватарку из Firestore
+// ============================================================
 function loadUserData() {
     const user = auth.currentUser;
     currentUser = user;
@@ -1713,18 +1716,49 @@ function loadUserData() {
     const dotEl = document.getElementById('userOnlineDot');
     
     if (user) {
-        avatarEl.innerHTML = user.photoURL 
-            ? `<img src="${user.photoURL}" alt="avatar">` 
-            : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
-        avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
-        dotEl.classList.add('show');
-        createUserInFirestore(user).then(() => {
-            startOnlineTracking();
-        }).catch(err => console.error('Error creating user:', err));
+        // ===== ЗАГРУЖАЕМ АВАТАРКУ ИЗ FIRESTORE =====
+        db.collection('users').doc(user.uid).get()
+            .then(doc => {
+                let avatarUrl = user.photoURL || null;
+                let displayName = user.displayName || '?';
+                
+                if (doc.exists) {
+                    const data = doc.data();
+                    avatarUrl = data.avatar || user.photoURL || null;
+                    displayName = data.displayName || user.displayName || '?';
+                    
+                    // Если в Firestore есть аватарка, но в Auth нет — обновляем Auth
+                    if (data.avatar && !user.photoURL) {
+                        user.updateProfile({ photoURL: data.avatar }).catch(() => {});
+                    }
+                }
+                
+                if (avatarEl) {
+                    avatarEl.innerHTML = avatarUrl 
+                        ? `<img src="${avatarUrl}" alt="avatar">` 
+                        : `<span>${displayName[0].toUpperCase()}</span>`;
+                    avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+                }
+                if (dotEl) dotEl.classList.add('show');
+            })
+            .catch(() => {
+                if (avatarEl) {
+                    avatarEl.innerHTML = user.photoURL 
+                        ? `<img src="${user.photoURL}" alt="avatar">` 
+                        : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
+                    avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+                }
+                if (dotEl) dotEl.classList.add('show');
+            });
+        
+        createUserInFirestore(user).then(() => startOnlineTracking())
+            .catch(err => console.error('Error creating user:', err));
     } else {
-        avatarEl.innerHTML = '<span>?</span>';
-        avatarEl.onclick = () => window.location.href = '/login.html';
-        dotEl.classList.remove('show');
+        if (avatarEl) {
+            avatarEl.innerHTML = '<span>?</span>';
+            avatarEl.onclick = () => window.location.href = '/login.html';
+        }
+        if (dotEl) dotEl.classList.remove('show');
         if (onlineCheckInterval) {
             clearInterval(onlineCheckInterval);
             onlineCheckInterval = null;
@@ -1774,7 +1808,34 @@ function loadPost(id) {
                 authorOnline = isOnline;
             });
             
-            Promise.all([communityPromise, authorPromise])
+            // ===== ЗАГРУЖАЕМ АКТУАЛЬНУЮ АВАТАРКУ АВТОРА =====
+            let authorAvatarPromise = Promise.resolve();
+            let authorName = currentPost.authorName || 'Аноним';
+            let authorAvatar = currentPost.authorAvatar || null;
+            
+            if (currentPost.authorId) {
+                authorAvatarPromise = db.collection('users').doc(currentPost.authorId).get()
+                    .then(doc => {
+                        if (doc.exists) {
+                            const data = doc.data();
+                            if (data.avatar) {
+                                authorAvatar = data.avatar;
+                                currentPost.authorAvatar = data.avatar;
+                            }
+                            if (data.displayName) {
+                                authorName = data.displayName;
+                                currentPost.authorName = data.displayName;
+                            }
+                            // Если есть username, сохраняем для ссылки
+                            if (data.username) {
+                                currentPost._username = data.username;
+                            }
+                        }
+                    })
+                    .catch(() => {});
+            }
+            
+            Promise.all([communityPromise, authorPromise, authorAvatarPromise])
                 .then(() => {
                     currentPost._communityData = communityData;
                     currentPost._authorOnline = authorOnline;
@@ -1840,6 +1901,8 @@ function renderPost(post) {
     const bgColor = post.bgColor || 'var(--post-content-bg)';
     const isOnline = post._authorOnline || false;
     const communityData = post._communityData || null;
+    const authorAvatar = post.authorAvatar || null;
+    const authorName = post.authorName || 'Аноним';
     
     const timeStr = post.createdAt 
         ? new Date(post.createdAt.seconds * 1000).toLocaleString('ru-RU', { 
@@ -1929,15 +1992,15 @@ function renderPost(post) {
             <div class="post-header">
                 <div class="post-avatar-wrap">
                     <div class="post-avatar" onclick="goToProfile('${post.authorId}')">
-                        ${post.authorAvatar 
-                            ? `<img src="${post.authorAvatar}" alt="">` 
-                            : `<span>${(post.authorName || '?')[0].toUpperCase()}</span>`}
+                        ${authorAvatar 
+                            ? `<img src="${authorAvatar}" alt="">` 
+                            : `<span>${(authorName || '?')[0].toUpperCase()}</span>`}
                         <span class="online-dot ${isOnline ? 'show' : ''}"></span>
                     </div>
                 </div>
                 <div class="post-user">
                     <div class="post-username" onclick="goToProfile('${post.authorId}')">
-                        ${escapeHtml(post.authorName || 'Аноним')}
+                        ${escapeHtml(authorName)}
                         ${post.authorBadge ? `<span class="post-badge">${escapeHtml(post.authorBadge)}</span>` : ''}
                     </div>
                     <div class="post-meta">
@@ -2079,11 +2142,9 @@ function votePost(direction) {
 // ШЕРИНГ И КОПИРОВАНИЕ ССЫЛОК (БЕЗ ?id=)
 // ============================================================
 function getShortUrl() {
-    // Если у поста есть shortId — используем короткую ссылку без ?id=
     if (currentPost && currentPost.shortId) {
         return `t.cl.is/${currentPost.shortId}`;
     }
-    // Если shortId нет — используем обычную ссылку (запасной вариант)
     return window.location.href;
 }
 
@@ -2106,7 +2167,7 @@ function sharePost() {
 }
 
 function copyLink() {
-    const url = getShortUrl(); // БЕЗ https:// и без ?id=
+    const url = getShortUrl();
     navigator.clipboard.writeText(url).then(() => {
         alert('Ссылка скопирована: ' + url);
     }).catch(() => {
@@ -2127,7 +2188,7 @@ function deletePost() {
 }
 
 // ============================================================
-// COMMENTS (РЕКУРСИВНАЯ ВЛОЖЕННОСТЬ)
+// COMMENTS (РЕКУРСИВНАЯ ВЛОЖЕННОСТЬ) — С АКТУАЛЬНЫМИ АВАТАРКАМИ
 // ============================================================
 function loadComments(postId) {
     const container = document.getElementById('commentsContainer');
@@ -2145,61 +2206,95 @@ function loadComments(postId) {
                 allComments.push({ id: doc.id, ...doc.data() });
             });
             
-            const rootComments = [];
-            const commentMap = {};
-            
+            // ===== ЗАГРУЖАЕМ АКТУАЛЬНЫЕ ДАННЫЕ ДЛЯ КАЖДОГО АВТОРА КОММЕНТАРИЯ =====
             allComments.forEach(c => {
-                commentMap[c.id] = { ...c, replies: [], _authorOnline: false };
-            });
-            
-            allComments.forEach(c => {
-                if (c.parentId && commentMap[c.parentId]) {
-                    commentMap[c.parentId].replies.push(commentMap[c.id]);
-                } else if (!c.parentId) {
-                    rootComments.push(commentMap[c.id]);
+                if (c.authorId) {
+                    promises.push(
+                        db.collection('users').doc(c.authorId).get()
+                            .then(doc => {
+                                if (doc.exists) {
+                                    const data = doc.data();
+                                    if (data.avatar) {
+                                        c._authorAvatar = data.avatar;
+                                    } else {
+                                        c._authorAvatar = c.authorAvatar || null;
+                                    }
+                                    if (data.displayName) {
+                                        c._authorName = data.displayName;
+                                    } else {
+                                        c._authorName = c.authorName || 'Аноним';
+                                    }
+                                } else {
+                                    c._authorAvatar = c.authorAvatar || null;
+                                    c._authorName = c.authorName || 'Аноним';
+                                }
+                            })
+                            .catch(() => {
+                                c._authorAvatar = c.authorAvatar || null;
+                                c._authorName = c.authorName || 'Аноним';
+                            })
+                    );
                 }
             });
             
-            const sortRecursive = (list) => {
-                list.sort((a, b) => {
-                    const aTime = a.createdAt?.seconds || 0;
-                    const bTime = b.createdAt?.seconds || 0;
-                    return aTime - bTime;
+            return Promise.all(promises).then(() => {
+                const rootComments = [];
+                const commentMap = {};
+                
+                allComments.forEach(c => {
+                    commentMap[c.id] = { ...c, replies: [], _authorOnline: false };
                 });
-                list.forEach(c => {
-                    if (c.replies && c.replies.length) {
-                        sortRecursive(c.replies);
+                
+                allComments.forEach(c => {
+                    if (c.parentId && commentMap[c.parentId]) {
+                        commentMap[c.parentId].replies.push(commentMap[c.id]);
+                    } else if (!c.parentId) {
+                        rootComments.push(commentMap[c.id]);
                     }
                 });
-            };
-            sortRecursive(rootComments);
-            
-            const userIds = new Set();
-            allComments.forEach(c => {
-                if (c.authorId) userIds.add(c.authorId);
-            });
-            
-            userIds.forEach(uid => {
-                promises.push(
-                    checkUserOnline(uid).then(isOnline => {
-                        const updateStatus = (list) => {
-                            list.forEach(c => {
-                                if (c.authorId === uid) {
-                                    c._authorOnline = isOnline;
-                                }
-                                if (c.replies && c.replies.length) {
-                                    updateStatus(c.replies);
-                                }
-                            });
-                        };
-                        updateStatus(rootComments);
-                    })
-                );
-            });
-            
-            return Promise.all(promises).then(() => {
-                comments = rootComments;
-                renderComments();
+                
+                const sortRecursive = (list) => {
+                    list.sort((a, b) => {
+                        const aTime = a.createdAt?.seconds || 0;
+                        const bTime = b.createdAt?.seconds || 0;
+                        return aTime - bTime;
+                    });
+                    list.forEach(c => {
+                        if (c.replies && c.replies.length) {
+                            sortRecursive(c.replies);
+                        }
+                    });
+                };
+                sortRecursive(rootComments);
+                
+                const userIds = new Set();
+                allComments.forEach(c => {
+                    if (c.authorId) userIds.add(c.authorId);
+                });
+                
+                const onlinePromises = [];
+                userIds.forEach(uid => {
+                    onlinePromises.push(
+                        checkUserOnline(uid).then(isOnline => {
+                            const updateStatus = (list) => {
+                                list.forEach(c => {
+                                    if (c.authorId === uid) {
+                                        c._authorOnline = isOnline;
+                                    }
+                                    if (c.replies && c.replies.length) {
+                                        updateStatus(c.replies);
+                                    }
+                                });
+                            };
+                            updateStatus(rootComments);
+                        })
+                    );
+                });
+                
+                return Promise.all(onlinePromises).then(() => {
+                    comments = rootComments;
+                    renderComments();
+                });
             });
         })
         .catch(err => {
@@ -2253,7 +2348,7 @@ function renderCommentTree(comment, depth) {
     let repliesHtml = '';
     if (comment.replies && comment.replies.length) {
         repliesHtml = comment.replies.map(reply => {
-            const parentName = comment.authorName || 'пользователь';
+            const parentName = comment._authorName || comment.authorName || 'пользователь';
             return renderCommentTree(reply, depth + 1);
         }).join('');
     }
@@ -2276,6 +2371,9 @@ function createCommentHTML(comment, isReply, parentName) {
     const score = (comment.likes?.length || 0) - (comment.dislikes?.length || 0);
     const scoreClass = score > 0 ? 'positive' : score < 0 ? 'negative' : '';
     const isOnline = comment._authorOnline || false;
+    const authorAvatar = comment._authorAvatar || comment.authorAvatar || null;
+    const authorName = comment._authorName || comment.authorName || 'Аноним';
+    
     const timeStr = comment.createdAt 
         ? new Date(comment.createdAt.seconds * 1000).toLocaleString('ru-RU', { 
             hour: '2-digit', minute: '2-digit', 
@@ -2297,7 +2395,7 @@ function createCommentHTML(comment, isReply, parentName) {
     }
     
     let replyToHtml = '';
-    if (comment.parentId && parentName && comment.authorName !== parentName) {
+    if (comment.parentId && parentName && authorName !== parentName) {
         replyToHtml = `
             <div class="comment-reply-to">
                 <span class="material-icons">reply</span>
@@ -2311,14 +2409,14 @@ function createCommentHTML(comment, isReply, parentName) {
             <div class="comment-header">
                 <div class="comment-avatar-wrap">
                     <div class="comment-avatar" onclick="goToProfile('${comment.authorId}')">
-                        ${comment.authorAvatar 
-                            ? `<img src="${comment.authorAvatar}" alt="">` 
-                            : `<span>${(comment.authorName || '?')[0].toUpperCase()}</span>`}
+                        ${authorAvatar 
+                            ? `<img src="${authorAvatar}" alt="">` 
+                            : `<span>${(authorName || '?')[0].toUpperCase()}</span>`}
                         <span class="online-dot ${isOnline ? 'show' : ''}"></span>
                     </div>
                 </div>
                 <div class="comment-username" onclick="goToProfile('${comment.authorId}')">
-                    ${escapeHtml(comment.authorName || 'Аноним')}
+                    ${escapeHtml(authorName)}
                 </div>
                 <span class="comment-time">${timeStr}</span>
             </div>
@@ -2340,7 +2438,7 @@ function createCommentHTML(comment, isReply, parentName) {
                     <span class="vote-count">${comment.dislikes?.length || 0}</span>
                 </button>
                 <span class="comment-score ${scoreClass}">${score}</span>
-                <button onclick="showReplyForm('${comment.id}', '${escapeHtml(comment.authorName || 'пользователь')}')">
+                <button onclick="showReplyForm('${comment.id}', '${escapeHtml(authorName)}')">
                     <span class="material-icons" style="font-size:16px;">reply</span> Ответить
                 </button>
                 ${comment.authorId === currentUser?.uid ? `
@@ -2351,7 +2449,7 @@ function createCommentHTML(comment, isReply, parentName) {
             </div>
             
             <div class="comment-reply-form hidden" id="replyForm-${comment.id}">
-                <input type="text" id="replyInput-${comment.id}" placeholder="Напишите ответ... @${comment.authorName || 'пользователь'}">
+                <input type="text" id="replyInput-${comment.id}" placeholder="Напишите ответ... @${escapeHtml(authorName)}">
                 <button onclick="submitReply('${comment.id}')">Ответить</button>
             </div>
         </div>
@@ -2398,7 +2496,7 @@ function submitReply(parentId) {
     const findParent = (list) => {
         for (const c of list) {
             if (c.id === parentId) {
-                parentAuthorName = c.authorName;
+                parentAuthorName = c._authorName || c.authorName || 'пользователь';
                 return true;
             }
             if (c.replies && c.replies.length) {
@@ -2409,20 +2507,36 @@ function submitReply(parentId) {
     };
     findParent(comments);
     
-    const commentData = {
-        postId: postId,
-        parentId: parentId,
-        authorId: currentUser.uid,
-        authorName: currentUser.displayName || 'Аноним',
-        authorAvatar: currentUser.photoURL || null,
-        text: text,
-        images: [],
-        likes: [],
-        dislikes: [],
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
+    // ===== ЗАГРУЖАЕМ АКТУАЛЬНУЮ АВАТАРКУ ДЛЯ НОВОГО КОММЕНТАРИЯ =====
+    let avatarUrl = currentUser.photoURL || null;
+    let displayName = currentUser.displayName || 'Аноним';
     
-    db.collection('comments').add(commentData)
+    db.collection('users').doc(currentUser.uid).get()
+        .then(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                avatarUrl = data.avatar || currentUser.photoURL || null;
+                displayName = data.displayName || currentUser.displayName || 'Аноним';
+            }
+            return { avatarUrl, displayName };
+        })
+        .catch(() => ({ avatarUrl, displayName }))
+        .then(userData => {
+            const commentData = {
+                postId: postId,
+                parentId: parentId,
+                authorId: currentUser.uid,
+                authorName: userData.displayName,
+                authorAvatar: userData.avatarUrl,
+                text: text,
+                images: [],
+                likes: [],
+                dislikes: [],
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            return db.collection('comments').add(commentData);
+        })
         .then(() => {
             input.value = '';
             document.getElementById(`replyForm-${parentId}`).classList.add('hidden');
@@ -2446,20 +2560,36 @@ function submitComment() {
     btn.disabled = true;
     btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;font-size:16px;">refresh</span>';
     
-    const commentData = {
-        postId: postId,
-        parentId: null,
-        authorId: currentUser.uid,
-        authorName: currentUser.displayName || 'Аноним',
-        authorAvatar: currentUser.photoURL || null,
-        text: text || '',
-        images: commentImages.slice(),
-        likes: [],
-        dislikes: [],
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
+    // ===== ЗАГРУЖАЕМ АКТУАЛЬНУЮ АВАТАРКУ ДЛЯ НОВОГО КОММЕНТАРИЯ =====
+    let avatarUrl = currentUser.photoURL || null;
+    let displayName = currentUser.displayName || 'Аноним';
     
-    db.collection('comments').add(commentData)
+    db.collection('users').doc(currentUser.uid).get()
+        .then(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                avatarUrl = data.avatar || currentUser.photoURL || null;
+                displayName = data.displayName || currentUser.displayName || 'Аноним';
+            }
+            return { avatarUrl, displayName };
+        })
+        .catch(() => ({ avatarUrl, displayName }))
+        .then(userData => {
+            const commentData = {
+                postId: postId,
+                parentId: null,
+                authorId: currentUser.uid,
+                authorName: userData.displayName,
+                authorAvatar: userData.avatarUrl,
+                text: text || '',
+                images: commentImages.slice(),
+                likes: [],
+                dislikes: [],
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            return db.collection('comments').add(commentData);
+        })
         .then(() => {
             textarea.value = '';
             commentImages = [];
