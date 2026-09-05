@@ -849,6 +849,54 @@
                 </select>
             </div>
         </div>
+        <div class="settings-item">
+            <div class="left">
+                <span class="material-icons">people_outline</span>
+                <div class="info">
+                    <div class="label">Кто может видеть список подписчиков</div>
+                    <div class="desc" id="followersPrivacyDesc">Все пользователи</div>
+                </div>
+            </div>
+            <div class="right">
+                <select class="settings-select" id="followersPrivacy">
+                    <option value="all">Все</option>
+                    <option value="followers">Только подписчики</option>
+                    <option value="none">Никто</option>
+                </select>
+            </div>
+        </div>
+        <div class="settings-item">
+            <div class="left">
+                <span class="material-icons">people</span>
+                <div class="info">
+                    <div class="label">Кто может видеть список подписок</div>
+                    <div class="desc" id="followingPrivacyDesc">Все пользователи</div>
+                </div>
+            </div>
+            <div class="right">
+                <select class="settings-select" id="followingPrivacy">
+                    <option value="all">Все</option>
+                    <option value="followers">Только подписчики</option>
+                    <option value="none">Никто</option>
+                </select>
+            </div>
+        </div>
+        <div class="settings-item">
+            <div class="left">
+                <span class="material-icons">chat</span>
+                <div class="info">
+                    <div class="label">Кто может видеть ваши комментарии</div>
+                    <div class="desc" id="commentsPrivacyDesc">Все пользователи</div>
+                </div>
+            </div>
+            <div class="right">
+                <select class="settings-select" id="commentsPrivacy">
+                    <option value="all">Все</option>
+                    <option value="followers">Только подписчики</option>
+                    <option value="none">Никто</option>
+                </select>
+            </div>
+        </div>
     </div>
 
     <!-- Безопасность -->
@@ -1002,7 +1050,10 @@ let userSettings = {
     theme: 'dark',
     fontSize: 'medium',
     showOnlineStatus: true,
-    followPrivacy: 'all'
+    followPrivacy: 'all',
+    followersPrivacy: 'all',
+    followingPrivacy: 'all',
+    commentsPrivacy: 'all'
 };
 
 // Загружаем из localStorage
@@ -1171,6 +1222,39 @@ function createModal(options) {
     return modal;
 }
 
+// ============================================================
+// ФУНКЦИЯ ДЛЯ ПОКАЗА ИНФОРМАЦИИ О СКРЫТЫХ ДАННЫХ (НОВОЕ!)
+// ============================================================
+function showPrivacyInfoModal(type) {
+    const titles = {
+        followers: 'Список подписчиков скрыт',
+        following: 'Список подписок скрыт',
+        comments: 'Комментарии скрыты'
+    };
+    
+    const icons = {
+        followers: 'people_outline',
+        following: 'people',
+        comments: 'chat'
+    };
+    
+    const texts = {
+        followers: 'Пользователь <strong>' + (profileUser?.displayName || 'этот пользователь') + '</strong> скрыл список своих подписчиков.',
+        following: 'Пользователь <strong>' + (profileUser?.displayName || 'этот пользователь') + '</strong> скрыл список своих подписок.',
+        comments: 'Пользователь <strong>' + (profileUser?.displayName || 'этот пользователь') + '</strong> скрыл свои комментарии.'
+    };
+    
+    createModal({
+        title: titles[type] || 'Информация скрыта',
+        icon: icons[type] || 'info',
+        iconColor: 'var(--text-muted)',
+        text: texts[type] || 'Эта информация скрыта пользователем.',
+        actions: [
+            { id: 'closePrivacyInfo', text: 'Закрыть', class: 'primary', onClick: (e, modal) => modal.remove() }
+        ]
+    });
+}
+
 function showComingSoonModal(feature) {
     createModal({
         title: 'В разработке',
@@ -1228,7 +1312,7 @@ function showLogoutModal() {
 }
 
 // ============================================================
-// УСТАНОВКА ПАРОЛЯ (ДЛЯ ПОЛЬЗОВАТЕЛЕЙ БЕЗ ПАРОЛЯ) — ГЛАВНОЕ ИСПРАВЛЕНИЕ!
+// УСТАНОВКА ПАРОЛЯ
 // ============================================================
 function setPasswordForUser() {
     if (!currentUser) {
@@ -1279,13 +1363,11 @@ function setPasswordForUser() {
                 btn.disabled = true;
                 btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Подготовка...';
                 
-                // Сначала выполняем повторную авторизацию через Google
                 const provider = new firebase.auth.GoogleAuthProvider();
                 provider.setCustomParameters({ prompt: 'select_account' });
                 
                 auth.signInWithPopup(provider)
                     .then(result => {
-                        // Пользователь подтвердил личность — теперь устанавливаем пароль
                         btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Установка...';
                         return currentUser.updatePassword(newPassword);
                     })
@@ -1309,7 +1391,7 @@ function setPasswordForUser() {
 }
 
 // ============================================================
-// ИЗМЕНЕНИЕ ПАРОЛЯ (С ПРОВЕРКОЙ НАЛИЧИЯ ПАРОЛЯ)
+// ИЗМЕНЕНИЕ ПАРОЛЯ
 // ============================================================
 function openChangePasswordModal() {
     if (!currentUser) { 
@@ -1322,12 +1404,10 @@ function openChangePasswordModal() {
     );
     
     if (!hasPassword) {
-        // Если пароля нет — используем setPasswordForUser
         setPasswordForUser();
         return;
     }
     
-    // Если пароль есть — стандартная смена пароля
     createModal({
         title: 'Изменить пароль',
         icon: 'lock',
@@ -1463,7 +1543,6 @@ function openChangeEmailModal() {
                             btn.innerHTML = 'Сохранить';
                         });
                 } else {
-                    // Для Google пользователей — сначала подтверждение через Google
                     const provider = new firebase.auth.GoogleAuthProvider();
                     provider.setCustomParameters({ prompt: 'select_account' });
                     
@@ -1615,6 +1694,14 @@ function showDeleteAccountModal() {
                             return batch.commit();
                         })
                         .then(() => {
+                            return db.collection('comments').where('authorId', '==', currentUser.uid).get();
+                        })
+                        .then(snapshot => {
+                            const batch = db.batch();
+                            snapshot.forEach(doc => { batch.delete(doc.ref); });
+                            return batch.commit();
+                        })
+                        .then(() => {
                             return currentUser.delete();
                         })
                         .then(() => {
@@ -1658,7 +1745,6 @@ function showDeleteAccountModal() {
                             btn.innerHTML = '<span class="material-icons">delete</span> Удалить';
                         });
                 } else {
-                    // Для Google — повторный вход через Google
                     const provider = new firebase.auth.GoogleAuthProvider();
                     provider.setCustomParameters({ prompt: 'select_account' });
                     auth.signInWithPopup(provider)
@@ -1755,10 +1841,56 @@ function setupEventListeners() {
             db.collection('users').doc(currentUser.uid).update({ followPrivacy: value }).catch(() => {});
         }
     });
+
+    // ===== НОВЫЕ НАСТРОЙКИ ПРИВАТНОСТИ =====
+    document.getElementById('followersPrivacy').addEventListener('change', function() {
+        const value = this.value;
+        userSettings.followersPrivacy = value;
+        const descMap = {
+            'all': 'Все пользователи',
+            'followers': 'Только подписчики',
+            'none': 'Никто'
+        };
+        document.getElementById('followersPrivacyDesc').textContent = descMap[value] || 'Все пользователи';
+        saveSettingsToCache();
+        if (currentUser) {
+            db.collection('users').doc(currentUser.uid).update({ followersPrivacy: value }).catch(() => {});
+        }
+    });
+
+    document.getElementById('followingPrivacy').addEventListener('change', function() {
+        const value = this.value;
+        userSettings.followingPrivacy = value;
+        const descMap = {
+            'all': 'Все пользователи',
+            'followers': 'Только подписчики',
+            'none': 'Никто'
+        };
+        document.getElementById('followingPrivacyDesc').textContent = descMap[value] || 'Все пользователи';
+        saveSettingsToCache();
+        if (currentUser) {
+            db.collection('users').doc(currentUser.uid).update({ followingPrivacy: value }).catch(() => {});
+        }
+    });
+
+    document.getElementById('commentsPrivacy').addEventListener('change', function() {
+        const value = this.value;
+        userSettings.commentsPrivacy = value;
+        const descMap = {
+            'all': 'Все пользователи',
+            'followers': 'Только подписчики',
+            'none': 'Никто'
+        };
+        document.getElementById('commentsPrivacyDesc').textContent = descMap[value] || 'Все пользователи';
+        saveSettingsToCache();
+        if (currentUser) {
+            db.collection('users').doc(currentUser.uid).update({ commentsPrivacy: value }).catch(() => {});
+        }
+    });
 }
 
 // ============================================================
-// ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ
+// ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ (С АВАТАРКОЙ ИЗ FIRESTORE)
 // ============================================================
 function loadUserData() {
     const user = auth.currentUser;
@@ -1771,12 +1903,19 @@ function loadUserData() {
     document.documentElement.style.fontSize = sizes[userSettings.fontSize] || '16px';
     document.getElementById('fontSizeSelect').value = userSettings.fontSize;
     document.getElementById('followPrivacy').value = userSettings.followPrivacy;
+    document.getElementById('followersPrivacy').value = userSettings.followersPrivacy || 'all';
+    document.getElementById('followingPrivacy').value = userSettings.followingPrivacy || 'all';
+    document.getElementById('commentsPrivacy').value = userSettings.commentsPrivacy || 'all';
+    
     const descMap = {
         'all': 'Все пользователи',
         'followers': 'Только подписчики',
         'none': 'Никто'
     };
     document.getElementById('followPrivacyDesc').textContent = descMap[userSettings.followPrivacy] || 'Все пользователи';
+    document.getElementById('followersPrivacyDesc').textContent = descMap[userSettings.followersPrivacy] || 'Все пользователи';
+    document.getElementById('followingPrivacyDesc').textContent = descMap[userSettings.followingPrivacy] || 'Все пользователи';
+    document.getElementById('commentsPrivacyDesc').textContent = descMap[userSettings.commentsPrivacy] || 'Все пользователи';
     
     if (userSettings.showOnlineStatus === false) {
         document.getElementById('statusToggle').classList.remove('active');
@@ -1786,12 +1925,39 @@ function loadUserData() {
     }
     
     if (user) {
-        if (avatarEl) {
-            avatarEl.innerHTML = user.photoURL 
-                ? `<img src="${user.photoURL}" alt="avatar">` 
-                : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
-            avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
-        }
+        // ===== ЗАГРУЖАЕМ АВАТАРКУ ИЗ FIRESTORE =====
+        db.collection('users').doc(user.uid).get()
+            .then(doc => {
+                let avatarUrl = user.photoURL || null;
+                let displayName = user.displayName || '?';
+                
+                if (doc.exists) {
+                    const data = doc.data();
+                    avatarUrl = data.avatar || user.photoURL || null;
+                    displayName = data.displayName || user.displayName || '?';
+                    
+                    if (data.avatar && !user.photoURL) {
+                        user.updateProfile({ photoURL: data.avatar }).catch(() => {});
+                    }
+                }
+                
+                if (avatarEl) {
+                    avatarEl.innerHTML = avatarUrl 
+                        ? `<img src="${avatarUrl}" alt="avatar">` 
+                        : `<span>${displayName[0].toUpperCase()}</span>`;
+                    avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+                }
+                if (dotEl) dotEl.classList.add('show');
+            })
+            .catch(() => {
+                if (avatarEl) {
+                    avatarEl.innerHTML = user.photoURL 
+                        ? `<img src="${user.photoURL}" alt="avatar">` 
+                        : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
+                    avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+                }
+                if (dotEl) dotEl.classList.add('show');
+            });
         
         document.getElementById('userEmail').textContent = user.email || 'Не указан';
         document.getElementById('userDisplayName').textContent = user.displayName || 'Не указан';
@@ -1844,12 +2010,25 @@ function loadUserData() {
                     if (userData.followPrivacy) {
                         userSettings.followPrivacy = userData.followPrivacy;
                         document.getElementById('followPrivacy').value = userData.followPrivacy;
-                        const descMap = {
-                            'all': 'Все пользователи',
-                            'followers': 'Только подписчики',
-                            'none': 'Никто'
-                        };
                         document.getElementById('followPrivacyDesc').textContent = descMap[userData.followPrivacy] || 'Все пользователи';
+                    }
+                    
+                    if (userData.followersPrivacy) {
+                        userSettings.followersPrivacy = userData.followersPrivacy;
+                        document.getElementById('followersPrivacy').value = userData.followersPrivacy;
+                        document.getElementById('followersPrivacyDesc').textContent = descMap[userData.followersPrivacy] || 'Все пользователи';
+                    }
+                    
+                    if (userData.followingPrivacy) {
+                        userSettings.followingPrivacy = userData.followingPrivacy;
+                        document.getElementById('followingPrivacy').value = userData.followingPrivacy;
+                        document.getElementById('followingPrivacyDesc').textContent = descMap[userData.followingPrivacy] || 'Все пользователи';
+                    }
+                    
+                    if (userData.commentsPrivacy) {
+                        userSettings.commentsPrivacy = userData.commentsPrivacy;
+                        document.getElementById('commentsPrivacy').value = userData.commentsPrivacy;
+                        document.getElementById('commentsPrivacyDesc').textContent = descMap[userData.commentsPrivacy] || 'Все пользователи';
                     }
                     
                     saveSettingsToCache();
@@ -1884,7 +2063,7 @@ function loadUserData() {
 
 auth.onAuthStateChanged(user => { loadUserData(); });
 
-console.log('⚙️ Settings page loaded with Google auth for password setup');
+console.log('⚙️ Settings page loaded with privacy settings');
 </script>
 </body>
 </html>
