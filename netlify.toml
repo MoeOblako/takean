@@ -1,10 +1,12 @@
 [build]
   processing.html.pretty_urls = true
 
+# Применяем Edge Function ко всем вариантам ссылок на посты
 [[edge_functions]]
-  path = "/post"
+  path = "/*"
   function = "og-preview"
 
+# Перенаправляем со старого /post.html на чистый URL
 [[redirects]]
   from = "/post.html"
   to = "/post"
