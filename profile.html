@@ -1819,7 +1819,7 @@ function updateOGTags(data) {
 }
 
 // ============================================================
-// ===== НОВАЯ ФУНКЦИЯ: ОБНОВЛЕНИЕ АВАТАРКИ ВО ВСЕХ ПОСТАХ И КОММЕНТАРИЯХ =====
+// ОБНОВЛЕНИЕ АВАТАРКИ ВО ВСЕХ ПОСТАХ И КОММЕНТАРИЯХ
 // ============================================================
 function updateAvatarInAllContent(uid, newAvatarUrl) {
     if (!uid || !newAvatarUrl) return;
@@ -1868,11 +1868,6 @@ function updateAvatarInAllContent(uid, newAvatarUrl) {
         .catch(err => {
             console.error('❌ Ошибка обновления комментариев:', err);
         });
-    
-    // Также обновляем аватарку в самом профиле пользователя (на всякий случай)
-    db.collection('users').doc(uid).update({
-        avatar: newAvatarUrl
-    }).catch(() => {});
 }
 
 // ============================================================
@@ -1935,7 +1930,7 @@ function setupEventListeners() {
 }
 
 // ============================================================
-// USER DATA
+// USER DATA (исправлено — загружаем из Firestore)
 // ============================================================
 function loadUserData() {
     const user = auth.currentUser;
@@ -1945,11 +1940,32 @@ function loadUserData() {
     const dotEl = document.getElementById('userOnlineDot');
     
     if (user) {
-        avatarEl.innerHTML = user.photoURL 
-            ? `<img src="${user.photoURL}" alt="avatar">` 
-            : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
+        // ===== ЗАГРУЖАЕМ АВАТАРКУ ИЗ FIRESTORE =====
+        db.collection('users').doc(user.uid).get()
+            .then(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    const avatarUrl = data.avatar || user.photoURL || null;
+                    const displayName = data.displayName || user.displayName || '?';
+                    
+                    avatarEl.innerHTML = avatarUrl 
+                        ? `<img src="${avatarUrl}" alt="avatar">` 
+                        : `<span>${displayName[0].toUpperCase()}</span>`;
+                } else {
+                    avatarEl.innerHTML = user.photoURL 
+                        ? `<img src="${user.photoURL}" alt="avatar">` 
+                        : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
+                }
+            })
+            .catch(() => {
+                avatarEl.innerHTML = user.photoURL 
+                    ? `<img src="${user.photoURL}" alt="avatar">` 
+                    : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
+            });
+        
         avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
         dotEl.classList.add('show');
+        
         createUserInFirestore(user).then(() => {
             startOnlineTracking();
         }).catch(err => console.error('Error creating user:', err));
@@ -3086,10 +3102,15 @@ function saveProfileChanges() {
             return db.collection('users').doc(currentUser.uid).update(updates);
         })
         .then(() => {
-            return currentUser.updateProfile({ displayName: displayName });
+            // ===== ОБНОВЛЯЕМ Firebase Auth =====
+            const authUpdates = { displayName: displayName };
+            if (newAvatarUrl) {
+                authUpdates.photoURL = newAvatarUrl;
+            }
+            return currentUser.updateProfile(authUpdates);
         })
         .then(() => {
-            // ===== КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: ОБНОВЛЯЕМ АВАТАРКУ ВО ВСЕХ ПОСТАХ И КОММЕНТАРИЯХ =====
+            // ===== Обновляем аватарку во всех постах и комментариях =====
             if (newAvatarUrl) {
                 updateAvatarInAllContent(currentUser.uid, newAvatarUrl);
             }
