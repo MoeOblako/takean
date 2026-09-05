@@ -1560,6 +1560,9 @@ let onlineCheckInterval = null;
 let lastActivityTime = Date.now();
 let isUserOnline = false;
 let userFollowPrivacy = 'all';
+let userFollowersPrivacy = 'all';
+let userFollowingPrivacy = 'all';
+let userCommentsPrivacy = 'all';
 
 let communityContext = null;
 
@@ -1623,6 +1626,39 @@ function createModal(options) {
     }
     
     return modal;
+}
+
+// ============================================================
+// ФУНКЦИЯ ДЛЯ ПОКАЗА ИНФОРМАЦИИ О СКРЫТЫХ ДАННЫХ
+// ============================================================
+function showPrivacyInfoModal(type) {
+    const titles = {
+        followers: 'Список подписчиков скрыт',
+        following: 'Список подписок скрыт',
+        comments: 'Комментарии скрыты'
+    };
+    
+    const icons = {
+        followers: 'people_outline',
+        following: 'people',
+        comments: 'chat'
+    };
+    
+    const texts = {
+        followers: 'Пользователь <strong>' + (profileUser?.displayName || 'этот пользователь') + '</strong> скрыл список своих подписчиков.',
+        following: 'Пользователь <strong>' + (profileUser?.displayName || 'этот пользователь') + '</strong> скрыл список своих подписок.',
+        comments: 'Пользователь <strong>' + (profileUser?.displayName || 'этот пользователь') + '</strong> скрыл свои комментарии.'
+    };
+    
+    createModal({
+        title: titles[type] || 'Информация скрыта',
+        icon: icons[type] || 'info',
+        iconColor: 'var(--text-muted)',
+        text: texts[type] || 'Эта информация скрыта пользователем.',
+        actions: [
+            { id: 'closePrivacyInfo', text: 'Закрыть', class: 'primary', onClick: (e, modal) => modal.remove() }
+        ]
+    });
 }
 
 // ============================================================
@@ -1742,7 +1778,10 @@ function createUserInFirestore(user) {
                 isOnline: true,
                 lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
                 showOnlineStatus: true,
-                followPrivacy: 'all'
+                followPrivacy: 'all',
+                followersPrivacy: 'all',
+                followingPrivacy: 'all',
+                commentsPrivacy: 'all'
             });
         }
         return doc;
@@ -1827,7 +1866,6 @@ function updateAvatarInAllContent(uid, newAvatarUrl) {
     console.log('🔄 Обновляем аватарку во всех постах и комментариях пользователя:', uid);
     console.log('🖼️ Новая аватарка:', newAvatarUrl);
     
-    // Обновляем во всех постах пользователя
     db.collection('posts')
         .where('authorId', '==', uid)
         .get()
@@ -1848,7 +1886,6 @@ function updateAvatarInAllContent(uid, newAvatarUrl) {
             console.error('❌ Ошибка обновления постов:', err);
         });
     
-    // Обновляем во всех комментариях пользователя
     db.collection('comments')
         .where('authorId', '==', uid)
         .get()
@@ -2013,6 +2050,9 @@ function loadProfile(uid) {
             profileUser = { id: doc.id, ...doc.data() };
             
             userFollowPrivacy = profileUser.followPrivacy || 'all';
+            userFollowersPrivacy = profileUser.followersPrivacy || 'all';
+            userFollowingPrivacy = profileUser.followingPrivacy || 'all';
+            userCommentsPrivacy = profileUser.commentsPrivacy || 'all';
             
             checkUserOnline(uid).then(isOnline => {
                 profileUser._isOnline = isOnline;
@@ -2302,6 +2342,63 @@ function toggleFollow() {
 }
 
 // ============================================================
+// ПОКАЗ ПОДПИСЧИКОВ / ПОДПИСОК (С ПРОВЕРКОЙ ПРИВАТНОСТИ)
+// ============================================================
+function showFollowers(type) {
+    if (!profileUser) return;
+    
+    const privacy = type === 'followers' ? userFollowersPrivacy : userFollowingPrivacy;
+    const canView = privacy === 'all' || 
+                   (privacy === 'followers' && currentUser && profileUser.followers && profileUser.followers.includes(currentUser.uid)) ||
+                   (currentUser && profileUser.id === currentUser.uid);
+    
+    if (!canView) {
+        showPrivacyInfoModal(type);
+        return;
+    }
+    
+    const ids = type === 'followers' ? profileUser.followers : profileUser.following;
+    if (!ids || !ids.length) {
+        alert('Нет пользователей');
+        return;
+    }
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-box">
+            <button class="close-btn" onclick="this.closest('.modal-overlay').remove()" style="float:right;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:24px;">×</button>
+            <h3 style="margin-bottom:16px;">${type === 'followers' ? 'Подписчики' : 'Подписки'}</h3>
+            <div id="followersList">
+                <div class="loading-spinner"><span class="material-icons">refresh</span></div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    const list = modal.querySelector('#followersList');
+    Promise.all(ids.map(id => 
+        db.collection('users').doc(id).get().then(doc => ({ id, data: doc.data() }))
+    )).then(results => {
+        list.innerHTML = results.filter(r => r.data).map(r => {
+            const displayName = r.data.displayName || r.data.username || 'Аноним';
+            const avatar = r.data.avatar || '';
+            return `
+                <div class="modal-user-item" onclick="window.location.href='/profile.html?uid=${r.id}'">
+                    <div class="avatar">
+                        ${avatar ? `<img src="${avatar}" alt="">` : `<span>${displayName[0].toUpperCase()}</span>`}
+                    </div>
+                    <div>
+                        <div class="name">${escapeHtml(displayName)}</div>
+                        <div class="username">@${escapeHtml(r.data.username || 'anonymous')}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    });
+}
+
+// ============================================================
 // ПОКАЗ ДЕЙСТВИЙ В СООБЩЕСТВЕ
 // ============================================================
 function showCommunityActions() {
@@ -2506,7 +2603,7 @@ function showReputationModal() {
 }
 
 // ============================================================
-// LOAD USER POSTS
+// LOAD USER POSTS (С АКТУАЛЬНЫМИ ИМЕНАМИ)
 // ============================================================
 function loadUserPosts(uid) {
     const container = document.getElementById('profilePosts');
@@ -2519,10 +2616,41 @@ function loadUserPosts(uid) {
         .get()
         .then(snapshot => {
             userPosts = [];
+            const promises = [];
+            
             snapshot.forEach(doc => {
-                userPosts.push({ id: doc.id, ...doc.data() });
+                const data = doc.data();
+                userPosts.push({ id: doc.id, ...data });
             });
-            renderPosts(userPosts);
+            
+            // ===== ЗАГРУЖАЕМ АКТУАЛЬНЫЕ ДАННЫЕ ДЛЯ КАЖДОГО АВТОРА =====
+            userPosts.forEach(post => {
+                if (post.authorId) {
+                    promises.push(
+                        db.collection('users').doc(post.authorId).get()
+                            .then(doc => {
+                                if (doc.exists) {
+                                    const data = doc.data();
+                                    post._authorName = data.displayName || data.username || post.authorName || 'Аноним';
+                                    post._authorAvatar = data.avatar || post.authorAvatar || null;
+                                } else {
+                                    post._authorName = post.authorName || 'Аноним';
+                                    post._authorAvatar = post.authorAvatar || null;
+                                }
+                            })
+                            .catch(() => {
+                                post._authorName = post.authorName || 'Аноним';
+                                post._authorAvatar = post.authorAvatar || null;
+                            })
+                    );
+                }
+            });
+            
+            Promise.all(promises).then(() => {
+                renderPosts(userPosts);
+            }).catch(() => {
+                renderPosts(userPosts);
+            });
         })
         .catch(err => {
             console.error('Load posts error:', err);
@@ -2556,16 +2684,18 @@ function renderPosts(posts) {
             ? new Date(post.createdAt.seconds * 1000).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
             : 'недавно';
         
+        const authorName = post._authorName || post.authorName || 'Аноним';
+        const authorAvatar = post._authorAvatar || post.authorAvatar || null;
         const parsedContent = parseBBC(post.content || '');
         
         return `
             <div class="post-card" onclick="window.location.href='/post.html?id=${post.id}'" style="cursor:pointer;">
                 <div class="post-header">
-                    <div class="post-avatar" onclick="event.stopPropagation();">
-                        ${post.authorAvatar ? `<img src="${post.authorAvatar}" alt="">` : `<span>${(post.authorName || '?')[0].toUpperCase()}</span>`}
+                    <div class="post-avatar" onclick="event.stopPropagation(); window.location.href='/profile.html?uid=${post.authorId}'">
+                        ${authorAvatar ? `<img src="${authorAvatar}" alt="">` : `<span>${(authorName || '?')[0].toUpperCase()}</span>`}
                     </div>
                     <div class="post-user">
-                        <div class="post-username">${escapeHtml(post.authorName || 'Аноним')}</div>
+                        <div class="post-username" onclick="window.location.href='/profile.html?uid=${post.authorId}'">${escapeHtml(authorName)}</div>
                         <div class="post-time">${timeStr}</div>
                     </div>
                 </div>
@@ -2633,11 +2763,27 @@ function goToProfileByUsername(username) {
 }
 
 // ============================================================
-// LOAD USER COMMENTS
+// LOAD USER COMMENTS (С ПРОВЕРКОЙ ПРИВАТНОСТИ И АКТУАЛЬНЫМИ ИМЕНАМИ)
 // ============================================================
 function loadUserComments(uid) {
     const container = document.getElementById('profilePosts');
     container.innerHTML = '<div class="loading-spinner"><span class="material-icons">refresh</span> Загрузка...</div>';
+
+    // ===== ПРОВЕРКА ПРИВАТНОСТИ =====
+    const canView = userCommentsPrivacy === 'all' || 
+                   (userCommentsPrivacy === 'followers' && currentUser && profileUser.followers && profileUser.followers.includes(currentUser.uid)) ||
+                   (currentUser && profileUser.id === currentUser.uid);
+    
+    if (!canView) {
+        container.innerHTML = `
+            <div style="text-align:center;padding:40px 20px;color:var(--text-muted);">
+                <span class="material-icons" style="font-size:48px;display:block;margin-bottom:12px;">chat</span>
+                <h3 style="font-weight:500;">Комментарии скрыты</h3>
+                <p style="font-size:14px;">Пользователь скрыл свои комментарии.</p>
+            </div>
+        `;
+        return;
+    }
 
     db.collection('comments')
         .where('authorId', '==', uid)
@@ -2646,10 +2792,41 @@ function loadUserComments(uid) {
         .get()
         .then(snapshot => {
             userComments = [];
+            const promises = [];
+            
             snapshot.forEach(doc => {
-                userComments.push({ id: doc.id, ...doc.data() });
+                const data = doc.data();
+                userComments.push({ id: doc.id, ...data });
             });
-            renderComments(userComments);
+            
+            // ===== ЗАГРУЖАЕМ АКТУАЛЬНЫЕ ДАННЫЕ ДЛЯ КАЖДОГО АВТОРА =====
+            userComments.forEach(comment => {
+                if (comment.authorId) {
+                    promises.push(
+                        db.collection('users').doc(comment.authorId).get()
+                            .then(doc => {
+                                if (doc.exists) {
+                                    const data = doc.data();
+                                    comment._authorName = data.displayName || data.username || comment.authorName || 'Аноним';
+                                    comment._authorAvatar = data.avatar || comment.authorAvatar || null;
+                                } else {
+                                    comment._authorName = comment.authorName || 'Аноним';
+                                    comment._authorAvatar = comment.authorAvatar || null;
+                                }
+                            })
+                            .catch(() => {
+                                comment._authorName = comment.authorName || 'Аноним';
+                                comment._authorAvatar = comment.authorAvatar || null;
+                            })
+                    );
+                }
+            });
+            
+            Promise.all(promises).then(() => {
+                renderComments(userComments);
+            }).catch(() => {
+                renderComments(userComments);
+            });
         })
         .catch(err => {
             console.error('Load comments error:', err);
@@ -2679,15 +2856,18 @@ function renderComments(comments) {
     }
 
     container.innerHTML = comments.map(comment => {
+        const authorName = comment._authorName || comment.authorName || 'Аноним';
+        const authorAvatar = comment._authorAvatar || comment.authorAvatar || null;
         const parsedText = parseBBC(comment.text || '');
+        
         return `
             <div class="comment-card">
                 <div class="comment-header">
                     <div class="comment-avatar" onclick="window.location.href='/profile.html?uid=${comment.authorId}'">
-                        ${comment.authorAvatar ? `<img src="${comment.authorAvatar}" alt="">` : `<span>${(comment.authorName || '?')[0].toUpperCase()}</span>`}
+                        ${authorAvatar ? `<img src="${authorAvatar}" alt="">` : `<span>${(authorName || '?')[0].toUpperCase()}</span>`}
                     </div>
                     <div class="comment-username" onclick="window.location.href='/profile.html?uid=${comment.authorId}'">
-                        ${escapeHtml(comment.authorName || 'Аноним')}
+                        ${escapeHtml(authorName)}
                     </div>
                     <span class="comment-time">${comment.createdAt ? new Date(comment.createdAt.seconds * 1000).toLocaleDateString('ru-RU') : 'недавно'}</span>
                 </div>
@@ -2799,45 +2979,6 @@ function loadUserLikes(uid) {
             <p style="font-size:13px;">В разработке</p>
         </div>
     `;
-}
-
-function showFollowers(type) {
-    if (!profileUser) return;
-    const ids = type === 'followers' ? profileUser.followers : profileUser.following;
-    if (!ids || !ids.length) {
-        alert('Нет пользователей');
-        return;
-    }
-
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-        <div class="modal-box">
-            <button class="close-btn" onclick="this.closest('.modal-overlay').remove()" style="float:right;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:24px;">×</button>
-            <h3 style="margin-bottom:16px;">${type === 'followers' ? 'Подписчики' : 'Подписки'}</h3>
-            <div id="followersList">
-                <div class="loading-spinner"><span class="material-icons">refresh</span></div>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-
-    const list = modal.querySelector('#followersList');
-    Promise.all(ids.map(id => 
-        db.collection('users').doc(id).get().then(doc => ({ id, data: doc.data() }))
-    )).then(results => {
-        list.innerHTML = results.filter(r => r.data).map(r => `
-            <div class="modal-user-item" onclick="window.location.href='/profile.html?uid=${r.id}'">
-                <div class="avatar">
-                    ${r.data.avatar ? `<img src="${r.data.avatar}" alt="">` : `<span>${(r.data.username || '?')[0].toUpperCase()}</span>`}
-                </div>
-                <div>
-                    <div class="name">${r.data.username || 'Аноним'}</div>
-                    <div class="username">@${r.data.username || 'anonymous'}</div>
-                </div>
-            </div>
-        `).join('');
-    });
 }
 
 // ============================================================
@@ -3102,7 +3243,6 @@ function saveProfileChanges() {
             return db.collection('users').doc(currentUser.uid).update(updates);
         })
         .then(() => {
-            // ===== ОБНОВЛЯЕМ Firebase Auth =====
             const authUpdates = { displayName: displayName };
             if (newAvatarUrl) {
                 authUpdates.photoURL = newAvatarUrl;
@@ -3110,7 +3250,6 @@ function saveProfileChanges() {
             return currentUser.updateProfile(authUpdates);
         })
         .then(() => {
-            // ===== Обновляем аватарку во всех постах и комментариях =====
             if (newAvatarUrl) {
                 updateAvatarInAllContent(currentUser.uid, newAvatarUrl);
             }
@@ -3130,7 +3269,7 @@ function saveProfileChanges() {
         });
 }
 
-console.log('👤 Profile page loaded with avatar sync across all posts and comments');
+console.log('👤 Profile page loaded with avatar sync and privacy settings');
 </script>
 </body>
 </html>
