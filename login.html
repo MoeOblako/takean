@@ -28,6 +28,7 @@
             --radius: 4px;
             --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             --topbar-height: 60px;
+            --online-color: #4caf50;
         }
 
         [data-theme="light"] {
@@ -197,7 +198,7 @@
             height: 10px;
             border-radius: 50%;
             border: 2px solid var(--bg-card);
-            background: #4caf50;
+            background: var(--online-color);
             display: none;
             z-index: 2;
         }
@@ -681,6 +682,7 @@ const db = firebase.firestore();
 
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
+let isRedirecting = false;
 
 function togglePasswordVisibility(inputId, btn) {
     const input = document.getElementById(inputId);
@@ -695,7 +697,87 @@ function togglePasswordVisibility(inputId, btn) {
     }
 }
 
+// ============================================================
+// ЗАГРУЗКА АВАТАРКИ ИЗ FIRESTORE
+// ============================================================
+function loadUserAvatar(user) {
+    const avatarEl = document.getElementById('userAvatar');
+    const dotEl = document.getElementById('userOnlineDot');
+    
+    if (user) {
+        db.collection('users').doc(user.uid).get()
+            .then(doc => {
+                let avatarUrl = user.photoURL || null;
+                let displayName = user.displayName || '?';
+                
+                if (doc.exists) {
+                    const data = doc.data();
+                    avatarUrl = data.avatar || user.photoURL || null;
+                    displayName = data.displayName || user.displayName || '?';
+                    
+                    if (data.avatar && !user.photoURL) {
+                        user.updateProfile({ photoURL: data.avatar }).catch(() => {});
+                    }
+                }
+                
+                if (avatarEl) {
+                    avatarEl.innerHTML = avatarUrl 
+                        ? `<img src="${avatarUrl}" alt="avatar">` 
+                        : `<span>${displayName[0].toUpperCase()}</span>`;
+                    avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+                }
+                if (dotEl) dotEl.classList.add('show');
+            })
+            .catch(() => {
+                if (avatarEl) {
+                    avatarEl.innerHTML = user.photoURL 
+                        ? `<img src="${user.photoURL}" alt="avatar">` 
+                        : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
+                    avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+                }
+                if (dotEl) dotEl.classList.add('show');
+            });
+    } else {
+        if (avatarEl) {
+            avatarEl.innerHTML = '<span>?</span>';
+            avatarEl.onclick = () => window.location.href = '/login.html';
+        }
+        if (dotEl) dotEl.classList.remove('show');
+    }
+}
+
+function createUserInFirestore(user) {
+    return db.collection('users').doc(user.uid).get().then(doc => {
+        if (!doc.exists) {
+            let username = user.displayName || 'user_' + Date.now().toString(36);
+            username = username.toLowerCase().replace(/[^a-z0-9_.-]/g, '');
+            if (!username || username.length < 2) {
+                username = 'user_' + Date.now().toString(36);
+            }
+            return db.collection('users').doc(user.uid).set({
+                username: username,
+                displayName: user.displayName || username,
+                email: user.email || '',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                avatar: user.photoURL || null,
+                cover: null,
+                bio: '',
+                reputation: 0,
+                followers: [],
+                following: [],
+                theme: currentTheme,
+                isOnline: true,
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+                showOnlineStatus: true,
+                followPrivacy: 'all'
+            });
+        }
+        return doc;
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Тема
     document.getElementById('themeToggle').addEventListener('click', () => {
         currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', currentTheme);
@@ -704,6 +786,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `<span class="material-icons">${currentTheme === 'dark' ? 'dark_mode' : 'light_mode'}</span>`;
     });
 
+    // Глобальный поиск
     document.getElementById('globalSearch').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             const q = document.getElementById('globalSearch').value.trim();
@@ -711,8 +794,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    loadUserData();
-
+    // События входа
     document.getElementById('loginBtn').addEventListener('click', login);
     document.getElementById('passwordInput').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') login();
@@ -721,29 +803,36 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Enter') document.getElementById('passwordInput').focus();
     });
     document.getElementById('googleBtn').addEventListener('click', googleLogin);
+
+    // Загружаем аватар если пользователь уже есть (мгновенно)
+    const user = auth.currentUser;
+    if (user) {
+        loadUserAvatar(user);
+        // Мгновенный редирект на профиль
+        window.location.href = `/profile.html?uid=${user.uid}`;
+        return;
+    } else {
+        loadUserAvatar(null);
+    }
 });
 
-function loadUserData() {
-    const user = auth.currentUser;
-    const avatarEl = document.getElementById('userAvatar');
-    const dotEl = document.getElementById('userOnlineDot');
+// Слушаем изменения состояния авторизации
+auth.onAuthStateChanged(user => {
+    if (isRedirecting) return;
     
     if (user) {
-        avatarEl.innerHTML = user.photoURL 
-            ? `<img src="${user.photoURL}" alt="avatar">` 
-            : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
-        avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
-        if (dotEl) dotEl.classList.add('show');
+        isRedirecting = true;
+        loadUserAvatar(user);
+        // Создаем пользователя в Firestore если его нет
+        createUserInFirestore(user).then(() => {
+            // Мгновенный редирект на страницу профиля
+            window.location.href = `/profile.html?uid=${user.uid}`;
+        }).catch(() => {
+            window.location.href = `/profile.html?uid=${user.uid}`;
+        });
     } else {
-        avatarEl.innerHTML = '<span>?</span>';
-        avatarEl.onclick = () => window.location.href = '/login.html';
-        if (dotEl) dotEl.classList.remove('show');
+        loadUserAvatar(null);
     }
-}
-
-auth.onAuthStateChanged(user => {
-    loadUserData();
-    if (user) window.location.href = '/';
 });
 
 function login() {
@@ -761,11 +850,14 @@ function login() {
     btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Вход...';
 
     auth.signInWithEmailAndPassword(email, password)
-        .then(() => {
+        .then((cred) => {
             if (remember) {
                 localStorage.setItem('takean-remember', 'true');
             }
-            window.location.href = '/';
+            const user = cred.user;
+            return createUserInFirestore(user).then(() => {
+                window.location.href = `/profile.html?uid=${user.uid}`;
+            });
         })
         .catch(err => {
             alert('Ошибка: ' + err.message);
@@ -783,28 +875,9 @@ function googleLogin() {
     auth.signInWithPopup(provider)
         .then(result => {
             const user = result.user;
-            return db.collection('users').doc(user.uid).get().then(doc => {
-                if (!doc.exists) {
-                    return db.collection('users').doc(user.uid).set({
-                        username: user.displayName || 'user_' + Date.now(),
-                        email: user.email,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        avatar: user.photoURL || null,
-                        bio: '',
-                        reputation: 0,
-                        followers: [],
-                        following: [],
-                        theme: currentTheme,
-                        isOnline: true,
-                        lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
-                        showOnlineStatus: true,
-                        followPrivacy: 'all'
-                    });
-                }
+            return createUserInFirestore(user).then(() => {
+                window.location.href = `/profile.html?uid=${user.uid}`;
             });
-        })
-        .then(() => {
-            window.location.href = '/';
         })
         .catch(err => {
             alert('Ошибка Google: ' + err.message);
