@@ -30,6 +30,7 @@
             --radius: 4px;
             --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             --topbar-height: 60px;
+            --online-color: #4caf50;
         }
 
         [data-theme="light"] {
@@ -195,6 +196,7 @@
             transition: border-color 0.2s;
             overflow: hidden;
             flex-shrink: 0;
+            position: relative;
         }
 
         .topbar-actions .avatar-small:hover {
@@ -205,6 +207,23 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .topbar-actions .avatar-small .online-dot {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-card);
+            background: var(--online-color);
+            display: none;
+            z-index: 2;
+        }
+
+        .topbar-actions .avatar-small .online-dot.show {
+            display: block;
         }
 
         .search-bar {
@@ -775,6 +794,7 @@
             .user-card .avatar { width: 40px; height: 40px; font-size: 14px; }
             .community-card { padding: 12px; }
             .community-card .avatar { width: 40px; height: 40px; font-size: 18px; }
+            .topbar-actions .avatar-small .online-dot { width: 8px; height: 8px; bottom: 1px; right: 1px; }
         }
 
         @media (max-width: 480px) {
@@ -795,6 +815,7 @@
             .user-card .avatar { width: 36px; height: 36px; font-size: 12px; }
             .user-card .info .name { font-size: 14px; }
             .community-card .avatar { width: 36px; height: 36px; font-size: 14px; }
+            .topbar-actions .avatar-small .online-dot { width: 6px; height: 6px; bottom: 0px; right: 0px; }
         }
     </style>
 </head>
@@ -836,6 +857,7 @@
 
                 <div class="avatar-small" id="userAvatar">
                     <span>?</span>
+                    <span class="online-dot" id="userOnlineDot"></span>
                 </div>
             </div>
         </div>
@@ -984,13 +1006,74 @@ function createUserInFirestore(user) {
                 reputation: 0,
                 followers: [],
                 following: [],
-                theme: currentTheme
+                theme: currentTheme,
+                showOnlineStatus: true,
+                followPrivacy: 'all'
             });
         }
         return doc;
     });
 }
 
+// ============================================================
+// ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ (С АВАТАРКОЙ ИЗ FIRESTORE)
+// ============================================================
+function loadUserData() {
+    const user = auth.currentUser;
+    currentUser = user;
+    
+    const avatarEl = document.getElementById('userAvatar');
+    const dotEl = document.getElementById('userOnlineDot');
+    
+    if (user) {
+        // ===== ЗАГРУЖАЕМ АВАТАРКУ ИЗ FIRESTORE =====
+        db.collection('users').doc(user.uid).get()
+            .then(doc => {
+                let avatarUrl = user.photoURL || null;
+                let displayName = user.displayName || '?';
+                
+                if (doc.exists) {
+                    const data = doc.data();
+                    avatarUrl = data.avatar || user.photoURL || null;
+                    displayName = data.displayName || user.displayName || '?';
+                    
+                    if (data.avatar && !user.photoURL) {
+                        user.updateProfile({ photoURL: data.avatar }).catch(() => {});
+                    }
+                    
+                    // Проверяем онлайн-статус
+                    if (data.isOnline && data.showOnlineStatus !== false) {
+                        dotEl.classList.add('show');
+                    } else {
+                        dotEl.classList.remove('show');
+                    }
+                }
+                
+                avatarEl.innerHTML = avatarUrl 
+                    ? `<img src="${avatarUrl}" alt="avatar">` 
+                    : `<span>${displayName[0].toUpperCase()}</span>`;
+                avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+            })
+            .catch(() => {
+                avatarEl.innerHTML = user.photoURL 
+                    ? `<img src="${user.photoURL}" alt="avatar">` 
+                    : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
+                avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
+            });
+        
+        createUserInFirestore(user).catch(err => console.error('Error creating user:', err));
+    } else {
+        avatarEl.innerHTML = '<span>?</span>';
+        avatarEl.onclick = () => window.location.href = '/login.html';
+        dotEl.classList.remove('show');
+    }
+}
+
+auth.onAuthStateChanged(user => { loadUserData(); });
+
+// ============================================================
+// ПОИСК
+// ============================================================
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('themeToggle').addEventListener('click', () => {
         currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -1051,25 +1134,6 @@ function setupEventListeners() {
     });
 }
 
-function loadUserData() {
-    const user = auth.currentUser;
-    currentUser = user;
-    
-    const avatarEl = document.getElementById('userAvatar');
-    if (user) {
-        avatarEl.innerHTML = user.photoURL 
-            ? `<img src="${user.photoURL}" alt="avatar">` 
-            : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
-        avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
-        createUserInFirestore(user).catch(err => console.error('Error creating user:', err));
-    } else {
-        avatarEl.innerHTML = '<span>?</span>';
-        avatarEl.onclick = () => window.location.href = '/login.html';
-    }
-}
-
-auth.onAuthStateChanged(user => { loadUserData(); });
-
 function performSearch(query) {
     const results = document.getElementById('searchResults');
     const count = document.getElementById('resultCount');
@@ -1092,6 +1156,8 @@ function performSearch(query) {
             postsQuery.orderBy('createdAt', 'desc').limit(50).get()
                 .then(snapshot => {
                     const posts = [];
+                    const userPromises = [];
+                    
                     snapshot.forEach(doc => {
                         const data = doc.data();
                         if ((data.title && data.title.toLowerCase().includes(q)) ||
@@ -1099,7 +1165,25 @@ function performSearch(query) {
                             posts.push({ id: doc.id, ...data, type: 'post' });
                         }
                     });
-                    return posts;
+                    
+                    // Загружаем актуальные имена для постов
+                    posts.forEach(post => {
+                        if (post.authorId) {
+                            userPromises.push(
+                                db.collection('users').doc(post.authorId).get()
+                                    .then(doc => {
+                                        if (doc.exists) {
+                                            const data = doc.data();
+                                            post._authorName = data.displayName || data.username || post.authorName || 'Аноним';
+                                            post._authorAvatar = data.avatar || post.authorAvatar || null;
+                                        }
+                                    })
+                                    .catch(() => {})
+                            );
+                        }
+                    });
+                    
+                    return Promise.all(userPromises).then(() => posts);
                 })
                 .catch(err => {
                     console.error('Posts search error:', err);
@@ -1195,16 +1279,18 @@ function renderResults(results, query) {
 function createPostCard(post, query) {
     const score = (post.likes?.length || 0) - (post.dislikes?.length || 0);
     const timeStr = post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleDateString('ru-RU') : 'недавно';
+    const authorName = post._authorName || post.authorName || 'Аноним';
+    const authorAvatar = post._authorAvatar || post.authorAvatar || null;
     
     return `
         <div class="post-card" onclick="window.location.href='/post.html?id=${post.id}'" style="cursor:pointer;">
             <div class="post-header">
                 <div class="post-avatar" onclick="event.stopPropagation(); window.location.href='/profile.html?uid=${post.authorId}'">
-                    ${post.authorAvatar ? `<img src="${post.authorAvatar}" alt="">` : `<span>${(post.authorName || '?')[0].toUpperCase()}</span>`}
+                    ${authorAvatar ? `<img src="${authorAvatar}" alt="">` : `<span>${(authorName || '?')[0].toUpperCase()}</span>`}
                 </div>
                 <div class="post-user">
                     <div class="post-username" onclick="event.stopPropagation(); window.location.href='/profile.html?uid=${post.authorId}'">
-                        ${escapeHtml(post.authorName || 'Аноним')}
+                        ${escapeHtml(authorName)}
                     </div>
                     <div class="post-time">${timeStr} ${post.category ? '• #' + escapeHtml(post.category) : ''}</div>
                 </div>
@@ -1285,7 +1371,7 @@ function goToProfileByUsername(username) {
         .catch(() => {});
 }
 
-console.log('🔍 Search page loaded');
+console.log('🔍 Search page loaded with avatar from Firestore');
 </script>
 </body>
 </html>
