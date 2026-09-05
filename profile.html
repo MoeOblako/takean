@@ -19,7 +19,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
-        /* ===== ВСЕ СТИЛИ (БЕЗ ИЗМЕНЕНИЙ) ===== */
+        /* ===== ВСЕ СТИЛИ (без изменений, кроме добавленных для username) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -342,6 +342,12 @@
             color: var(--green);
         }
         .ripple-btn.success:hover { background: rgba(76, 175, 80, 0.1); }
+
+        .ripple-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
 
         /* ===== PROFILE ===== */
         .profile-header {
@@ -961,6 +967,11 @@
             padding: 8px 24px;
         }
 
+        .modal-box .modal-actions .ripple-btn:disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
         .modal-user-item {
             display: flex;
             align-items: center;
@@ -1255,7 +1266,7 @@
             box-shadow: none;
         }
 
-        /* ===== КАСТОМНЫЙ СТАТУС ПРОВЕРКИ USERNAME ===== */
+        /* ===== USERNAME STATUS (ИСПРАВЛЕНО — БЕЗ ДВУХ КРЕСТИКОВ) ===== */
         .username-status {
             display: flex;
             align-items: center;
@@ -1263,14 +1274,18 @@
             font-size: 12px;
             margin-top: 4px;
             min-height: 20px;
+            padding: 2px 0;
         }
 
         .username-status .status-icon {
-            font-size: 16px;
+            font-size: 18px;
+            flex-shrink: 0;
+            line-height: 1;
         }
 
         .username-status .status-icon.loading {
             animation: spin 0.8s linear infinite;
+            color: var(--text-muted);
         }
 
         .username-status .status-icon.available {
@@ -1279,6 +1294,14 @@
 
         .username-status .status-icon.taken {
             color: var(--red);
+        }
+
+        .username-status .status-icon.same {
+            color: var(--text-muted);
+        }
+
+        .username-status .status-icon.hidden {
+            display: none;
         }
 
         .username-status .status-text.available {
@@ -1297,6 +1320,10 @@
             color: var(--text-muted);
         }
 
+        .username-status .status-text.hidden {
+            display: none;
+        }
+
         .username-input-wrap .input-prefix {
             border-color: var(--border-color);
             transition: border-color 0.3s;
@@ -1308,6 +1335,10 @@
 
         .username-input-wrap .input-prefix.invalid {
             border-color: var(--red);
+        }
+
+        .username-input-wrap .input-prefix.loading {
+            border-color: var(--text-muted);
         }
 
         /* ===== BBC STYLES ===== */
@@ -1612,6 +1643,7 @@ let communityContext = null;
 let usernameCheckTimeout = null;
 let isUsernameValid = false;
 let isUsernameChecking = false;
+let usernameCheckResult = null; // null | 'available' | 'taken' | 'same' | 'too_short'
 
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
@@ -1639,7 +1671,7 @@ function createModal(options) {
     let actionsHtml = '';
     if (actions) {
         actionsHtml = actions.map(a => `
-            <button class="ripple-btn ${a.class || 'outline'}" id="${a.id}" ${a.danger ? 'style="color:var(--red);"' : ''}>
+            <button class="ripple-btn ${a.class || 'outline'}" id="${a.id}" ${a.danger ? 'style="color:var(--red);"' : ''} ${a.disabled ? 'disabled' : ''}>
                 ${a.icon ? `<span class="material-icons">${a.icon}</span>` : ''}
                 ${a.text}
             </button>
@@ -1706,7 +1738,7 @@ function showEmptyListModal(type) {
 }
 
 // ============================================================
-// ИСПРАВЛЕННАЯ ФУНКЦИЯ ПОКАЗА РЕПУТАЦИИ (с правильной иконкой)
+// ИСПРАВЛЕННАЯ ФУНКЦИЯ ПОКАЗА РЕПУТАЦИИ
 // ============================================================
 function showReputationModal() {
     if (!profileUser) return;
@@ -1756,23 +1788,30 @@ function showReputationModal() {
 }
 
 // ============================================================
-// ПРОВЕРКА USERNAME (КАК В ТИКТОКЕ)
+// ПРОВЕРКА USERNAME (с проверкой сообществ)
 // ============================================================
 function checkUsernameAvailability(username) {
     const statusEl = document.getElementById('usernameStatus');
     const iconEl = document.getElementById('usernameStatusIcon');
     const textEl = document.getElementById('usernameStatusText');
     const prefixEl = document.querySelector('.username-input-wrap .input-prefix');
+    const saveBtn = document.getElementById('saveProfileBtn');
     
     if (!statusEl || !iconEl || !textEl) return;
     
     // Если username пустой или меньше 2 символов
     if (!username || username.length < 2) {
-        statusEl.style.display = 'none';
+        statusEl.style.display = 'flex';
+        iconEl.className = 'status-icon hidden material-icons';
+        iconEl.textContent = '';
+        textEl.className = 'status-text hidden';
+        textEl.textContent = '';
         isUsernameValid = false;
+        usernameCheckResult = 'too_short';
         if (prefixEl) {
-            prefixEl.classList.remove('valid', 'invalid');
+            prefixEl.classList.remove('valid', 'invalid', 'loading');
         }
+        if (saveBtn) saveBtn.disabled = true;
         return;
     }
     
@@ -1783,60 +1822,51 @@ function checkUsernameAvailability(username) {
     textEl.className = 'status-text loading';
     textEl.textContent = 'Проверка...';
     if (prefixEl) {
+        prefixEl.classList.add('loading');
         prefixEl.classList.remove('valid', 'invalid');
     }
+    if (saveBtn) saveBtn.disabled = true;
     
     isUsernameChecking = true;
+    usernameCheckResult = null;
     
     // Проверяем, не совпадает ли с текущим username
     if (profileUser && profileUser.username === username) {
-        iconEl.className = 'status-icon material-icons';
+        iconEl.className = 'status-icon same material-icons';
         iconEl.textContent = 'check_circle';
-        iconEl.style.color = 'var(--text-muted)';
         textEl.className = 'status-text same';
         textEl.textContent = 'Ваш текущий username';
         isUsernameValid = true;
+        usernameCheckResult = 'same';
         isUsernameChecking = false;
         if (prefixEl) {
-            prefixEl.classList.remove('valid', 'invalid');
+            prefixEl.classList.remove('valid', 'invalid', 'loading');
         }
+        if (saveBtn) saveBtn.disabled = false;
         return;
     }
     
-    // Делаем запрос к БД
+    // Проверяем в пользователях
     db.collection('users')
         .where('username', '==', username)
         .limit(1)
         .get()
         .then(snapshot => {
-            isUsernameChecking = false;
-            
-            if (snapshot.empty) {
-                // Username свободен
-                iconEl.className = 'status-icon available material-icons';
-                iconEl.textContent = 'check_circle';
-                textEl.className = 'status-text available';
-                textEl.textContent = 'Username доступен! ✅';
-                isUsernameValid = true;
-                if (prefixEl) {
-                    prefixEl.classList.add('valid');
-                    prefixEl.classList.remove('invalid');
-                }
-            } else {
-                // Username занят
+            if (!snapshot.empty) {
                 const existingDoc = snapshot.docs[0];
                 const existingData = existingDoc.data();
                 // Если это текущий пользователь — пропускаем
                 if (existingData.uid === currentUser?.uid) {
-                    iconEl.className = 'status-icon material-icons';
+                    iconEl.className = 'status-icon same material-icons';
                     iconEl.textContent = 'check_circle';
-                    iconEl.style.color = 'var(--text-muted)';
                     textEl.className = 'status-text same';
                     textEl.textContent = 'Ваш текущий username';
                     isUsernameValid = true;
+                    usernameCheckResult = 'same';
                     if (prefixEl) {
-                        prefixEl.classList.remove('valid', 'invalid');
+                        prefixEl.classList.remove('valid', 'invalid', 'loading');
                     }
+                    if (saveBtn) saveBtn.disabled = false;
                     return;
                 }
                 iconEl.className = 'status-icon taken material-icons';
@@ -1844,21 +1874,83 @@ function checkUsernameAvailability(username) {
                 textEl.className = 'status-text taken';
                 textEl.textContent = '❌ Этот username уже занят';
                 isUsernameValid = false;
+                usernameCheckResult = 'taken';
                 if (prefixEl) {
                     prefixEl.classList.add('invalid');
-                    prefixEl.classList.remove('valid');
+                    prefixEl.classList.remove('valid', 'loading');
                 }
+                if (saveBtn) saveBtn.disabled = true;
+                return;
             }
+            
+            // Проверяем в сообществах
+            db.collection('communities')
+                .where('handle', '==', username)
+                .limit(1)
+                .get()
+                .then(snapshot2 => {
+                    isUsernameChecking = false;
+                    
+                    if (!snapshot2.empty) {
+                        iconEl.className = 'status-icon taken material-icons';
+                        iconEl.textContent = 'close';
+                        textEl.className = 'status-text taken';
+                        textEl.textContent = '❌ Это имя занято сообществом';
+                        isUsernameValid = false;
+                        usernameCheckResult = 'taken';
+                        if (prefixEl) {
+                            prefixEl.classList.add('invalid');
+                            prefixEl.classList.remove('valid', 'loading');
+                        }
+                        if (saveBtn) saveBtn.disabled = true;
+                        return;
+                    }
+                    
+                    // Username свободен!
+                    iconEl.className = 'status-icon available material-icons';
+                    iconEl.textContent = 'check_circle';
+                    textEl.className = 'status-text available';
+                    textEl.textContent = '✅ Username доступен!';
+                    isUsernameValid = true;
+                    usernameCheckResult = 'available';
+                    if (prefixEl) {
+                        prefixEl.classList.add('valid');
+                        prefixEl.classList.remove('invalid', 'loading');
+                    }
+                    if (saveBtn) saveBtn.disabled = false;
+                })
+                .catch(err => {
+                    console.error('Community check error:', err);
+                    isUsernameChecking = false;
+                    iconEl.className = 'status-icon taken material-icons';
+                    iconEl.textContent = 'error';
+                    iconEl.style.color = 'var(--red)';
+                    textEl.className = 'status-text taken';
+                    textEl.textContent = '⚠️ Ошибка проверки';
+                    isUsernameValid = false;
+                    usernameCheckResult = 'taken';
+                    if (prefixEl) {
+                        prefixEl.classList.add('invalid');
+                        prefixEl.classList.remove('valid', 'loading');
+                    }
+                    if (saveBtn) saveBtn.disabled = true;
+                });
         })
         .catch(err => {
             console.error('Username check error:', err);
             isUsernameChecking = false;
-            iconEl.className = 'status-icon material-icons';
+            iconEl.className = 'status-icon taken material-icons';
             iconEl.textContent = 'error';
             iconEl.style.color = 'var(--red)';
             textEl.className = 'status-text taken';
             textEl.textContent = '⚠️ Ошибка проверки';
             isUsernameValid = false;
+            usernameCheckResult = 'taken';
+            if (prefixEl) {
+                prefixEl.classList.add('invalid');
+                prefixEl.classList.remove('valid', 'loading');
+            }
+            if (saveBtn) saveBtn.disabled = true;
         });
 }
 
@@ -2168,7 +2260,7 @@ function setupEventListeners() {
 }
 
 // ============================================================
-// USER DATA (исправлено — загружаем из Firestore)
+// USER DATA
 // ============================================================
 function loadUserData() {
     const user = auth.currentUser;
@@ -2542,7 +2634,7 @@ function toggleFollow() {
 }
 
 // ============================================================
-// ПОКАЗ ПОДПИСЧИКОВ / ПОДПИСОК (С ПРОВЕРКОЙ ПРИВАТНОСТИ)
+// ПОКАЗ ПОДПИСЧИКОВ / ПОДПИСОК
 // ============================================================
 function showFollowers(type) {
     if (!profileUser) return;
@@ -2780,7 +2872,7 @@ function removeAdminFromProfile(uid) {
 }
 
 // ============================================================
-// LOAD USER POSTS (С АКТУАЛЬНЫМИ ИМЕНАМИ)
+// LOAD USER POSTS
 // ============================================================
 function loadUserPosts(uid) {
     const container = document.getElementById('profilePosts');
@@ -2939,7 +3031,7 @@ function goToProfileByUsername(username) {
 }
 
 // ============================================================
-// LOAD USER COMMENTS (С ПРОВЕРКОЙ ПРИВАТНОСТИ И АКТУАЛЬНЫМИ ИМЕНАМИ)
+// LOAD USER COMMENTS
 // ============================================================
 function loadUserComments(uid) {
     const container = document.getElementById('profilePosts');
@@ -3224,8 +3316,8 @@ function openEditModal() {
                            oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9_.-]/g, ''); handleUsernameInput()">
                 </div>
                 <div class="username-status" id="usernameStatus" style="display:none;">
-                    <span class="status-icon material-icons" id="usernameStatusIcon">check_circle</span>
-                    <span class="status-text" id="usernameStatusText">Готово</span>
+                    <span class="status-icon material-icons" id="usernameStatusIcon"></span>
+                    <span class="status-text" id="usernameStatusText"></span>
                 </div>
                 <div class="input-hint">
                     <span class="material-icons">info</span> Только латиница, цифры, _ . -
@@ -3239,7 +3331,7 @@ function openEditModal() {
             
             <div class="modal-actions">
                 <button class="ripple-btn outline" onclick="closeEditModal()">Отмена</button>
-                <button class="ripple-btn primary" id="saveProfileBtn" onclick="saveProfileChanges()">
+                <button class="ripple-btn primary" id="saveProfileBtn" onclick="saveProfileChanges()" disabled>
                     <span class="material-icons">save</span> Сохранить
                 </button>
             </div>
@@ -3274,6 +3366,7 @@ function closeEditModal() {
     window._avatarFile = null;
     window._coverFile = null;
     isUsernameValid = false;
+    usernameCheckResult = null;
 }
 
 function handleAvatarUpload(event) {
@@ -3321,8 +3414,11 @@ function saveProfileChanges() {
     const username = document.getElementById('editUsername').value.trim();
     const bio = document.getElementById('editBio').value.trim();
     
+    // Проверка длины
     if (!username || username.length < 2) {
-        alert('Имя пользователя должно быть минимум 2 символа');
+        // alert убран! Кнопка просто неактивна, если длина < 2
+        const saveBtn = document.getElementById('saveProfileBtn');
+        if (saveBtn) saveBtn.disabled = true;
         return;
     }
     
@@ -3334,7 +3430,16 @@ function saveProfileChanges() {
     // ===== ПРОВЕРКА: если username не валидный и не равен текущему =====
     const isCurrentUsername = profileUser && profileUser.username === username;
     if (!isUsernameValid && !isUsernameChecking && !isCurrentUsername) {
-        alert('Этот username уже занят. Выберите другой.');
+        // Не показываем alert, просто блокируем кнопку
+        const saveBtn = document.getElementById('saveProfileBtn');
+        if (saveBtn) saveBtn.disabled = true;
+        return;
+    }
+    
+    // Если username слишком короткий
+    if (username.length < 2) {
+        const saveBtn = document.getElementById('saveProfileBtn');
+        if (saveBtn) saveBtn.disabled = true;
         return;
     }
     
@@ -3440,7 +3545,6 @@ function saveProfileChanges() {
     }
     
     // ===== ПРОВЕРЯЕМ, НЕ ЗАНЯТ ЛИ USERNAME ПЕРЕД СОХРАНЕНИЕМ =====
-    // Если username изменился — проверяем ещё раз
     const usernameChanged = profileUser && profileUser.username !== username;
     
     let usernameCheckPromise = Promise.resolve();
@@ -3452,10 +3556,19 @@ function saveProfileChanges() {
             .then(snapshot => {
                 if (!snapshot.empty) {
                     const existingDoc = snapshot.docs[0];
-                    // Если это текущий пользователь — пропускаем
                     if (existingDoc.data().uid !== currentUser.uid) {
                         throw new Error('Этот username уже занят. Выберите другой.');
                     }
+                }
+                // Проверяем сообщества
+                return db.collection('communities')
+                    .where('handle', '==', username)
+                    .limit(1)
+                    .get();
+            })
+            .then(snapshot2 => {
+                if (!snapshot2.empty) {
+                    throw new Error('Это имя занято сообществом.');
                 }
             });
     }
@@ -3498,7 +3611,7 @@ function saveProfileChanges() {
         });
 }
 
-console.log('👤 Profile page loaded with username availability check');
+console.log('👤 Profile page loaded with username availability check (no alerts)');
 </script>
 </body>
 </html>
