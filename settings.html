@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
-        /* ===== ВСЕ СТИЛИ (сокращены для читаемости) ===== */
+        /* ===== ВСЕ СТИЛИ (без изменений, такие же как в предыдущей версии) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -1228,47 +1228,9 @@ function showLogoutModal() {
 }
 
 // ============================================================
-// ПОВТОРНАЯ АВТОРИЗАЦИЯ (ДЛЯ ПОЛЬЗОВАТЕЛЕЙ С ПАРОЛЕМ)
+// УСТАНОВКА ПАРОЛЯ (ДЛЯ ПОЛЬЗОВАТЕЛЕЙ БЕЗ ПАРОЛЯ) — ГЛАВНОЕ ИСПРАВЛЕНИЕ!
 // ============================================================
-function reauthenticateUser(password) {
-    if (!currentUser) return Promise.reject('No user');
-    if (!currentUser.email) return Promise.reject('No email');
-    
-    const credential = firebase.auth.EmailAuthProvider.credential(
-        currentUser.email,
-        password
-    );
-    
-    return currentUser.reauthenticateWithCredential(credential);
-}
-
-// ============================================================
-// ПОВТОРНАЯ АВТОРИЗАЦИЯ ЧЕРЕЗ GOOGLE (ДЛЯ ПОЛЬЗОВАТЕЛЕЙ БЕЗ ПАРОЛЯ)
-// ============================================================
-function reauthenticateWithGoogle() {
-    if (!currentUser) return Promise.reject('No user');
-    
-    const provider = new firebase.auth.GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
-    
-    return auth.signInWithPopup(provider)
-        .then(result => {
-            // После успешного входа, возвращаем пользователя
-            return result.user;
-        })
-        .catch(err => {
-            // Если пользователь закрыл окно
-            if (err.code === 'auth/popup-closed-by-user') {
-                return Promise.reject('Отменено пользователем');
-            }
-            return Promise.reject(err);
-        });
-}
-
-// ============================================================
-// УНИВЕРСАЛЬНАЯ ФУНКЦИЯ ДЛЯ ЧУВСТВИТЕЛЬНЫХ ДЕЙСТВИЙ
-// ============================================================
-function performSensitiveAction(actionCallback) {
+function setPasswordForUser() {
     if (!currentUser) {
         showNotLoggedInModal();
         return;
@@ -1279,84 +1241,153 @@ function performSensitiveAction(actionCallback) {
     );
     
     if (hasPassword) {
-        // У пользователя есть пароль — запрашиваем его
-        createModal({
-            title: 'Подтверждение',
-            icon: 'verified',
-            iconColor: 'var(--accent)',
-            text: 'Для выполнения этого действия требуется повторный вход.<br>Введите ваш пароль для подтверждения.',
-            fields: [
-                { type: 'password', id: 'reauthPassword', label: 'Пароль', placeholder: 'Введите пароль', error: 'reauthError' }
-            ],
-            actions: [
-                { id: 'cancelReauth', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
-                { id: 'confirmReauth', text: 'Подтвердить', class: 'primary', onClick: (e, modal) => {
-                    const password = document.getElementById('reauthPassword').value;
-                    const errorEl = document.getElementById('reauthError');
-                    
-                    if (!password) {
-                        errorEl.textContent = 'Введите пароль';
-                        errorEl.style.display = 'block';
-                        return;
-                    }
-                    
-                    const btn = document.getElementById('confirmReauth');
-                    btn.disabled = true;
-                    btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Проверка...';
-                    errorEl.style.display = 'none';
-                    
-                    reauthenticateUser(password)
-                        .then(() => {
-                            modal.remove();
-                            if (actionCallback) actionCallback();
-                        })
-                        .catch(err => {
-                            if (err.code === 'auth/wrong-password') {
-                                errorEl.textContent = 'Неверный пароль. Попробуйте снова.';
-                                errorEl.style.display = 'block';
-                            } else {
-                                errorEl.textContent = 'Ошибка: ' + err.message;
-                                errorEl.style.display = 'block';
-                            }
-                            btn.disabled = false;
-                            btn.innerHTML = 'Подтвердить';
-                        });
-                }}
-            ]
-        });
-    } else {
-        // У пользователя нет пароля — предлагаем войти через Google
-        createModal({
-            title: 'Подтверждение',
-            icon: 'verified',
-            iconColor: 'var(--accent)',
-            text: 'Для выполнения этого действия требуется повторный вход.<br>Нажмите "Войти через Google", чтобы подтвердить свою личность.',
-            actions: [
-                { id: 'cancelReauthGoogle', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
-                { id: 'confirmReauthGoogle', text: 'Войти через Google', class: 'primary', icon: 'login', onClick: (e, modal) => {
-                    const btn = document.getElementById('confirmReauthGoogle');
-                    btn.disabled = true;
-                    btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Вход...';
-                    
-                    reauthenticateWithGoogle()
-                        .then(() => {
-                            modal.remove();
-                            if (actionCallback) actionCallback();
-                        })
-                        .catch(err => {
-                            if (err === 'Отменено пользователем') {
-                                // Просто закрываем
-                                modal.remove();
-                            } else {
-                                alert('Ошибка: ' + (err.message || err));
-                            }
-                            btn.disabled = false;
-                            btn.innerHTML = 'Войти через Google';
-                        });
-                }}
-            ]
-        });
+        alert('У вас уже есть пароль. Используйте "Изменить пароль"');
+        return;
     }
+    
+    createModal({
+        title: 'Установить пароль',
+        icon: 'lock_open',
+        iconColor: 'var(--accent)',
+        text: 'У вас ещё нет пароля, так как вы вошли через Google.<br>Установите новый пароль для входа через email.<br><br><strong>Для подтверждения потребуется повторный вход через Google.</strong>',
+        fields: [
+            { type: 'password', id: 'newPasswordOnly', label: 'Новый пароль', placeholder: '••••••••', hint: 'Минимум 6 символов' },
+            { type: 'password', id: 'confirmPasswordOnly', label: 'Повторите пароль', placeholder: '••••••••' }
+        ],
+        actions: [
+            { id: 'cancelPasswordOnly', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
+            { id: 'savePasswordOnly', text: 'Установить пароль', class: 'primary', onClick: (e, modal) => {
+                const newPassword = document.getElementById('newPasswordOnly').value;
+                const confirmPassword = document.getElementById('confirmPasswordOnly').value;
+                
+                if (!newPassword || !confirmPassword) {
+                    alert('Заполните все поля');
+                    return;
+                }
+                
+                if (newPassword.length < 6) {
+                    alert('Пароль должен быть минимум 6 символов');
+                    return;
+                }
+                
+                if (newPassword !== confirmPassword) {
+                    alert('Пароли не совпадают');
+                    return;
+                }
+                
+                const btn = document.getElementById('savePasswordOnly');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Подготовка...';
+                
+                // Сначала выполняем повторную авторизацию через Google
+                const provider = new firebase.auth.GoogleAuthProvider();
+                provider.setCustomParameters({ prompt: 'select_account' });
+                
+                auth.signInWithPopup(provider)
+                    .then(result => {
+                        // Пользователь подтвердил личность — теперь устанавливаем пароль
+                        btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Установка...';
+                        return currentUser.updatePassword(newPassword);
+                    })
+                    .then(() => {
+                        alert('Пароль успешно установлен!');
+                        modal.remove();
+                        loadUserData();
+                    })
+                    .catch(err => {
+                        if (err.code === 'auth/popup-closed-by-user') {
+                            alert('Вход через Google был отменён. Попробуйте снова.');
+                        } else {
+                            alert('Ошибка: ' + err.message);
+                        }
+                        btn.disabled = false;
+                        btn.innerHTML = 'Установить пароль';
+                    });
+            }}
+        ]
+    });
+}
+
+// ============================================================
+// ИЗМЕНЕНИЕ ПАРОЛЯ (С ПРОВЕРКОЙ НАЛИЧИЯ ПАРОЛЯ)
+// ============================================================
+function openChangePasswordModal() {
+    if (!currentUser) { 
+        showNotLoggedInModal();
+        return; 
+    }
+    
+    const hasPassword = currentUser.providerData.some(provider => 
+        provider.providerId === 'password'
+    );
+    
+    if (!hasPassword) {
+        // Если пароля нет — используем setPasswordForUser
+        setPasswordForUser();
+        return;
+    }
+    
+    // Если пароль есть — стандартная смена пароля
+    createModal({
+        title: 'Изменить пароль',
+        icon: 'lock',
+        iconColor: 'var(--accent)',
+        fields: [
+            { type: 'password', id: 'oldPasswordInput', label: 'Текущий пароль', placeholder: '••••••••' },
+            { type: 'password', id: 'newPasswordInput', label: 'Новый пароль', placeholder: '••••••••', hint: 'Минимум 6 символов' },
+            { type: 'password', id: 'confirmPasswordInput', label: 'Повторите новый пароль', placeholder: '••••••••' }
+        ],
+        actions: [
+            { id: 'cancelPassword', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
+            { id: 'savePassword', text: 'Сохранить', class: 'primary', onClick: (e, modal) => {
+                const oldPassword = document.getElementById('oldPasswordInput').value;
+                const newPassword = document.getElementById('newPasswordInput').value;
+                const confirmPassword = document.getElementById('confirmPasswordInput').value;
+                
+                if (!oldPassword || !newPassword || !confirmPassword) {
+                    alert('Заполните все поля');
+                    return;
+                }
+                
+                if (newPassword.length < 6) {
+                    alert('Новый пароль должен быть минимум 6 символов');
+                    return;
+                }
+                
+                if (newPassword !== confirmPassword) {
+                    alert('Пароли не совпадают');
+                    return;
+                }
+                
+                const btn = document.getElementById('savePassword');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
+                
+                const credential = firebase.auth.EmailAuthProvider.credential(
+                    currentUser.email,
+                    oldPassword
+                );
+                
+                currentUser.reauthenticateWithCredential(credential)
+                    .then(() => {
+                        return currentUser.updatePassword(newPassword);
+                    })
+                    .then(() => {
+                        alert('Пароль успешно изменён!');
+                        modal.remove();
+                    })
+                    .catch(err => {
+                        if (err.code === 'auth/wrong-password') {
+                            alert('Неверный текущий пароль');
+                        } else {
+                            alert('Ошибка: ' + err.message);
+                        }
+                        btn.disabled = false;
+                        btn.innerHTML = 'Сохранить';
+                    });
+            }}
+        ]
+    });
 }
 
 // ============================================================
@@ -1400,16 +1431,9 @@ function openChangeEmailModal() {
                             loadUserData();
                         })
                         .catch(err => {
-                            if (err.code === 'auth/requires-recent-login') {
-                                modal.remove();
-                                performSensitiveAction(() => {
-                                    openChangeEmailModal();
-                                });
-                            } else {
-                                alert('Ошибка: ' + err.message);
-                                btn.disabled = false;
-                                btn.innerHTML = 'Сохранить';
-                            }
+                            alert('Ошибка: ' + err.message);
+                            btn.disabled = false;
+                            btn.innerHTML = 'Сохранить';
                         });
                 };
                 
@@ -1421,7 +1445,11 @@ function openChangeEmailModal() {
                         btn.innerHTML = 'Сохранить';
                         return;
                     }
-                    reauthenticateUser(password)
+                    const credential = firebase.auth.EmailAuthProvider.credential(
+                        currentUser.email,
+                        password
+                    );
+                    currentUser.reauthenticateWithCredential(credential)
                         .then(doUpdate)
                         .catch(err => {
                             if (err.code === 'auth/wrong-password') {
@@ -1435,143 +1463,24 @@ function openChangeEmailModal() {
                             btn.innerHTML = 'Сохранить';
                         });
                 } else {
-                    // Для пользователей без пароля — используем универсальное подтверждение
-                    performSensitiveAction(() => {
-                        doUpdate();
-                    });
-                }
-            }}
-        ]
-    });
-}
-
-// ============================================================
-// ИЗМЕНЕНИЕ ПАРОЛЯ (С ПРОВЕРКОЙ НАЛИЧИЯ ПАРОЛЯ)
-// ============================================================
-function openChangePasswordModal() {
-    if (!currentUser) { 
-        showNotLoggedInModal();
-        return; 
-    }
-    
-    const hasPassword = currentUser.providerData.some(provider => 
-        provider.providerId === 'password'
-    );
-    
-    if (!hasPassword) {
-        // Если пароля нет — предлагаем установить новый
-        createModal({
-            title: 'Установить пароль',
-            icon: 'lock_open',
-            iconColor: 'var(--accent)',
-            text: 'У вас ещё нет пароля, так как вы вошли через Google.<br>Установите новый пароль для входа через email.',
-            fields: [
-                { type: 'password', id: 'newPasswordOnly', label: 'Новый пароль', placeholder: '••••••••', hint: 'Минимум 6 символов' },
-                { type: 'password', id: 'confirmPasswordOnly', label: 'Повторите пароль', placeholder: '••••••••' }
-            ],
-            actions: [
-                { id: 'cancelPasswordOnly', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
-                { id: 'savePasswordOnly', text: 'Установить пароль', class: 'primary', onClick: (e, modal) => {
-                    const newPassword = document.getElementById('newPasswordOnly').value;
-                    const confirmPassword = document.getElementById('confirmPasswordOnly').value;
+                    // Для Google пользователей — сначала подтверждение через Google
+                    const provider = new firebase.auth.GoogleAuthProvider();
+                    provider.setCustomParameters({ prompt: 'select_account' });
                     
-                    if (!newPassword || !confirmPassword) {
-                        alert('Заполните все поля');
-                        return;
-                    }
-                    
-                    if (newPassword.length < 6) {
-                        alert('Пароль должен быть минимум 6 символов');
-                        return;
-                    }
-                    
-                    if (newPassword !== confirmPassword) {
-                        alert('Пароли не совпадают');
-                        return;
-                    }
-                    
-                    const btn = document.getElementById('savePasswordOnly');
-                    btn.disabled = true;
-                    btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
-                    
-                    // Для установки пароля тоже нужна свежая авторизация
-                    performSensitiveAction(() => {
-                        currentUser.updatePassword(newPassword)
-                            .then(() => {
-                                alert('Пароль успешно установлен!');
-                                modal.remove();
-                                loadUserData();
-                            })
-                            .catch(err => {
+                    auth.signInWithPopup(provider)
+                        .then(() => {
+                            doUpdate();
+                        })
+                        .catch(err => {
+                            if (err.code === 'auth/popup-closed-by-user') {
+                                alert('Вход через Google был отменён');
+                            } else {
                                 alert('Ошибка: ' + err.message);
-                                btn.disabled = false;
-                                btn.innerHTML = 'Установить пароль';
-                            });
-                    });
-                }}
-            ]
-        });
-        return;
-    }
-    
-    // Если пароль есть — стандартная смена пароля
-    createModal({
-        title: 'Изменить пароль',
-        icon: 'lock',
-        iconColor: 'var(--accent)',
-        fields: [
-            { type: 'password', id: 'oldPasswordInput', label: 'Текущий пароль', placeholder: '••••••••' },
-            { type: 'password', id: 'newPasswordInput', label: 'Новый пароль', placeholder: '••••••••', hint: 'Минимум 6 символов' },
-            { type: 'password', id: 'confirmPasswordInput', label: 'Повторите новый пароль', placeholder: '••••••••' }
-        ],
-        actions: [
-            { id: 'cancelPassword', text: 'Отмена', class: 'outline', onClick: (e, modal) => modal.remove() },
-            { id: 'savePassword', text: 'Сохранить', class: 'primary', onClick: (e, modal) => {
-                const oldPassword = document.getElementById('oldPasswordInput').value;
-                const newPassword = document.getElementById('newPasswordInput').value;
-                const confirmPassword = document.getElementById('confirmPasswordInput').value;
-                
-                if (!oldPassword || !newPassword || !confirmPassword) {
-                    alert('Заполните все поля');
-                    return;
+                            }
+                            btn.disabled = false;
+                            btn.innerHTML = 'Сохранить';
+                        });
                 }
-                
-                if (newPassword.length < 6) {
-                    alert('Новый пароль должен быть минимум 6 символов');
-                    return;
-                }
-                
-                if (newPassword !== confirmPassword) {
-                    alert('Пароли не совпадают');
-                    return;
-                }
-                
-                const btn = document.getElementById('savePassword');
-                btn.disabled = true;
-                btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
-                
-                reauthenticateUser(oldPassword)
-                    .then(() => {
-                        return currentUser.updatePassword(newPassword);
-                    })
-                    .then(() => {
-                        alert('Пароль успешно изменён!');
-                        modal.remove();
-                    })
-                    .catch(err => {
-                        if (err.code === 'auth/wrong-password') {
-                            alert('Неверный текущий пароль');
-                        } else if (err.code === 'auth/requires-recent-login') {
-                            modal.remove();
-                            performSensitiveAction(() => {
-                                openChangePasswordModal();
-                            });
-                        } else {
-                            alert('Ошибка: ' + err.message);
-                        }
-                        btn.disabled = false;
-                        btn.innerHTML = 'Сохранить';
-                    });
             }}
         ]
     });
@@ -1731,7 +1640,11 @@ function showDeleteAccountModal() {
                         return;
                     }
                     
-                    reauthenticateUser(password)
+                    const credential = firebase.auth.EmailAuthProvider.credential(
+                        currentUser.email,
+                        password
+                    );
+                    currentUser.reauthenticateWithCredential(credential)
                         .then(doDelete)
                         .catch(err => {
                             if (err.code === 'auth/wrong-password') {
@@ -1745,7 +1658,20 @@ function showDeleteAccountModal() {
                             btn.innerHTML = '<span class="material-icons">delete</span> Удалить';
                         });
                 } else {
-                    performSensitiveAction(doDelete);
+                    // Для Google — повторный вход через Google
+                    const provider = new firebase.auth.GoogleAuthProvider();
+                    provider.setCustomParameters({ prompt: 'select_account' });
+                    auth.signInWithPopup(provider)
+                        .then(doDelete)
+                        .catch(err => {
+                            if (err.code === 'auth/popup-closed-by-user') {
+                                alert('Вход через Google был отменён');
+                            } else {
+                                alert('Ошибка: ' + err.message);
+                            }
+                            btn.disabled = false;
+                            btn.innerHTML = '<span class="material-icons">delete</span> Удалить';
+                        });
                 }
             }}
         ]
@@ -1841,7 +1767,6 @@ function loadUserData() {
     const avatarEl = document.getElementById('userAvatar');
     const dotEl = document.getElementById('userOnlineDot');
     
-    // Сначала применяем кэшированные настройки
     const sizes = { small: '14px', medium: '16px', large: '20px' };
     document.documentElement.style.fontSize = sizes[userSettings.fontSize] || '16px';
     document.getElementById('fontSizeSelect').value = userSettings.fontSize;
@@ -1959,7 +1884,7 @@ function loadUserData() {
 
 auth.onAuthStateChanged(user => { loadUserData(); });
 
-console.log('⚙️ Settings page loaded with Google reauthentication');
+console.log('⚙️ Settings page loaded with Google auth for password setup');
 </script>
 </body>
 </html>
