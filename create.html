@@ -2172,11 +2172,10 @@ function resetColors() {
 }
 
 // ============================================================
-// PUBLISH (С ГЕНЕРАЦИЕЙ shortId)
+// PUBLISH (С ГЕНЕРАЦИЕЙ shortId) — БЕЗ ALERT
 // ============================================================
 function publishPost() {
     if (!currentUser) {
-        alert('Войдите в аккаунт, чтобы опубликовать тейк');
         window.location.href = '/login.html';
         return;
     }
@@ -2185,6 +2184,7 @@ function publishPost() {
     const content = document.getElementById('postContent').value.trim();
 
     if (!title || !content) {
+        // Оставляем предупреждение, но через alert (это критическая ошибка валидации)
         alert('Заполните заголовок и текст тейка');
         return;
     }
@@ -2223,19 +2223,16 @@ function publishPost() {
 
     db.collection('posts').add(postData)
         .then(docRef => {
-            // ===== ГЕНЕРАЦИЯ shortId =====
             return db.collection('meta').doc('counters').get()
                 .then(doc => {
                     let counter = 1;
                     if (doc.exists) {
                         counter = (doc.data().postCounter || 0) + 1;
                     }
-                    // Обновляем счётчик
                     return db.collection('meta').doc('counters').set(
                         { postCounter: counter },
                         { merge: true }
                     ).then(() => {
-                        // Сохраняем shortId и order в посте
                         return docRef.update({
                             shortId: String(counter),
                             order: counter
@@ -2243,13 +2240,12 @@ function publishPost() {
                     });
                 })
                 .then(() => {
-                    // Обновляем счётчик постов в сообществе
                     if (community) {
                         db.collection('communities').doc(community).update({
                             postsCount: firebase.firestore.FieldValue.increment(1)
                         }).catch(() => {});
                     }
-                    alert('✅ Тейк успешно опубликован!');
+                    // ⚡ Мгновенный редирект без alert
                     window.location.href = `/post.html?id=${docRef.id}`;
                 });
         })
@@ -2260,7 +2256,7 @@ function publishPost() {
         });
 }
 
-console.log('📝 Create page loaded with shortId generation');
+console.log('📝 Create page loaded with shortId generation (no alerts)');
 </script>
 </body>
 </html>
