@@ -2076,12 +2076,12 @@ function votePost(direction) {
 }
 
 // ============================================================
-// ШЕРИНГ И КОПИРОВАНИЕ ССЫЛОК (С КОРОТКИМ ДОМЕНОМ ЧЕРЕЗ ID)
+// ШЕРИНГ И КОПИРОВАНИЕ ССЫЛОК (БЕЗ ?id=)
 // ============================================================
 function getShortUrl() {
-    // Если у поста есть shortId — используем короткую ссылку с ID
+    // Если у поста есть shortId — используем короткую ссылку без ?id=
     if (currentPost && currentPost.shortId) {
-        return `t.cl.is/?id=${currentPost.shortId}`;
+        return `t.cl.is/${currentPost.shortId}`;
     }
     // Если shortId нет — используем обычную ссылку (запасной вариант)
     return window.location.href;
@@ -2089,7 +2089,7 @@ function getShortUrl() {
 
 function getFullUrl() {
     if (currentPost && currentPost.shortId) {
-        return `https://t.cl.is/?id=${currentPost.shortId}`;
+        return `https://t.cl.is/${currentPost.shortId}`;
     }
     return window.location.href;
 }
@@ -2106,7 +2106,7 @@ function sharePost() {
 }
 
 function copyLink() {
-    const url = getShortUrl(); // БЕЗ https://
+    const url = getShortUrl(); // БЕЗ https:// и без ?id=
     navigator.clipboard.writeText(url).then(() => {
         alert('✅ Ссылка скопирована: ' + url);
     }).catch(() => {
