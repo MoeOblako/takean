@@ -53,6 +53,7 @@
             color: var(--text-primary);
             transition: background 0.3s, color 0.3s;
             -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -70,15 +71,6 @@
 
         .container { max-width: 800px; margin: 0 auto; padding: 0 16px; width: 100%; }
         .hidden { display: none !important; }
-        .flex { display: flex; }
-        .flex-center { display: flex; align-items: center; justify-content: center; }
-        .flex-between { display: flex; align-items: center; justify-content: space-between; }
-        .flex-col { display: flex; flex-direction: column; }
-        .gap-8 { gap: 8px; }
-        .gap-12 { gap: 12px; }
-        .gap-16 { gap: 16px; }
-        .gap-24 { gap: 24px; }
-        .text-center { text-align: center; }
         .text-muted { color: var(--text-muted); }
 
         @keyframes ripple {
@@ -153,6 +145,7 @@
             align-items: center;
             gap: 4px;
             white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .topbar-nav a:hover {
@@ -196,6 +189,7 @@
             transition: border-color 0.2s;
             overflow: hidden;
             flex-shrink: 0;
+            position: relative;
         }
 
         .topbar-actions .avatar-small:hover {
@@ -206,6 +200,23 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .topbar-actions .avatar-small .online-dot {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-card);
+            background: #4caf50;
+            display: none;
+            z-index: 2;
+        }
+
+        .topbar-actions .avatar-small .online-dot.show {
+            display: block;
         }
 
         .search-bar {
@@ -265,6 +276,7 @@
             align-items: center;
             gap: 6px;
             -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
         }
 
         .ripple-btn .ripple-effect {
@@ -281,7 +293,7 @@
         }
 
         .ripple-btn:hover { background: var(--bg-hover); }
-        .ripple-btn:active { transform: scale(0.97); }
+        .ripple-btn:active { transform: scale(0.96); }
 
         .ripple-btn.primary {
             background: var(--accent);
@@ -629,6 +641,7 @@
             .settings-item .right .settings-input { width: 100%; }
             .footer-inner { flex-direction: column; align-items: center; text-align: center; }
             .modal-box { padding: 20px; margin: 8px; }
+            .topbar-actions .avatar-small .online-dot { width: 8px; height: 8px; bottom: 1px; right: 1px; }
         }
 
         @media (max-width: 480px) {
@@ -648,6 +661,7 @@
             .modal-box { padding: 16px; }
             .modal-box .modal-header h2 { font-size: 18px; }
             .modal-box .field input { font-size: 13px; padding: 8px 10px; }
+            .topbar-actions .avatar-small .online-dot { width: 6px; height: 6px; bottom: 0px; right: 0px; }
         }
     </style>
 </head>
@@ -671,6 +685,10 @@
                     <span class="material-icons">add_box</span>
                     <span>Создать</span>
                 </a>
+                <a href="/communities.html">
+                    <span class="material-icons">group</span>
+                    <span>Сообщества</span>
+                </a>
             </nav>
 
             <div class="topbar-actions">
@@ -685,6 +703,7 @@
 
                 <div class="avatar-small" id="userAvatar">
                     <span>?</span>
+                    <span class="online-dot" id="userOnlineDot"></span>
                 </div>
             </div>
         </div>
@@ -795,7 +814,7 @@
                 <span class="material-icons">person_add</span>
                 <div class="info">
                     <div class="label">Кто может подписываться</div>
-                    <div class="desc">Ограничьте возможность подписки</div>
+                    <div class="desc" id="followPrivacyDesc">Все пользователи</div>
                 </div>
             </div>
             <div class="right">
@@ -955,6 +974,12 @@ const db = firebase.firestore();
 
 let currentUser = null;
 let userData = null;
+let userSettings = {
+    theme: 'dark',
+    fontSize: 'medium',
+    showOnlineStatus: true,
+    followPrivacy: 'all'
+};
 
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
@@ -972,6 +997,80 @@ function togglePasswordVisibility(inputId, btn) {
     }
 }
 
+// ============================================================
+// ОНЛАЙН СТАТУС (умная система)
+// ============================================================
+let onlineCheckInterval = null;
+let isUserActive = true;
+let inactivityTimer = null;
+
+function updateOnlineStatus() {
+    if (!currentUser) return;
+    const showStatus = userSettings.showOnlineStatus !== false;
+    db.collection('users').doc(currentUser.uid).update({
+        lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+        isOnline: showStatus ? isUserActive : false
+    }).catch(() => {});
+}
+
+function startOnlineTracking() {
+    if (onlineCheckInterval) clearInterval(onlineCheckInterval);
+    
+    isUserActive = true;
+    updateOnlineStatus();
+    
+    function resetInactivity() {
+        isUserActive = true;
+        updateOnlineStatus();
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+            isUserActive = false;
+            updateOnlineStatus();
+        }, 120000);
+    }
+    
+    const events = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    events.forEach(event => {
+        document.addEventListener(event, resetInactivity);
+    });
+    
+    resetInactivity();
+    
+    onlineCheckInterval = setInterval(() => {
+        if (currentUser) {
+            updateOnlineStatus();
+        }
+    }, 30000);
+    
+    window.addEventListener('beforeunload', () => {
+        if (currentUser) {
+            db.collection('users').doc(currentUser.uid).update({
+                isOnline: false,
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(() => {});
+        }
+    });
+    
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            isUserActive = false;
+            if (currentUser) {
+                db.collection('users').doc(currentUser.uid).update({
+                    isOnline: false,
+                    lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(() => {});
+            }
+        } else {
+            isUserActive = true;
+            updateOnlineStatus();
+            resetInactivity();
+        }
+    });
+}
+
+// ============================================================
+// DOM CONTENT LOADED
+// ============================================================
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('themeToggle').addEventListener('click', () => {
         currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -994,27 +1093,65 @@ function setupEventListeners() {
         }
     });
 
+    // Сохранение темы
     document.getElementById('themeSelect').addEventListener('change', function() {
         const theme = this.value;
         if (theme === 'system') {
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
-            localStorage.setItem('takean-theme', prefersDark ? 'dark' : 'light');
+            const appliedTheme = prefersDark ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', appliedTheme);
+            localStorage.setItem('takean-theme', appliedTheme);
+            currentTheme = appliedTheme;
         } else {
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('takean-theme', theme);
+            currentTheme = theme;
         }
-        currentTheme = document.documentElement.getAttribute('data-theme');
         document.getElementById('themeToggle').innerHTML = 
             `<span class="material-icons">${currentTheme === 'dark' ? 'dark_mode' : 'light_mode'}</span>`;
+        
+        if (currentUser) {
+            db.collection('users').doc(currentUser.uid).update({ theme: currentTheme }).catch(() => {});
+        }
+    });
+
+    // Сохранение размера шрифта
+    document.getElementById('fontSizeSelect').addEventListener('change', function() {
+        const size = this.value;
+        const sizes = { small: '14px', medium: '16px', large: '20px' };
+        document.documentElement.style.fontSize = sizes[size] || '16px';
+        if (currentUser) {
+            db.collection('users').doc(currentUser.uid).update({ fontSize: size }).catch(() => {});
+        }
+    });
+
+    // Сохранение приватности подписок
+    document.getElementById('followPrivacy').addEventListener('change', function() {
+        const value = this.value;
+        userSettings.followPrivacy = value;
+        const descMap = {
+            'all': 'Все пользователи',
+            'followers': 'Только подписчики',
+            'none': 'Никто'
+        };
+        document.getElementById('followPrivacyDesc').textContent = descMap[value] || 'Все пользователи';
+        
+        if (currentUser) {
+            db.collection('users').doc(currentUser.uid).update({ followPrivacy: value }).catch(() => {});
+        }
     });
 }
 
+// ============================================================
+// ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ
+// ============================================================
 function loadUserData() {
     const user = auth.currentUser;
     currentUser = user;
     
     const avatarEl = document.getElementById('userAvatar');
+    const dotEl = document.getElementById('userOnlineDot');
+    
     if (user) {
         avatarEl.innerHTML = user.photoURL 
             ? `<img src="${user.photoURL}" alt="avatar">` 
@@ -1028,16 +1165,64 @@ function loadUserData() {
             .then(doc => {
                 if (doc.exists) {
                     userData = doc.data();
+                    
                     if (userData.theme) {
                         document.getElementById('themeSelect').value = userData.theme;
+                        document.documentElement.setAttribute('data-theme', userData.theme);
+                        currentTheme = userData.theme;
+                        localStorage.setItem('takean-theme', userData.theme);
+                        document.getElementById('themeToggle').innerHTML = 
+                            `<span class="material-icons">${currentTheme === 'dark' ? 'dark_mode' : 'light_mode'}</span>`;
+                    }
+                    
+                    if (userData.fontSize) {
+                        document.getElementById('fontSizeSelect').value = userData.fontSize;
+                        const sizes = { small: '14px', medium: '16px', large: '20px' };
+                        document.documentElement.style.fontSize = sizes[userData.fontSize] || '16px';
+                    }
+                    
+                    if (userData.showOnlineStatus !== undefined) {
+                        userSettings.showOnlineStatus = userData.showOnlineStatus;
+                        const toggle = document.getElementById('statusToggle');
+                        if (userData.showOnlineStatus) {
+                            toggle.classList.add('active');
+                        } else {
+                            toggle.classList.remove('active');
+                        }
+                    }
+                    
+                    if (userData.followPrivacy) {
+                        userSettings.followPrivacy = userData.followPrivacy;
+                        document.getElementById('followPrivacy').value = userData.followPrivacy;
+                        const descMap = {
+                            'all': 'Все пользователи',
+                            'followers': 'Только подписчики',
+                            'none': 'Никто'
+                        };
+                        document.getElementById('followPrivacyDesc').textContent = descMap[userData.followPrivacy] || 'Все пользователи';
+                    }
+                    
+                    if (userData.isOnline && userSettings.showOnlineStatus !== false) {
+                        dotEl.classList.add('show');
+                    } else {
+                        dotEl.classList.remove('show');
                     }
                 }
-            });
+            })
+            .catch(() => {});
+        
+        startOnlineTracking();
+        
     } else {
         avatarEl.innerHTML = '<span>?</span>';
         avatarEl.onclick = () => window.location.href = '/login.html';
+        dotEl.classList.remove('show');
         document.getElementById('userEmail').textContent = 'Не авторизован';
         document.getElementById('userDisplayName').textContent = 'Не авторизован';
+        if (onlineCheckInterval) {
+            clearInterval(onlineCheckInterval);
+            onlineCheckInterval = null;
+        }
     }
 }
 
@@ -1170,7 +1355,6 @@ function openChangePasswordModal() {
         this.disabled = true;
         this.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Сохранение...';
         
-        // Сначала переавторизуемся с текущим паролем
         const credential = firebase.auth.EmailAuthProvider.credential(
             currentUser.email,
             oldPassword
@@ -1254,22 +1438,58 @@ function changeDisplayName() {
     });
 }
 
+// ============================================================
+// ТОГГЛ СТАТУСА ОНЛАЙН
+// ============================================================
 function toggleStatus() {
-    document.getElementById('statusToggle').classList.toggle('active');
+    const toggle = document.getElementById('statusToggle');
+    toggle.classList.toggle('active');
+    userSettings.showOnlineStatus = toggle.classList.contains('active');
+    
+    if (currentUser) {
+        db.collection('users').doc(currentUser.uid).update({
+            showOnlineStatus: userSettings.showOnlineStatus,
+            isOnline: userSettings.showOnlineStatus ? isUserActive : false
+        }).catch(() => {});
+        
+        const dotEl = document.getElementById('userOnlineDot');
+        if (userSettings.showOnlineStatus && isUserActive) {
+            dotEl.classList.add('show');
+        } else {
+            dotEl.classList.remove('show');
+        }
+    }
 }
 
+// ============================================================
+// ВЫХОД ИЗ АККАУНТА
+// ============================================================
 function logout() {
     if (confirm('Вы уверены, что хотите выйти?')) {
+        if (onlineCheckInterval) {
+            clearInterval(onlineCheckInterval);
+            onlineCheckInterval = null;
+        }
         auth.signOut().then(() => { window.location.href = '/'; });
     }
 }
 
+// ============================================================
+// УДАЛЕНИЕ АККАУНТА
+// ============================================================
 function deleteAccount() {
     if (!currentUser) return;
     if (confirm('Вы уверены, что хотите удалить аккаунт? Это действие необратимо!')) {
         if (confirm('Пожалуйста, подтвердите ещё раз: удалить аккаунт?')) {
-            // Сначала удаляем данные из Firestore
             db.collection('users').doc(currentUser.uid).delete()
+                .then(() => {
+                    return db.collection('posts').where('authorId', '==', currentUser.uid).get();
+                })
+                .then(snapshot => {
+                    const batch = db.batch();
+                    snapshot.forEach(doc => { batch.delete(doc.ref); });
+                    return batch.commit();
+                })
                 .then(() => {
                     return currentUser.delete();
                 })
@@ -1278,7 +1498,6 @@ function deleteAccount() {
                     window.location.href = '/';
                 })
                 .catch(err => {
-                    // Если пользователь недавно вошёл, нужна повторная авторизация
                     if (err.code === 'auth/requires-recent-login') {
                         alert('Для удаления аккаунта требуется повторный вход. Пожалуйста, выйдите и зайдите снова.');
                     } else {
