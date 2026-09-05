@@ -1,0 +1,12 @@
+[build]
+  processing.html.pretty_urls = true
+
+[[edge_functions]]
+  path = "/post"
+  function = "og-preview"
+
+[[redirects]]
+  from = "/post.html"
+  to = "/post"
+  status = 301
+  
