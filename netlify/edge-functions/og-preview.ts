@@ -1,21 +1,16 @@
-import { Context } from "@netlify/edge-functions";
-
 const FIREBASE_PROJECT_ID = "takean";
 const FIRESTORE_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
 
-// Расширенный список ботов мессенджеров и соцсетей
 const BOT_REGEX = /telegrambot|twitterbot|facebookexternalhit|whatsapp|discordbot|vkshare|linkedinbot|yandexbot|googlebot|bingbot|applebot|slackbot|skypeuripreview/i;
 
-export default async (request: Request, context: Context) => {
+export default async (request, context) => {
   const url = new URL(request.url);
   const userAgent = request.headers.get("user-agent") || "";
 
-  // Пропускаем статику и запросы к ресурсам
   if (url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|json|woff|woff2|ttf)$/i)) {
     return context.next();
   }
 
-  // 1. Извлекаем postId из query-параметра ?id= или из пути (/post/ID, /post.html?id=ID)
   let postId = url.searchParams.get("id");
   if (!postId) {
     const pathParts = url.pathname.split("/").filter(Boolean);
@@ -33,15 +28,13 @@ export default async (request: Request, context: Context) => {
 
   const isBot = BOT_REGEX.test(userAgent);
 
-  // Если это не бот или нет ID, отдаем обычную страницу
   if (!postId || !isBot) {
     return context.next();
   }
 
   try {
-    let fields: Record<string, any> | null = null;
+    let fields = null;
 
-    // 2. Попытка №1: Прямой запрос по Document ID (если ID длинее 15 символов)
     if (postId.length >= 15) {
       try {
         const docUrl = `${FIRESTORE_URL}/posts/${postId}`;
@@ -55,11 +48,9 @@ export default async (request: Request, context: Context) => {
       }
     }
 
-    // 3. Попытка №2: Поиск по shortId или id в Firestore
     if (!fields) {
       const queryUrl = `${FIRESTORE_URL}:runQuery`;
       
-      // Ищем либо по shortId, либо по id
       const queryBody = {
         structuredQuery: {
           from: [{ collectionId: "posts" }],
@@ -102,15 +93,12 @@ export default async (request: Request, context: Context) => {
       }
     }
 
-    // Если данные поста не найдены в Firestore, отдаем обычную страницу
     if (!fields) {
       return context.next();
     }
 
-    // 4. Извлечение заголовка
     const title = fields.title?.stringValue || "Takean";
 
-    // 5. Извлечение текста
     const rawContent = 
       fields.content?.stringValue || 
       fields.text?.stringValue || 
@@ -118,22 +106,18 @@ export default async (request: Request, context: Context) => {
       fields.body?.stringValue || 
       "";
 
-    // 6. Извлечение изображения
     let imageUrl = "";
 
-    // Картинка из BB-кода [img]URL[/img]
     if (rawContent.includes("[img]")) {
       const match = rawContent.match(/\[img\]\s*(.*?)\s*\[\/img\]/i);
       if (match && match[1]) imageUrl = match[1];
     }
 
-    // Массив images (берем элемент 0)
     if (!imageUrl && fields.images?.arrayValue?.values?.length > 0) {
       const firstImg = fields.images.arrayValue.values[0];
       imageUrl = firstImg.stringValue || firstImg.mapValue?.fields?.url?.stringValue || "";
     }
 
-    // Одиночные поля
     if (!imageUrl) {
       imageUrl = 
         fields.coverURL?.stringValue || 
@@ -144,16 +128,13 @@ export default async (request: Request, context: Context) => {
         "";
     }
 
-    // Нормализация ссылок (гарантируем https://)
     if (imageUrl) {
       if (imageUrl.startsWith("//")) imageUrl = "https:" + imageUrl;
       else if (!imageUrl.startsWith("http")) imageUrl = "https://" + imageUrl;
     } else {
-      // Стандартный баннер-логотип, если картинки у поста нет
       imageUrl = "https://takean.cl.is/og-image.png";
     }
 
-    // 7. Формирование короткого описания (удаляем тэги и переносы)
     let cleanDescription = rawContent
       .replace(/\[img\].*?\[\/img\]/gi, "")
       .replace(/\[.*?\]/g, "")
@@ -168,7 +149,6 @@ export default async (request: Request, context: Context) => {
       cleanDescription = cleanDescription.substring(0, 177) + "...";
     }
 
-    // 8. HTML-ответ
     const html = `<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -211,7 +191,7 @@ export default async (request: Request, context: Context) => {
   }
 };
 
-function escapeXml(unsafe: string): string {
+function escapeXml(unsafe) {
   return unsafe
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
