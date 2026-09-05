@@ -1238,6 +1238,10 @@ let tempFilePreview = null;
 let currentTheme = localStorage.getItem('takean-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
 
+// ===== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ДЛЯ АВАТАРКИ =====
+let currentAvatarUrl = null;
+let currentDisplayName = 'Аноним';
+
 // ============================================================
 // ПОЛУЧАЕМ COMMUNITY ИЗ URL
 // ============================================================
@@ -1336,6 +1340,60 @@ function createUserInFirestore(user) {
 }
 
 // ============================================================
+// ЗАГРУЗКА АВАТАРКИ (ОДИН РАЗ, КЭШИРУЕТСЯ)
+// ============================================================
+function loadUserAvatar() {
+    const user = auth.currentUser;
+    if (!user) {
+        currentAvatarUrl = null;
+        currentDisplayName = 'Аноним';
+        return;
+    }
+    
+    db.collection('users').doc(user.uid).get()
+        .then(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                currentAvatarUrl = data.avatar || user.photoURL || null;
+                currentDisplayName = data.displayName || user.displayName || 'Аноним';
+            } else {
+                currentAvatarUrl = user.photoURL || null;
+                currentDisplayName = user.displayName || 'Аноним';
+            }
+            // Обновляем везде, где нужно
+            updateAllAvatars();
+        })
+        .catch(() => {
+            currentAvatarUrl = user.photoURL || null;
+            currentDisplayName = user.displayName || 'Аноним';
+        });
+}
+
+function updateAllAvatars() {
+    // Правый верхний угол
+    const avatarEl = document.getElementById('userAvatar');
+    const dotEl = document.getElementById('userOnlineDot');
+    
+    if (currentUser && avatarEl) {
+        avatarEl.innerHTML = currentAvatarUrl 
+            ? `<img src="${currentAvatarUrl}" alt="avatar">` 
+            : `<span>${(currentDisplayName || '?')[0].toUpperCase()}</span>`;
+        avatarEl.onclick = () => window.location.href = `/profile.html?uid=${currentUser.uid}`;
+    }
+    if (dotEl && currentUser) dotEl.classList.add('show');
+    
+    // Предпросмотр
+    const previewName = document.getElementById('previewName');
+    const previewAvatar = document.getElementById('previewAvatar');
+    if (previewName) previewName.textContent = currentDisplayName;
+    if (previewAvatar) {
+        previewAvatar.innerHTML = currentAvatarUrl 
+            ? `<img src="${currentAvatarUrl}" style="width:100%;height:100%;object-fit:cover;">` 
+            : (currentDisplayName || '?')[0].toUpperCase();
+    }
+}
+
+// ============================================================
 // DOM CONTENT LOADED
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -1417,51 +1475,8 @@ function loadUserData() {
     const dotEl = document.getElementById('userOnlineDot');
     
     if (user) {
-        // ===== ЗАГРУЖАЕМ АВАТАРКУ ИЗ FIRESTORE =====
-        db.collection('users').doc(user.uid).get()
-            .then(doc => {
-                let avatarUrl = user.photoURL || null;
-                let displayName = user.displayName || '?';
-                
-                if (doc.exists) {
-                    const data = doc.data();
-                    avatarUrl = data.avatar || user.photoURL || null;
-                    displayName = data.displayName || user.displayName || '?';
-                    
-                    // Если в Firestore есть аватарка, но в Auth нет — обновляем Auth
-                    if (data.avatar && !user.photoURL) {
-                        user.updateProfile({ photoURL: data.avatar }).catch(() => {});
-                    }
-                }
-                
-                if (avatarEl) {
-                    avatarEl.innerHTML = avatarUrl 
-                        ? `<img src="${avatarUrl}" alt="avatar">` 
-                        : `<span>${displayName[0].toUpperCase()}</span>`;
-                    avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
-                }
-                
-                if (dotEl) dotEl.classList.add('show');
-                
-                const previewName = document.getElementById('previewName');
-                const previewAvatar = document.getElementById('previewAvatar');
-                if (previewName) previewName.textContent = displayName;
-                if (previewAvatar) {
-                    previewAvatar.innerHTML = avatarUrl 
-                        ? `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;">` 
-                        : displayName[0].toUpperCase();
-                }
-            })
-            .catch(() => {
-                // Если ошибка — используем данные из Auth
-                if (avatarEl) {
-                    avatarEl.innerHTML = user.photoURL 
-                        ? `<img src="${user.photoURL}" alt="avatar">` 
-                        : `<span>${(user.displayName || '?')[0].toUpperCase()}</span>`;
-                    avatarEl.onclick = () => window.location.href = `/profile.html?uid=${user.uid}`;
-                }
-                if (dotEl) dotEl.classList.add('show');
-            });
+        // ===== ЗАГРУЖАЕМ АВАТАРКУ =====
+        loadUserAvatar();
         
         createUserInFirestore(user).then(() => startOnlineTracking())
             .catch(err => console.error('Error creating user:', err));
@@ -2083,7 +2098,7 @@ function removeImage(index) {
 }
 
 // ============================================================
-// PREVIEW (исправлен — загружаем аватарку из Firestore)
+// PREVIEW (исправлен — использует закэшированную аватарку)
 // ============================================================
 function updatePreview() {
     clearTimeout(previewTimeout);
@@ -2092,7 +2107,6 @@ function updatePreview() {
         const content = document.getElementById('postContent').value || 'Текст тейка будет здесь...';
         const textColor = document.getElementById('textColor').value;
         const bgColor = document.getElementById('bgColor').value;
-        const user = auth.currentUser;
         const communitySelect = document.getElementById('communitySelect');
         const selectedCommunity = communitySelect.options[communitySelect.selectedIndex];
         
@@ -2103,31 +2117,11 @@ function updatePreview() {
         document.getElementById('previewContent').style.padding = '8px';
         document.getElementById('previewContent').style.borderRadius = 'var(--radius)';
         
-        // ===== ИСПРАВЛЕНО: ЗАГРУЖАЕМ АВАТАРКУ ИЗ FIRESTORE =====
-        if (user) {
-            db.collection('users').doc(user.uid).get()
-                .then(doc => {
-                    let avatarUrl = user.photoURL || null;
-                    let displayName = user.displayName || 'Аноним';
-                    
-                    if (doc.exists) {
-                        const data = doc.data();
-                        avatarUrl = data.avatar || user.photoURL || null;
-                        displayName = data.displayName || user.displayName || 'Аноним';
-                    }
-                    
-                    document.getElementById('previewName').textContent = displayName;
-                    document.getElementById('previewAvatar').innerHTML = avatarUrl 
-                        ? `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;">` 
-                        : (displayName || '?')[0].toUpperCase();
-                })
-                .catch(() => {
-                    document.getElementById('previewName').textContent = user.displayName || 'Аноним';
-                    document.getElementById('previewAvatar').innerHTML = user.photoURL 
-                        ? `<img src="${user.photoURL}" style="width:100%;height:100%;object-fit:cover;">` 
-                        : (user.displayName || '?')[0].toUpperCase();
-                });
-        }
+        // ===== ИСПОЛЬЗУЕМ УЖЕ ЗАГРУЖЕННУЮ АВАТАРКУ (БЕЗ ЗАПРОСА К БД) =====
+        document.getElementById('previewName').textContent = currentDisplayName;
+        document.getElementById('previewAvatar').innerHTML = currentAvatarUrl 
+            ? `<img src="${currentAvatarUrl}" style="width:100%;height:100%;object-fit:cover;">` 
+            : (currentDisplayName || '?')[0].toUpperCase();
         
         const tagsContainer = document.getElementById('previewTags');
         let tagsHtml = '';
@@ -2222,7 +2216,7 @@ function resetColors() {
 }
 
 // ============================================================
-// PUBLISH (С ГЕНЕРАЦИЕЙ shortId) — БЕЗ ALERT
+// PUBLISH (С ГЕНЕРАЦИЕЙ shortId) — ИСПРАВЛЕНО!
 // ============================================================
 function publishPost() {
     if (!currentUser) {
@@ -2250,42 +2244,28 @@ function publishPost() {
     btn.disabled = true;
     btn.innerHTML = '<span class="material-icons" style="animation:spin 1s linear infinite;">refresh</span> Публикация...';
 
-    // ===== ВАЖНО: ЗАГРУЖАЕМ АКТУАЛЬНУЮ АВАТАРКУ ИЗ FIRESTORE =====
-    db.collection('users').doc(currentUser.uid).get()
-        .then(doc => {
-            let avatarUrl = null;
-            let displayName = currentUser.displayName || 'Аноним';
-            
-            if (doc.exists) {
-                const userData = doc.data();
-                avatarUrl = userData.avatar || currentUser.photoURL || null;
-                displayName = userData.displayName || currentUser.displayName || 'Аноним';
-            } else {
-                avatarUrl = currentUser.photoURL || null;
-            }
-            
-            const postData = {
-                title: title,
-                content: content,
-                authorId: currentUser.uid,
-                authorName: displayName,
-                authorAvatar: avatarUrl,  // ✅ ТЕПЕРЬ АКТУАЛЬНАЯ АВАТАРКА
-                category: category,
-                community: community || null,
-                communityId: community || null,
-                communityName: community ? (communityNameCache[community] || null) : null,
-                images: uploadedImages,
-                likes: [],
-                dislikes: [],
-                commentsCount: 0,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                textColor: document.getElementById('textColor').value,
-                bgColor: document.getElementById('bgColor').value,
-                status: 'active'
-            };
-            
-            return db.collection('posts').add(postData);
-        })
+    // ===== ИСПОЛЬЗУЕМ УЖЕ ЗАГРУЖЕННУЮ АВАТАРКУ =====
+    const postData = {
+        title: title,
+        content: content,
+        authorId: currentUser.uid,
+        authorName: currentDisplayName,
+        authorAvatar: currentAvatarUrl,
+        category: category,
+        community: community || null,
+        communityId: community || null,
+        communityName: community ? (communityNameCache[community] || null) : null,
+        images: uploadedImages,
+        likes: [],
+        dislikes: [],
+        commentsCount: 0,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        textColor: document.getElementById('textColor').value,
+        bgColor: document.getElementById('bgColor').value,
+        status: 'active'
+    };
+
+    db.collection('posts').add(postData)
         .then(docRef => {
             return db.collection('meta').doc('counters').get()
                 .then(doc => {
@@ -2319,7 +2299,7 @@ function publishPost() {
         });
 }
 
-console.log('📝 Create page loaded with shortId generation (no alerts)');
+console.log('📝 Create page loaded with shortId generation (avatar cached)');
 </script>
 </body>
 </html>
